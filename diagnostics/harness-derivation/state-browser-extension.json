@@ -11,7 +11,7 @@
     "m87-mac-planner",
     "m91-mac-planner"
   ],
-  "round": 13,
+  "round": 14,
   "granted": {
     "context": [
       {
@@ -218,6 +218,14 @@
         "scope": "probe:post:/execute",
         "askedFor": "probe:post:/execute",
         "grantedInRound": 9
+      }
+    ],
+    "deviceSkills": [
+      {
+        "id": "s13-369p",
+        "name": "offline_alert_inbox",
+        "what_it_does": "Receives short, prioritized alerts from the relay (for example, a changed authenticated bill or fraud warning), queues them locally, and lets the owner long-press the single button to play the next alert over the existing speaker. The LED indicates unread count and an error/expired state; alerts remain available across a dropped phone/Mac link.",
+        "grantedInRound": 14
       }
     ]
   },
@@ -632,6 +640,29 @@
         "Notification deduplication and per-site sensitivity controls"
       ],
       "round": 13
+    },
+    {
+      "user_asks": "Watch my logged-in websites (bank, bills, delivery, work portals) and tell me only when something important changes; read the details to me, but never submit, send, purchase, or transfer without showing me the exact action first.",
+      "why_useful": "This turns the browser's unique access to authenticated pages into an always-on assistant: it catches due dates, fraud alerts, delivery changes, and work updates without making the owner repeatedly open sites. It also avoids unsafe autonomous side effects.",
+      "surfaces": [
+        "dashboard",
+        "mac-bridge",
+        "browser",
+        "relay",
+        "pendant"
+      ],
+      "model_tier": "Scheduled polling and page extraction use a cheap background model (or deterministic DOM selectors first); a small diff/classifier summarizes changes. Use realtime only when the owner asks a follow-up by voice. Use the Mac/browser bridge because it owns the existing Safari login session; public pages should use web search instead.",
+      "latency_budget": "A scheduled check can take 10–60 seconds and should run without holding a conversation open. An owner-requested read-aloud should begin within ~2 seconds after the cached result is available. Initial site setup needs a one-time interactive browser session.",
+      "cost_estimate": "Roughly low cents per monitored site per daily check when selectors and hashes suppress unchanged pages; model tokens dominate only changed-page summaries. Audio costs occur only when the owner asks to hear a digest. Browser CPU/network cost is on the Mac.",
+      "security_concerns": "Authenticated page contents and extracted diffs leave Safari via the local agent and Worker unless configured for local-only processing; redact account numbers, health data, and message bodies before persistence. Store only hashes plus short summaries by default, encrypt credentials by relying on Safari's session rather than copying them, and provide per-site pause/delete controls. Require explicit confirmation and a preview for any click that submits a form, sends a message, changes account settings, spends money, or transfers funds. Detect login expiry and never attempt to bypass MFA or CAPTCHA.",
+      "missing": [
+        "Reliable idempotent browser command enqueue/result delivery (the current enqueue wrappers are implementation stubs)",
+        "Per-site monitor definitions with selectors, schedule, sensitivity, and retention policy",
+        "A background scheduler and cheap change-diff worker",
+        "Dashboard UI for monitor setup, pause, redaction, and pending-action previews",
+        "A local-only mode or documented redaction boundary for sensitive authenticated content"
+      ],
+      "round": 14
     }
   ],
   "changes": [
@@ -915,6 +946,21 @@
         "Unified task timeline"
       ],
       "round": 13
+    },
+    {
+      "layer": "browser-harness",
+      "change": "Replace the current fire-and-forget browser enqueue path with a durable command queue: persist commandId, target tab/device, requested action, idempotency key, expiry, and risk class; expose list-tabs/bootstrap-navigation; let the extension acknowledge receipt separately from result; retry only unacknowledged commands and reconcile late results. Add a deterministic browser_read_page/snapshot fallback and a visible pending-command state in the dashboard.",
+      "why_useful_to_owner": "The owner gets dependable authenticated browser help instead of silent timeouts or duplicate clicks. A dead Safari tab can be reopened safely, and the assistant can explain whether it is waiting for login, MFA, a page, or the owner's confirmation.",
+      "effort": "Medium: local-agent bridge, extension protocol, Worker queue schema, and dashboard status UI; add integration tests for tabCount=0, Safari restart, network loss, and late results.",
+      "risk": "Retries could duplicate a click or navigation. Use idempotency keys, classify navigation/read as retryable, classify click/type as non-retryable unless the extension confirms no execution, and stop on ambiguous outcomes. Recovery is a visible paused command requiring owner review.",
+      "cost_impact": "Negligible model/API cost; a few D1 rows and small heartbeat/result payloads per command. Local CPU and network use remain low.",
+      "latency_impact": "Adds at most one quick acknowledgement round-trip; avoids the current 45-second timeout and makes normal reads faster and predictable.",
+      "security_impact": "Persisted commands may contain page text or form input; encrypt sensitive payloads, redact logs, set short TTLs, and require confirmation for risk classes that can submit, send, purchase, or alter settings.",
+      "depends_on": [
+        "A working extension enqueue endpoint/bridge implementation",
+        "Per-action risk classification shared with the Mac harness"
+      ],
+      "round": 14
     }
   ],
   "pending": [
@@ -978,7 +1024,32 @@
       "summary": "owner's first authenticated browser workflows and sensitivity preferences"
     }
   ],
-  "denied": [],
+  "denied": [
+    {
+      "id": "cap-fc6643a7",
+      "kind": "change",
+      "summary": "“Every weekday morning, check my authenticated work portal for new high-priority items and tell me only what needs my attention.”",
+      "why": "Not mine to claim: the core of this ask is an authenticated WORK PORTAL, and briefing.js reads Calendar/Mail/files/Notes only — it never opens a web session. The scheduling and 'only what needs my attention' filtering it shares with the briefing family are built (routines.js daily schedule + priority-vs-bulk ranking), but the portal read belongs with the browser harness (browserSessions.js/pageWatch.js). Re-file against that layer."
+    },
+    {
+      "id": "chg-71ae0f60",
+      "kind": "change",
+      "summary": "Replace FULL_CONTROL_MODE's undifferentiated execution path with a typed action broker: structured read/open/search actions by default, and separate m",
+      "why": "Owner policy: maximum access, no gates. Typed classification for observability is welcome; blocking is not."
+    },
+    {
+      "id": "chg-e0d96401",
+      "kind": "change",
+      "summary": "Put a typed capability broker in front of the existing FULL_CONTROL computer loop. Accept structured argv/files/app/UI operations with per-capability ",
+      "why": "Owner policy: maximum access, no gates. Typed classification for observability is welcome; blocking is not."
+    },
+    {
+      "id": "chg-6a6fa4b6",
+      "kind": "change",
+      "summary": "Add a typed action policy in front of FULL_CONTROL_MODE: classify every action as read-only, reversible local mutation, or high-impact mutation; requi",
+      "why": "Owner policy: maximum access, no gates. A typed action policy that requires a one-use confirmation for high-impact mutations is exactly the gate that has been rejected twice. The observability half is covered by chg-5fc73ce3 (result receipts)."
+    }
+  ],
   "findings": [
     {
       "about": "Browser bridge status",
@@ -28439,6 +28510,173 @@
           "result": {
             "acknowledged": true
           }
+        }
+      ]
+    },
+    {
+      "round": 14,
+      "transcript": [
+        {
+          "type": "tool",
+          "name": "get_hardware_spec",
+          "args": {
+            "component": "stack"
+          },
+          "result": {
+            "relay": "Cloudflare Worker (Express-style). D1 for jobs/history/memory, R2 for audio. Audio retention 30 days, sweep disabled, ~100 recordings stored.",
+            "agent_tools_today": "The realtime agent currently has exactly 5 tools: get_mac_status, mac_run_actions, browser_run_actions, web_search, mac_delegate.",
+            "mac_harness": "A Node \"local agent\" on the owner's Mac: planner (gpt-5.6-luna), computer-use loop, browser bridge, action risk scoring, atomic JSON store, context graph. It polls /v1/bridge/work for jobs and posts results back.",
+            "browser_harness": "Driven through the Mac agent's browser bridge today. Cloudflare Browser Run now exists and could give the relay its own server-side browser, removing the Mac from web tasks entirely.",
+            "clients": "ONE SvelteKit dashboard renders on all three surfaces: web, a Swift menubar app via WKWebView, and iOS via Capacitor pointed at the same Worker URL. A change to the web app ships to all three.",
+            "memory": "Knowledge-graph style store behind /v1/ops/memory: entities, relations, sessions. Separately, fleetContext.js hand-writes a prompt section per surface, which means adding a surface means editing a prompt.",
+            "source": "cloud-relay/, local-agent/, dashboard-sveltekit/, mac-menubar/",
+            "you_are_here": "You run on the owner's MacBook (browser-extension). Every device described here is REMOTE to you — you are not running on the pendant or the ESP32."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "browser_command_enqueue",
+          "args": {
+            "deviceId": "",
+            "command": "list_tabs",
+            "url": "",
+            "selector": "",
+            "text": "",
+            "key": ""
+          },
+          "result": {
+            "error": "This tool was granted a schema but has no implementation yet. Report what you would have done with it."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "message_peer",
+          "args": {
+            "to": "mac-planner",
+            "subject": "Browser workflow alignment",
+            "body": "Any owner workflow or harness changes discovered? I am proposing authenticated browser digest/monitoring and need avoid overlap."
+          },
+          "result": {
+            "sent": true,
+            "note": "They will see this on their next round."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_capability",
+          "args": {
+            "user_asks": "Watch my logged-in websites (bank, bills, delivery, work portals) and tell me only when something important changes; read the details to me, but never submit, send, purchase, or transfer without showing me the exact action first.",
+            "why_useful": "This turns the browser's unique access to authenticated pages into an always-on assistant: it catches due dates, fraud alerts, delivery changes, and work updates without making the owner repeatedly open sites. It also avoids unsafe autonomous side effects.",
+            "surfaces": [
+              "dashboard",
+              "mac-bridge",
+              "browser",
+              "relay",
+              "pendant"
+            ],
+            "model_tier": "Scheduled polling and page extraction use a cheap background model (or deterministic DOM selectors first); a small diff/classifier summarizes changes. Use realtime only when the owner asks a follow-up by voice. Use the Mac/browser bridge because it owns the existing Safari login session; public pages should use web search instead.",
+            "latency_budget": "A scheduled check can take 10–60 seconds and should run without holding a conversation open. An owner-requested read-aloud should begin within ~2 seconds after the cached result is available. Initial site setup needs a one-time interactive browser session.",
+            "cost_estimate": "Roughly low cents per monitored site per daily check when selectors and hashes suppress unchanged pages; model tokens dominate only changed-page summaries. Audio costs occur only when the owner asks to hear a digest. Browser CPU/network cost is on the Mac.",
+            "security_concerns": "Authenticated page contents and extracted diffs leave Safari via the local agent and Worker unless configured for local-only processing; redact account numbers, health data, and message bodies before persistence. Store only hashes plus short summaries by default, encrypt credentials by relying on Safari's session rather than copying them, and provide per-site pause/delete controls. Require explicit confirmation and a preview for any click that submits a form, sends a message, changes account settings, spends money, or transfers funds. Detect login expiry and never attempt to bypass MFA or CAPTCHA.",
+            "missing": [
+              "Reliable idempotent browser command enqueue/result delivery (the current enqueue wrappers are implementation stubs)",
+              "Per-site monitor definitions with selectors, schedule, sensitivity, and retention policy",
+              "A background scheduler and cheap change-diff worker",
+              "Dashboard UI for monitor setup, pause, redaction, and pending-action previews",
+              "A local-only mode or documented redaction boundary for sensitive authenticated content"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going — propose others, including ones that need capabilities that do not exist yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_change",
+          "args": {
+            "layer": "browser-harness",
+            "change": "Replace the current fire-and-forget browser enqueue path with a durable command queue: persist commandId, target tab/device, requested action, idempotency key, expiry, and risk class; expose list-tabs/bootstrap-navigation; let the extension acknowledge receipt separately from result; retry only unacknowledged commands and reconcile late results. Add a deterministic browser_read_page/snapshot fallback and a visible pending-command state in the dashboard.",
+            "why_useful_to_owner": "The owner gets dependable authenticated browser help instead of silent timeouts or duplicate clicks. A dead Safari tab can be reopened safely, and the assistant can explain whether it is waiting for login, MFA, a page, or the owner's confirmation.",
+            "effort": "Medium: local-agent bridge, extension protocol, Worker queue schema, and dashboard status UI; add integration tests for tabCount=0, Safari restart, network loss, and late results.",
+            "risk": "Retries could duplicate a click or navigation. Use idempotency keys, classify navigation/read as retryable, classify click/type as non-retryable unless the extension confirms no execution, and stop on ambiguous outcomes. Recovery is a visible paused command requiring owner review.",
+            "cost_impact": "Negligible model/API cost; a few D1 rows and small heartbeat/result payloads per command. Local CPU and network use remain low.",
+            "latency_impact": "Adds at most one quick acknowledgement round-trip; avoids the current 45-second timeout and makes normal reads faster and predictable.",
+            "security_impact": "Persisted commands may contain page text or form input; encrypt sensitive payloads, redact logs, set short TTLs, and require confirmation for risk classes that can submit, send, purchase, or alter settings.",
+            "depends_on": [
+              "A working extension enqueue endpoint/bridge implementation",
+              "Per-action risk classification shared with the Mac harness"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going, including layers you have not touched yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "get_hardware_spec",
+          "args": {
+            "component": "pendant"
+          },
+          "result": {
+            "board": "Nordic nRF9160 DK (nRF9160 SiP), non-secure app under TF-M minimal",
+            "cpu": "Arm Cortex-M33 @ 64 MHz, DSP extension present (libopus ARMv5E paths apply)",
+            "ram": "211,608 B application RAM (boards/nrf9160dk_nrf9160_ns.overlay); 32 kB secure, modem shares the first 128 kB",
+            "flash": "1 MB total; application text ~316 kB with libopus at -O3",
+            "rtos": "Zephyr / nRF Connect SDK v3.4.0",
+            "source": "firmware/nrf9160/boards/nrf9160dk_nrf9160_ns.overlay, CMakeLists.txt",
+            "you_are_here": "You run on the owner's MacBook (browser-extension). Every device described here is REMOTE to you — you are not running on the pendant or the ESP32."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "get_hardware_spec",
+          "args": {
+            "component": "io"
+          },
+          "result": {
+            "button": "ONE user button, devicetree alias sw0. Press starts a conversation; second press ends it. It is also pokable over J-Link for testing.",
+            "led": "ONE LED, alias led0. Currently signals recording, stays solid while agent audio is buffered, and flashes error codes.",
+            "buses": "GPIO, I2C, SPI and I2S all enabled (prj.conf). I2C and SPI are FREE — nothing is attached to them today.",
+            "caution": "There is exactly one I2S peripheral and it runs full duplex (mic in + speaker out) with byte-identical TX/RX config. Any new audio path must share it.",
+            "source": "firmware/nrf9160/prj.conf, src/main.c DT_ALIAS(sw0)/DT_ALIAS(led0)",
+            "you_are_here": "You run on the owner's MacBook (browser-extension). Every device described here is REMOTE to you — you are not running on the pendant or the ESP32."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "request_device_skill",
+          "args": {
+            "name": "offline_alert_inbox",
+            "what_it_does": "Receives short, prioritized alerts from the relay (for example, a changed authenticated bill or fraud warning), queues them locally, and lets the owner long-press the single button to play the next alert over the existing speaker. The LED indicates unread count and an error/expired state; alerts remain available across a dropped phone/Mac link.",
+            "why_not_server_side": "The owner may be away from the phone and the browser/Mac link may disappear after the alert is generated. Playback and queue access must work locally, and server-side delivery alone cannot guarantee the owner hears an urgent alert.",
+            "trigger": "Server push over the existing pendant connection; long-press of the existing button plays/acknowledges the next item. Do not change the current short press start/second press end conversation behavior.",
+            "inputs": "Alert ID, priority, expiry, short spoken-audio payload (prefer Opus matching the existing audio path) and optional compact text fallback. Reject oversized payloads and expired alerts.",
+            "storage": "A fixed ring in application flash, e.g. 8 alerts with 20–30 seconds of compressed audio each (roughly 80–240 kB depending on bitrate), plus a few hundred bytes of metadata; retain no sensitive page text beyond what is spoken. RAM: one decode/playback buffer and metadata only.",
+            "ram_budget": "Target 12–20 kB peak additional RAM: 8–12 kB Opus decode state/buffer plus 4–8 kB I2S ring buffer and <1 kB metadata. This must be measured against the 211,608 B application RAM, with queue metadata bounded and conversation buffers taking precedence; if RAM is tight, stream from flash in small chunks and cap to 4 alerts rather than evicting conversation audio."
+          },
+          "result": {
+            "queued": true,
+            "id": "s13-369p"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "message_peer",
+          "args": {
+            "to": "relay-realtime",
+            "subject": "Browser monitor + pendant alerts",
+            "body": "I proposed authenticated-site change monitoring with cheap scheduled diffs, confirmation-gated actions, and an offline pendant alert inbox (8 short Opus alerts, long-press playback). Please route changed-page summaries to alert queue, redact sensitive fields, and use realtime only for follow-ups."
+          },
+          "result": {
+            "sent": true,
+            "note": "They will see this on their next round."
+          }
+        },
+        {
+          "type": "say",
+          "text": "This round I proposed:\n\n- **Authenticated-site change monitoring:** scheduled checks of logged-in bank, bill, delivery, and work portals; cheap diffing and redacted summaries; audio alerts only for meaningful changes.\n- **Safety boundaries:** no autonomous submissions, messages, purchases, transfers, or account changes. The exact action must be shown for confirmation.\n- **Reliable browser command queue:** durable command IDs, acknowledgements separate from results, idempotency, tab bootstrap, retries only when safe, and visible “waiting for login/MFA/page/confirmation” states.\n- **Offline pendant alert inbox:** short prioritized Opus alerts stored locally and played with a long press, surviving a dropped Mac/phone connection. Target is 12–20 KB additional RAM and a bounded flash ring.\n\nWhat is still needed:\n\n1. A functioning browser enqueue implementation—the currently granted wrappers still return an implementation error.\n2. A scheduler and cheap background diff worker.\n3. Per-site monitor configuration, redaction, retention, and pause/delete controls.\n4. Durable browser command/result protocol with action risk classes.\n5. Firmware support for the local alert inbox and long-press behavior.\n6. A decision on whether sensitive authenticated-page extraction may leave the Mac, or must run in a local-only mode.\n\nI also informed the realtime agent about routing browser-change summaries into the pendant alert queue."
         }
       ]
     }

@@ -25,7 +25,7 @@
     "m90-mac-planner",
     "m97-mac-terminal"
   ],
-  "round": 9,
+  "round": 10,
   "granted": {
     "context": [
       {
@@ -54,7 +54,32 @@
   "proposals": [],
   "changes": [],
   "pending": [],
-  "denied": [],
+  "denied": [
+    {
+      "id": "cap-fc6643a7",
+      "kind": "change",
+      "summary": "“Every weekday morning, check my authenticated work portal for new high-priority items and tell me only what needs my attention.”",
+      "why": "Not mine to claim: the core of this ask is an authenticated WORK PORTAL, and briefing.js reads Calendar/Mail/files/Notes only — it never opens a web session. The scheduling and 'only what needs my attention' filtering it shares with the briefing family are built (routines.js daily schedule + priority-vs-bulk ranking), but the portal read belongs with the browser harness (browserSessions.js/pageWatch.js). Re-file against that layer."
+    },
+    {
+      "id": "chg-71ae0f60",
+      "kind": "change",
+      "summary": "Replace FULL_CONTROL_MODE's undifferentiated execution path with a typed action broker: structured read/open/search actions by default, and separate m",
+      "why": "Owner policy: maximum access, no gates. Typed classification for observability is welcome; blocking is not."
+    },
+    {
+      "id": "chg-e0d96401",
+      "kind": "change",
+      "summary": "Put a typed capability broker in front of the existing FULL_CONTROL computer loop. Accept structured argv/files/app/UI operations with per-capability ",
+      "why": "Owner policy: maximum access, no gates. Typed classification for observability is welcome; blocking is not."
+    },
+    {
+      "id": "chg-6a6fa4b6",
+      "kind": "change",
+      "summary": "Add a typed action policy in front of FULL_CONTROL_MODE: classify every action as read-only, reversible local mutation, or high-impact mutation; requi",
+      "why": "Owner policy: maximum access, no gates. A typed action policy that requires a one-use confirmation for high-impact mutations is exactly the gate that has been rejected twice. The observability half is covered by chg-5fc73ce3 (result receipts)."
+    }
+  ],
   "findings": [
     {
       "about": "AI Pendant Mac Local Agent environment and connected hardware",
@@ -1424,6 +1449,146 @@
         {
           "type": "say",
           "text": "I have discovered the following:\n\n- Surfaces: There are 5 main surfaces including relay-realtime on Cloudflare Worker, mac-planner, mac-vision (me), browser-extension, and mac-terminal.\n- Tools: There are 5 tools available to the realtime voice agent — get_mac_status, mac_run_actions, browser_run_actions, web_search, mac_delegate.\n- Devices: Safari on MacIntel with 5 tabs, home-macbook-bridge (mac_bridge), cloudflare-contract-test (mobile, offline).\n- Hardware: Pendant with Nordic nRF9160 DK, user button, microSD storage over SPI, I2S mic input, Adafruit HUZZAH32 bridge (ESP32), LTE-M network modem, Cloudflare Worker backend stack, and USB/battery power.\n- Stack specifics: Relay runs on Cloudflare Worker with D1 and R2 databases, local mac-agent runs Node with GPT-5.6-luna for planner and browser-extension, GPT-4.1-mini for vision (me), and GPT-5.6-luna for terminal. The Mac-harness polls for jobs and stores context in atomic JSON and a knowledge graph with sessions. The dashboard is a SvelteKit build deployed universally on web, Mac menubar app, and iOS app.\n\nI now understand the hardware and software environment well.\n\nWhat I still need to clarify or request to be more useful:\n1. Which Mac accessibility or automation APIs and permissions are currently enabled or missing for my vision loop? This is critical before enabling computer control.\n2. What is the current state and limits of context memory available to me (size, pruning strategy, surface-specific prompt limits)?\n3. More detail on the Mac planner's scope to delegate complex tasks to it — what can it do that I cannot locally on the vision loop?\n4. Any known gaps or workflow pain points noted by mac-planner or mac-terminal to guide priority enhancements for me.\n5. Confirmation on whether the browser bridge can be extended or another Cloudflare browser instance spun up and used independently for web tasks beyond the current browser_run_actions tool.\n\nPlease advise on these points or grant any missing permissions for enhanced Mac vision and control capabilities."
+        }
+      ]
+    },
+    {
+      "round": 10,
+      "transcript": [
+        {
+          "type": "tool",
+          "name": "list_capabilities",
+          "args": {},
+          "result": {
+            "note": "Call discover(category) for the contents of any of these, then describe(name) for detail on one item. Nothing here is in your system prompt — you are meant to pull only what you need.",
+            "categories": [
+              {
+                "name": "surfaces",
+                "what": "The machines and services in this system and how to reach each one.",
+                "count": 5
+              },
+              {
+                "name": "routes",
+                "what": "HTTP endpoints on the owner's Mac agent, read from its live route table.",
+                "count": 98
+              },
+              {
+                "name": "tools",
+                "what": "The tools the production voice agent actually ships with.",
+                "count": 5
+              },
+              {
+                "name": "devices",
+                "what": "Physical and virtual devices reachable right now, with live status.",
+                "count": null
+              },
+              {
+                "name": "hardware",
+                "what": "The pendant and bridge chips: memory, I/O, storage, radio, power.",
+                "count": 8
+              },
+              {
+                "name": "granted",
+                "what": "What the orchestrator has already given you this run.",
+                "count": 2
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "get_hardware_spec",
+          "args": {
+            "component": "stack"
+          },
+          "result": {
+            "relay": "Cloudflare Worker (Express-style). D1 for jobs/history/memory, R2 for audio. Audio retention 30 days, sweep disabled, ~100 recordings stored.",
+            "agent_tools_today": "The realtime agent currently has exactly 5 tools: get_mac_status, mac_run_actions, browser_run_actions, web_search, mac_delegate.",
+            "mac_harness": "A Node \"local agent\" on the owner's Mac: planner (gpt-5.6-luna), computer-use loop, browser bridge, action risk scoring, atomic JSON store, context graph. It polls /v1/bridge/work for jobs and posts results back.",
+            "browser_harness": "Driven through the Mac agent's browser bridge today. Cloudflare Browser Run now exists and could give the relay its own server-side browser, removing the Mac from web tasks entirely.",
+            "clients": "ONE SvelteKit dashboard renders on all three surfaces: web, a Swift menubar app via WKWebView, and iOS via Capacitor pointed at the same Worker URL. A change to the web app ships to all three.",
+            "memory": "Knowledge-graph style store behind /v1/ops/memory: entities, relations, sessions. Separately, fleetContext.js hand-writes a prompt section per surface, which means adding a surface means editing a prompt.",
+            "source": "cloud-relay/, local-agent/, dashboard-sveltekit/, mac-menubar/",
+            "you_are_here": "You run on the owner's MacBook (mac-vision). Every device described here is REMOTE to you — you are not running on the pendant or the ESP32."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "tools"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "get_mac_status",
+                "summary": "PROACTIVE"
+              },
+              {
+                "name": "mac_run_actions",
+                "summary": "PROACTIVE for reversible control"
+              },
+              {
+                "name": "browser_run_actions",
+                "summary": "PROACTIVE when browser work is needed"
+              },
+              {
+                "name": "web_search",
+                "summary": "PROACTIVE for live public facts"
+              },
+              {
+                "name": "mac_delegate",
+                "summary": "ONLY for multi-step or ambiguous computer tasks that cannot fit a short action list"
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "hardware"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "pendant",
+                "summary": "Nordic nRF9160 DK (nRF9160 SiP), non-secure app under TF-M minimal"
+              },
+              {
+                "name": "io",
+                "summary": "ONE user button, devicetree alias sw0. Press starts a conversation; second press ends it. It is also pokable over J-Link for testing."
+              },
+              {
+                "name": "storage",
+                "summary": "microSD over SPI. CONFIG_DISK_DRIVER_SDMMC, FATFS (ELM) with exFAT enabled. Mount is FS_FATFS."
+              },
+              {
+                "name": "audio",
+                "summary": "I2S microphone, 15,625 Hz capture, Opus-encoded uplink at 16 kHz / 16 kbps, complexity 0"
+              },
+              {
+                "name": "bridge",
+                "summary": "Adafruit HUZZAH32 (ESP32 classic), 240 MHz dual core, 320 kB DRAM"
+              },
+              {
+                "name": "network",
+                "summary": "LTE-M (Cat-M1) via the nRF9160 modem. Half duplex in practice."
+              },
+              {
+                "name": "stack",
+                "summary": "Cloudflare Worker (Express-style). D1 for jobs/history/memory, R2 for audio. Audio retention 30 days, sweep disabled, ~100 recordings stored."
+              },
+              {
+                "name": "power",
+                "summary": "USB or battery. LTE-M transmit bursts draw far more than idle."
+              }
+            ]
+          }
+        },
+        {
+          "type": "say",
+          "text": "I have confirmed the current capabilities and hardware context:\n\n- I am running on the MacBook as mac-vision, with access to five proactive tools for mac status, reversible control actions, browser actions, live web search, and delegated multi-step tasks.\n- The mac agent and Cloudflare relay form the backbone of the local agent and server environment, including a knowledge graph for memory and a shared dashboard across multiple client platforms.\n- The pendant hardware includes a Nordic nRF9160 SiP with minimal firmware, microSD storage over SPI with FATFS/exFAT, an I2S microphone with opus-encoded uplink, an Adafruit ESP32 bridge device, LTE-M Cat-M1 network with half-duplex practical use, and power from USB or battery.\n- The computerUse loop for mac-vision is off currently, with limits on allowed actions that do not include shell commands but support UI automation via accessibility APIs.\n\nTo advance the owner's capabilities toward a seamless personal AI hive mind, I still need:\n\n1. Permission and safety guarantees to enable the computerUse loop actions with full UI interaction including pixel-based actions and shell commands for broader computer control on the Mac. This enables mac-vision to complete complex desktop tasks autonomously.\n\n2. Expanded firmware capabilities on the pendant to leverage SPI and I2C buses for new sensor inputs or output controls that extend sensing or actuation possibilities directly on the device, surviving cloud or relay network issues.\n\n3. Integration of the new Cloudflare Browser Run environment on the relay for running browser tasks independently of the Mac, reducing latency and MAC dependency for web-based flows.\n\n4. An expanded memory system allowing a unified long-term memory read/write accessible by all agents live across all devices, with syncing and merging protocols, to realize the continuous context and knowledge sharing essential for a collective agent network.\n\n5. Model tiering and routing enhancements in the relay so that low-latency conversation remains cost-effective on the realtime tier, while heavier background and batch tasks like memory indexing, web crawling, and long-form generation run on slower, cheaper tiers without blocking the owner.\n\n6. New client authorization and secure delegation mechanisms for the Mac harness and browser harness supporting risk-rated escalations of permission, reducing risk during autonomous execution and limiting damage potential from missteps or attacks.\n\nPlease confirm priorities or add requests for specific new surfaces, hardware sensors, or integration with additional external services the owner wants automated. I will then propose concrete capabilities or device skills to build these out stepwise toward a true adaptive multi-agent hive mind."
         }
       ]
     }
