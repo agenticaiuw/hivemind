@@ -32,9 +32,10 @@
     "m99-mac-terminal",
     "m101-mac-planner",
     "m103-mac-planner",
-    "m105-browser-extension"
+    "m105-browser-extension",
+    "m107-mac-planner"
   ],
-  "round": 19,
+  "round": 20,
   "granted": {
     "context": [
       {
@@ -542,6 +543,26 @@
         "A routing rule to prefer server-side browser for public pages and Mac session only for authenticated origins"
       ],
       "round": 19
+    },
+    {
+      "user_asks": "“Give me a quick overnight briefing.”",
+      "why_useful": "The owner wakes up to a concise, trustworthy summary of what happened while they slept: tasks completed, things that failed, messages worth attention, and any follow-up already queued. It turns the system into a dependable teammate instead of a chat window.",
+      "surfaces": [
+        "relay",
+        "mac-bridge",
+        "dashboard"
+      ],
+      "model_tier": "Background planning and summarization should run on the Mac planner (cheaper, not latency-critical). The relay only plays back the result when asked, keeping realtime usage minimal.",
+      "latency_budget": "Owner is not waiting for the work to happen; it should complete in the background and be ready instantly when requested. Playback should be near-instant.",
+      "cost_estimate": "Low per day if summarized once into a small artifact. Biggest cost is any email/calendar/file reads and summarization tokens on the planner tier; relay cost is just a short spoken reply.",
+      "security_concerns": "Summaries include sensitive data. The ledger must track provenance and avoid leaking content across contexts. Any action to fix something (e.g., send a message, move money, change files) must require explicit confirmation.",
+      "missing": [
+        "A scheduler/worker to run the briefing job daily (Cloudflare Cron or Durable Object alarms wired into the bridge)",
+        "Event-sourced ledger and receipts wired end-to-end so the summary is based on auditable events",
+        "A stored ‘briefing artifact’ the relay can fetch quickly without recomputing",
+        "Permissioned readers for mail/calendar/files (or a defined scope)"
+      ],
+      "round": 20
     }
   ],
   "changes": [
@@ -744,6 +765,31 @@
         "Policy enforcement in mac-planner and browser harness"
       ],
       "round": 19
+    },
+    {
+      "layer": "routines",
+      "change": "Add a scheduling layer using Cloudflare Cron Triggers (for daily/weekly routines) and Durable Object alarms (for per-user delayed tasks and retries). Jobs emit ledger events and produce artifacts (e.g., briefing summaries) stored in D1/R2 with ids and provenance.",
+      "why_useful_to_owner": "The system can do useful work while the owner sleeps or is away, and the result is ready when they ask — without burning realtime tokens or requiring the Mac to be awake at that moment.",
+      "effort": "Medium to high. Requires wiring Cron/alarms, defining job schemas, idempotency keys, and artifact storage; plus observability for failures.",
+      "risk": "Jobs could run at the wrong time or duplicate. Mitigate with idempotency keys, explicit timezones, and a replay-safe event log. Provide a ‘disable routine’ control in the dashboard.",
+      "cost_impact": "Adds cheap scheduled compute and storage reads/writes. Saves realtime cost by shifting work off the expensive tier.",
+      "latency_impact": "Improves perceived latency because results are precomputed; adds background job latency but nobody is waiting.",
+      "security_impact": "Scheduled jobs can touch sensitive data. Require scoped readers and audit logs; high-impact follow-up actions must still require explicit confirmation.",
+      "depends_on": [
+        "Event-sourced ledger/receipt system already proposed by mac-planner to be implemented end-to-end"
+      ],
+      "round": 20
+    },
+    {
+      "layer": "browser-harness",
+      "change": "Give the relay a server-side browsing path using Cloudflare Browser Run for public web tasks, with a policy to prefer server_browser_actions over routing through the Mac when the target is public and doesn’t require the user’s authenticated sessions.",
+      "why_useful_to_owner": "Web lookups and extraction can happen even when the Mac is asleep or disconnected. The pendant becomes more reliable for quick questions and research on the go.",
+      "effort": "Medium. Needs action schema, extraction patterns, error handling, and a fallback to mac-planner/browser extension when authentication is required.",
+      "risk": "Automated browsing can click the wrong thing or misread content. Mitigate with read-only defaults, explicit extraction, and clear provenance in the returned artifact.",
+      "cost_impact": "Adds server-side browser runtime cost; offsets by reducing mac round-trips and planner tokens for simple extraction tasks.",
+      "latency_impact": "Often faster than waiting for the Mac; still not realtime, so relay should present as ‘working’ and return when done.",
+      "security_impact": "Public browsing is lower risk, but still needs URL allow/deny policies and content sanitization. Never treat it as authenticated unless explicitly configured. ",
+      "round": 20
     }
   ],
   "pending": [],
@@ -54123,6 +54169,275 @@
           "result": {
             "acknowledged": true
           }
+        }
+      ]
+    },
+    {
+      "round": 20,
+      "transcript": [
+        {
+          "type": "say",
+          "text": "I’m going to quickly check what’s available now, then I’ll propose a new capability and call out what’s missing so someone can build it."
+        },
+        {
+          "type": "tool",
+          "name": "list_capabilities",
+          "args": {},
+          "result": {
+            "note": "Call discover(category) for the contents of any of these, then describe(name) for detail on one item. Nothing here is in your system prompt — you are meant to pull only what you need.",
+            "categories": [
+              {
+                "name": "surfaces",
+                "what": "The machines and services in this system and how to reach each one.",
+                "count": 5
+              },
+              {
+                "name": "routes",
+                "what": "HTTP endpoints on the owner's Mac agent, read from its live route table.",
+                "count": 98
+              },
+              {
+                "name": "tools",
+                "what": "The tools the production voice agent actually ships with.",
+                "count": 5
+              },
+              {
+                "name": "devices",
+                "what": "Physical and virtual devices reachable right now, with live status.",
+                "count": null
+              },
+              {
+                "name": "hardware",
+                "what": "The pendant and bridge chips: memory, I/O, storage, radio, power.",
+                "count": 8
+              },
+              {
+                "name": "granted",
+                "what": "What the orchestrator has already given you this run.",
+                "count": 11
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "get_hardware_spec",
+          "args": {
+            "component": "stack"
+          },
+          "result": {
+            "relay": "Cloudflare Worker (Express-style). D1 for jobs/history/memory, R2 for audio. Audio retention 30 days, sweep disabled, ~100 recordings stored.",
+            "agent_tools_today": "The realtime agent currently has exactly 5 tools: get_mac_status, mac_run_actions, browser_run_actions, web_search, mac_delegate.",
+            "mac_harness": "A Node \"local agent\" on the owner's Mac: planner (gpt-5.6-luna), computer-use loop, browser bridge, action risk scoring, atomic JSON store, context graph. It polls /v1/bridge/work for jobs and posts results back.",
+            "browser_harness": "Driven through the Mac agent's browser bridge today. Cloudflare Browser Run now exists and could give the relay its own server-side browser, removing the Mac from web tasks entirely.",
+            "clients": "ONE SvelteKit dashboard renders on all three surfaces: web, a Swift menubar app via WKWebView, and iOS via Capacitor pointed at the same Worker URL. A change to the web app ships to all three.",
+            "memory": "Knowledge-graph style store behind /v1/ops/memory: entities, relations, sessions. Separately, fleetContext.js hand-writes a prompt section per surface, which means adding a surface means editing a prompt.",
+            "source": "cloud-relay/, local-agent/, dashboard-sveltekit/, mac-menubar/",
+            "status": "PROTOTYPE. This is a Nordic development kit, not the product. Every choice here — the SoC, the RAM, the single button, the single LED, the enclosure — is provisional and can change. Design the device the owner should wear, then say what it would take to build it.",
+            "you_are_here": "You run on a Cloudflare Worker. The pendant and ESP32 below are REMOTE devices you talk to over the network; you are not running on them."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "tools"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "get_mac_status",
+                "summary": "PROACTIVE"
+              },
+              {
+                "name": "mac_run_actions",
+                "summary": "PROACTIVE for reversible control"
+              },
+              {
+                "name": "browser_run_actions",
+                "summary": "PROACTIVE when browser work is needed"
+              },
+              {
+                "name": "web_search",
+                "summary": "PROACTIVE for live public facts"
+              },
+              {
+                "name": "mac_delegate",
+                "summary": "ONLY for multi-step or ambiguous computer tasks that cannot fit a short action list"
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "granted"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "relay_route_intent",
+                "summary": "tool"
+              },
+              {
+                "name": "server_browser_actions",
+                "summary": "tool"
+              },
+              {
+                "name": "relay_job_status",
+                "summary": "tool"
+              },
+              {
+                "name": "current session pairing and owner state",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "job scheduling and background workers",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "Relay intent contract and supported intents/context fields",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "owner_workflows_and_preferences",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "available_tools_and_routing_contract",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "probe:post:/v1/mac/plan",
+                "summary": "permission"
+              },
+              {
+                "name": "probe:post:/v1/bridge/work",
+                "summary": "permission"
+              },
+              {
+                "name": "probe:get:/v1/state/* and probe:get:/v1/ops/* additional routes beyond latest/history/memory",
+                "summary": "permission"
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "surfaces"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "relay-realtime",
+                "summary": "You run on a Cloudflare Worker and hold the live voice conversation with the owner through a wearable pendant",
+                "model": "gpt-realtime-2.1",
+                "base": "https://ai-pendant-relay.evan20050827.workers.dev",
+                "facetOf": null
+              },
+              {
+                "name": "mac-planner",
+                "summary": "You run on the owner's MacBook",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": null
+              },
+              {
+                "name": "mac-vision",
+                "summary": "You are the computer-use loop on the owner's MacBook",
+                "model": "gpt-4.1-mini",
+                "base": "http://localhost:8000",
+                "facetOf": null
+              },
+              {
+                "name": "browser-extension",
+                "summary": "You drive the owner's browser through the AI Pendant browser extension",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": "mac-planner"
+              },
+              {
+                "name": "mac-terminal",
+                "summary": "You are the shell tier on the owner's MacBook",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": "mac-planner"
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_capability",
+          "args": {
+            "user_asks": "“Give me a quick overnight briefing.”",
+            "why_useful": "The owner wakes up to a concise, trustworthy summary of what happened while they slept: tasks completed, things that failed, messages worth attention, and any follow-up already queued. It turns the system into a dependable teammate instead of a chat window.",
+            "surfaces": [
+              "relay",
+              "mac-bridge",
+              "dashboard"
+            ],
+            "model_tier": "Background planning and summarization should run on the Mac planner (cheaper, not latency-critical). The relay only plays back the result when asked, keeping realtime usage minimal.",
+            "latency_budget": "Owner is not waiting for the work to happen; it should complete in the background and be ready instantly when requested. Playback should be near-instant.",
+            "cost_estimate": "Low per day if summarized once into a small artifact. Biggest cost is any email/calendar/file reads and summarization tokens on the planner tier; relay cost is just a short spoken reply.",
+            "security_concerns": "Summaries include sensitive data. The ledger must track provenance and avoid leaking content across contexts. Any action to fix something (e.g., send a message, move money, change files) must require explicit confirmation.",
+            "missing": [
+              "A scheduler/worker to run the briefing job daily (Cloudflare Cron or Durable Object alarms wired into the bridge)",
+              "Event-sourced ledger and receipts wired end-to-end so the summary is based on auditable events",
+              "A stored ‘briefing artifact’ the relay can fetch quickly without recomputing",
+              "Permissioned readers for mail/calendar/files (or a defined scope)"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going — propose others, including ones that need capabilities that do not exist yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_change",
+          "args": {
+            "layer": "routines",
+            "change": "Add a scheduling layer using Cloudflare Cron Triggers (for daily/weekly routines) and Durable Object alarms (for per-user delayed tasks and retries). Jobs emit ledger events and produce artifacts (e.g., briefing summaries) stored in D1/R2 with ids and provenance.",
+            "why_useful_to_owner": "The system can do useful work while the owner sleeps or is away, and the result is ready when they ask — without burning realtime tokens or requiring the Mac to be awake at that moment.",
+            "effort": "Medium to high. Requires wiring Cron/alarms, defining job schemas, idempotency keys, and artifact storage; plus observability for failures.",
+            "risk": "Jobs could run at the wrong time or duplicate. Mitigate with idempotency keys, explicit timezones, and a replay-safe event log. Provide a ‘disable routine’ control in the dashboard.",
+            "cost_impact": "Adds cheap scheduled compute and storage reads/writes. Saves realtime cost by shifting work off the expensive tier.",
+            "latency_impact": "Improves perceived latency because results are precomputed; adds background job latency but nobody is waiting.",
+            "security_impact": "Scheduled jobs can touch sensitive data. Require scoped readers and audit logs; high-impact follow-up actions must still require explicit confirmation.",
+            "depends_on": [
+              "Event-sourced ledger/receipt system already proposed by mac-planner to be implemented end-to-end"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going, including layers you have not touched yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_change",
+          "args": {
+            "layer": "browser-harness",
+            "change": "Give the relay a server-side browsing path using Cloudflare Browser Run for public web tasks, with a policy to prefer server_browser_actions over routing through the Mac when the target is public and doesn’t require the user’s authenticated sessions.",
+            "why_useful_to_owner": "Web lookups and extraction can happen even when the Mac is asleep or disconnected. The pendant becomes more reliable for quick questions and research on the go.",
+            "effort": "Medium. Needs action schema, extraction patterns, error handling, and a fallback to mac-planner/browser extension when authentication is required.",
+            "risk": "Automated browsing can click the wrong thing or misread content. Mitigate with read-only defaults, explicit extraction, and clear provenance in the returned artifact.",
+            "cost_impact": "Adds server-side browser runtime cost; offsets by reducing mac round-trips and planner tokens for simple extraction tasks.",
+            "latency_impact": "Often faster than waiting for the Mac; still not realtime, so relay should present as ‘working’ and return when done.",
+            "security_impact": "Public browsing is lower risk, but still needs URL allow/deny policies and content sanitization. Never treat it as authenticated unless explicitly configured. "
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going, including layers you have not touched yet."
+          }
+        },
+        {
+          "type": "say",
+          "text": "Still missing, and very worth building next:\n\nFirst, a real scheduler. Right now, anything “later” simply can’t happen. I proposed a routines layer using Cloudflare Cron plus Durable Object alarms to run daily briefings, retries, and delayed tasks, and to store a small artifact the relay can play back instantly.\n\nNext, a shared event ledger with provenance and idempotency end-to-end. mac-planner has already proposed this; it needs to be implemented so summaries and “what happened overnight?” are trustworthy and safe to resume.\n\nAlso, a server-side browser path for public web work. You now have a tool for that, but it needs harnessing and a policy: prefer server browsing for public pages, fall back to the Mac when authentication is required.\n\nIf you want, I can also propose a voice-first “capture thought” flow next—tap or phrase to save a note, then route it to tasks, reminders, or a daily summary—but it needs either a firmware skill for reliable capture triggers or a defined always-on listening behavior, and that’s a design choice."
         }
       ]
     }

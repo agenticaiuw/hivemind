@@ -9,7 +9,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 6,
       "status": "implementing",
       "note": "Subagent building durable browser session API with auto-bootstrap. Classification for observability only, no gates.",
@@ -24,7 +24,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 8,
       "status": "implementing",
       "note": "Subagent building durable browser session API with auto-bootstrap. Classification for observability only, no gates.",
@@ -39,7 +39,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 9,
       "status": "implementing",
       "note": "Subagent building durable browser session API with auto-bootstrap. Classification for observability only, no gates.",
@@ -54,7 +54,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 6,
       "status": "implemented",
       "note": "mode=page with --match reads the relevant open tabs (one page per host, only tabs whose title/URL match), compares them, and writes a short brief whose Sources section carries every URL, plus the audio version. Unread tabs are listed as 'seen but not read' rather than silently dropped. Not covered: extracting deadlines as a distinct field — they appear only if the page states them."
@@ -68,7 +68,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 6,
       "status": "rejected",
       "note": "Not mine to claim: the core of this ask is an authenticated WORK PORTAL, and briefing.js reads Calendar/Mail/files/Notes only — it never opens a web session. The scheduling and 'only what needs my attention' filtering it shares with the briefing family are built (routines.js daily schedule + priority-vs-bulk ranking), but the portal read belongs with the browser harness (browserSessions.js/pageWatch.js). Re-file against that layer."
@@ -82,7 +82,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 6,
       "status": "implemented",
       "note": "local-agent/research.js: searches the public web via the production runWebSearch, fetches and reads each candidate page (a URL nothing opened is never cited), and composes a cited brief on the cheap text tier. Written note + 24 kHz audio land in ~/AI-Pendant-Workspace/Briefings; POST /research, the research-brief.mjs CLI, and routines all reach it. Verified live: 3 of 4 sources read, 80s of audio."
@@ -96,7 +96,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 6,
       "status": "implemented",
       "note": "formFill.js + browserPage.js + /forms/fill routes: navigate, match dictated notes to real controls (name attribute, id, accessible name, or the markup <label>), type/select/tick them, then STOP and return the envelope — method, resolved submit URL, every field the browser would actually send with its wire name and value, fields left blank, fields the browser omits (disabled/file), fields still required, and the submit control named and located but never clicked. Checkbox state and dropdown values are read back off the page rather than echoed from the request. Password inputs are never filled, only named. Verified live on https://www.selenium.dev/selenium/web/web-form.html: five dictated labels matched, screenshot matches the manifest, page never left web-form.html."
@@ -110,7 +110,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 8,
       "status": "duplicate",
       "note": "Covered by cap-d65785c8: both are 'read my real logged-in browser session, compare, leave me an audio brief later', served by mode=page over the extension's own profile. Gap noted there: this reads tabs that are open, it does not autonomously search inside a logged-in site."
@@ -124,7 +124,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 8,
       "status": "implemented",
       "note": "pageWatch.js + browserPage.js + /watches routes: register a URL and named fields (CSS selector and/or regex), poll on a durable interval schedule, diff field-by-field against the last observation, and report ONLY on change with before/after plus the sentence around the new value. First check is a baseline and stays silent. Read-only by construction: an allowlist of list_tabs/navigate/read_page is enforced before dispatch, so no click, type or key press can ever be issued by a watch. Authenticated pages work because the extension drives the owner's own Safari. Verified live on https://time.is/UTC (06:08:13 -> 06:08:31 reported with evidence) and on a static page (two checks, zero reports)."
@@ -138,7 +138,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 8,
       "status": "implemented",
       "note": "formFill.js + browserPage.js + /forms/fill routes: navigate, match dictated notes to real controls (name attribute, id, accessible name, or the markup <label>), type/select/tick them, then STOP and return the envelope — method, resolved submit URL, every field the browser would actually send with its wire name and value, fields left blank, fields the browser omits (disabled/file), fields still required, and the submit control named and located but never clicked. Checkbox state and dropdown values are read back off the page rather than echoed from the request. Password inputs are never filled, only named. Verified live on https://www.selenium.dev/selenium/web/web-form.html: five dictated labels matched, screenshot matches the manifest, page never left web-form.html."
@@ -152,7 +152,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 9,
       "status": "implemented",
       "note": "Inbox half built: briefing.js summarizes unread mail (priority vs bulk) and renders a real short audio briefing via audioBrief.js renderBriefAudio — .wav/.opus at the pendant's 24kHz mono wire format, on the same shelf as the research briefs. The 'authenticated work sites' source is browser-harness territory (browserSessions.js/pageWatch.js), not this module."
@@ -166,7 +166,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 9,
       "status": "implemented",
       "note": "formFill.js + browserPage.js + /forms/fill routes: navigate, match dictated notes to real controls (name attribute, id, accessible name, or the markup <label>), type/select/tick them, then STOP and return the envelope — method, resolved submit URL, every field the browser would actually send with its wire name and value, fields left blank, fields the browser omits (disabled/file), fields still required, and the submit control named and located but never clicked. Checkbox state and dropdown values are read back off the page rather than echoed from the request. Password inputs are never filled, only named. Verified live on https://www.selenium.dev/selenium/web/web-form.html: five dictated labels matched, screenshot matches the manifest, page never left web-form.html."
@@ -180,7 +180,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 9,
       "status": "implemented",
       "note": "pageWatch.js + browserPage.js + /watches routes: register a URL and named fields (CSS selector and/or regex), poll on a durable interval schedule, diff field-by-field against the last observation, and report ONLY on change with before/after plus the sentence around the new value. First check is a baseline and stays silent. Read-only by construction: an allowlist of list_tabs/navigate/read_page is enforced before dispatch, so no click, type or key press can ever be issued by a watch. Authenticated pages work because the extension drives the owner's own Safari. Verified live on https://time.is/UTC (06:08:13 -> 06:08:31 reported with evidence) and on a static page (two checks, zero reports)."
@@ -194,7 +194,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 10,
       "status": "implemented",
       "note": "briefing.js: morning brief reads Calendar+Mail+recent files+Mac state, flags meetings needing prep, derives a priority list; spoken line + long-form audio + Notes.app note + markdown. Live-verified on the owner's real calendar/inbox."
@@ -208,7 +208,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 10,
       "status": "implementing",
       "note": "assigned to subagent: quick-capture"
@@ -222,7 +222,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 10,
       "status": "implemented",
       "note": "local-agent/audioBrief.js deliverBriefing(): every run leaves BOTH a source-linked markdown note and a .wav/.opus pair with the same basename under ~/AI-Pendant-Workspace/Briefings. Audio is rendered at the pendant's exact wire format (24 kHz mono s16le + Ogg Opus) so it plays on the Mac or from the pendant later; ceiling is 120 s, not the 10 s reply cap. Verified: 71-85 s briefs produced."
@@ -236,7 +236,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 11,
       "status": "implemented",
       "note": "Covered by briefing.js kind=morning (same brief as cap-fb442a50): today's calendar, priority vs bulk unread mail, recent files, Mac state. Two parts of the ask are NOT built: weather is not folded in (get_weather exists as a separate action), and 'the files I need for my first meeting' is a recency list, not per-meeting file matching. Follow-ups/'open anything I mention' are the normal conversational path, not this module."
@@ -250,10 +250,10 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 11,
-      "status": "implementing",
-      "note": "assigned to subagent: quick-capture"
+      "status": "implemented",
+      "note": "meetingPrep.js. Retrieval, not summary: ranks local documents against the invite and quotes the sentences that already state a decision or an action, with their source file. Two bugs found and fixed against the owner's real data — a 5-minute solo alarm was being treated as 'the next meeting', and the organiser's own name matched every file on the machine. Verified live: found the real 9pm interview, 3 related documents copied into a folder with BRIEF.md. GET /meeting-prep. 14 tests."
     },
     {
       "id": "cap-70db8ef3",
@@ -264,7 +264,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 12,
       "status": "implemented",
       "note": "briefing.js kind=workday: 'prepare my workday' matches deterministically (no model call), reads Calendar+Mail, writes a Notes.app note and a markdown brief. Composes and stores only — assertNeverSends refuses any transmitting sink and there is no transport call in the module."
@@ -278,7 +278,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 12,
       "status": "implementing",
       "note": "assigned to subagent: quick-capture"
@@ -292,10 +292,10 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 12,
-      "status": "implementing",
-      "note": "assigned to subagent: quick-capture"
+      "status": "implemented",
+      "note": "downloadsTidy.js. Preview and apply are two calls with the plan persisted between them, so apply replays exactly what the owner read rather than recomputing it; sources are re-stat'd and anything that changed is reported as drift and skipped. Nothing deletes, collisions are suffixed, every apply leaves an undo manifest. Verified against the owner's real ~/Downloads: 28 files previewed into 5 groups, NOTHING APPLIED. 16 tests."
     },
     {
       "id": "cap-23af3e85",
@@ -306,7 +306,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 12,
       "status": "implemented",
       "note": "briefing.js kind=wrapup + a daily 17:00 routine via routines.js: summarizes notes created today into <=3 next actions and creates real macOS Reminders. Never sends. Fixed a live feedback loop where it followed up on its own briefing notes."
@@ -320,7 +320,7 @@
       "proposedBy": [
         "relay-realtime"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 10,
       "status": "implemented",
       "note": "briefing.js kind=mail, reachable as 'Summarize what I missed in my email today.' Deterministic route, 24h-bounded Mail query, separates priority mail from newsletters. Live output: 'Good morning. 3 unread emails, all newsletters.'"
@@ -334,7 +334,7 @@
       "proposedBy": [
         "relay-realtime"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 10,
       "status": "implemented",
       "note": "briefing.js kind=schedule, reachable as 'Read my upcoming schedule for the day.' Deterministic route, renders long-form audio. Live output: 'Good morning. 7 meetings today, next is stand up at 9:00 AM. 2 need preparation.'"
@@ -348,10 +348,10 @@
       "proposedBy": [
         "relay-realtime"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 10,
-      "status": "implementing",
-      "note": "assigned to subagent: quick-capture"
+      "status": "implemented",
+      "note": "quickCapture.js: 'save this idea for later' parses off the lead-in and stores the idea whole. Two stores by design — memoryService (prompt tier, sensitivity-aware) and contextGraph (durable archive) — so an idea neither expires nor leaks. POST /capture, GET /capture?query=, action type quick_capture. 12 tests."
     },
     {
       "id": "cap-1634d96f",
@@ -362,10 +362,10 @@
       "proposedBy": [
         "relay-realtime"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 12,
-      "status": "implementing",
-      "note": "assigned to subagent: quick-capture"
+      "status": "implemented",
+      "note": "dayPlan.js. Calendar+Reminders read through EventKit (appleData.js) because Calendar.app's AppleScript walks all 16 calendars per query. Briefing is built against a spoken word budget and drops whole sentences, never mid-sentence. Travel is the real gap between real places — a Zoom URL is not somewhere you travel to. Verified live: 3 events, 25 tasks, 48 words / ~17s inside a 30s target. GET /day-plan. 9 tests."
     },
     {
       "id": "cap-f66f7f6e",
@@ -376,10 +376,10 @@
       "proposedBy": [
         "relay-realtime"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 12,
-      "status": "implementing",
-      "note": "assigned to subagent: quick-capture"
+      "status": "implemented",
+      "note": "notificationTriage.js. Notification Center's DB needs Full Disk Access and logs dismissed banners anyway, so it triages the three sources that generate the interruptions: unread mail, imminent meetings, overdue reminders. Default is silence — everything must earn a threshold. Verified live: scanned 83, surfaced 2 past-due, suppressed 80, in 4.3s. 10 tests."
     },
     {
       "id": "cap-b5796f52",
@@ -390,10 +390,10 @@
       "proposedBy": [
         "relay-realtime"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 12,
-      "status": "implementing",
-      "note": "assigned to subagent: quick-capture"
+      "status": "implemented",
+      "note": "focusSession.js. End time written to disk before anything is blocked, so the alarm survives a restart (resumeFocusSessions re-arms, or fires late rather than dropping). Blocking hides apps reversibly and restores only what this session changed. Verified live: hid Mail+Spotify in 0.6s, auto-ended at 2 min, spoke the alarm, restored both. 9 tests."
     },
     {
       "id": "cap-fb73a1d0",
@@ -404,10 +404,10 @@
       "proposedBy": [
         "relay-realtime"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 12,
-      "status": "implementing",
-      "note": "assigned to subagent: quick-capture"
+      "status": "implemented",
+      "note": "Same module. 'my X is Y' becomes a keyed fact; a spoken lock code is classified secret by new patterns in redaction.js, so the value lives in exactly one 0600 file and contextProjection renders it 'bike lock code: [withheld]' in prompts while the owner reads 4829 back in full. Verified live: 0 occurrences in context_graph.json, 1 in facts.json."
     },
     {
       "id": "cap-d9af189b",
@@ -418,7 +418,7 @@
       "proposedBy": [
         "relay-realtime"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 13,
       "status": "implemented",
       "note": "mode=page: readOpenTabs() drives browser_list_tabs + browser_read_page over POST /execute, so pages are read in the owner's real logged-in profile, then summarized into key points and rendered to audio they play later. Falls back to the public web when no tab matches rather than failing. Verified live against open Safari tabs (2 tabs read, 78.6 s of audio)."
@@ -432,7 +432,7 @@
       "proposedBy": [
         "relay-realtime"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 14,
       "status": "duplicate",
       "note": "Same capability and same code path as cap-d9af189b (mode=page): read the page the owner already has open and summarize it. Immediate delivery is the --now flag on the same command; price-on-this-product is that summary of the open product page. No separate implementation."
@@ -446,10 +446,10 @@
       "proposedBy": [
         "relay-realtime"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 14,
-      "status": "implementing",
-      "note": "assigned to subagent: quick-capture"
+      "status": "implemented",
+      "note": "remindMe.js. One-off -> Apple Reminders (reused reminders.js, not a second path). Recurring -> a repeating Calendar event with an alarm, because routines.js cannot express 'not on Saturday' and only fires while the agent is up. Verified live: real Reminders item due Fri 18:00, real event 'stand up' FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR at 09:00 with 1 alarm. 9 tests."
     },
     {
       "id": "chg-43804606",
@@ -460,7 +460,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 8,
       "status": "implemented",
       "note": "Jobs tab shipped in the React ops dashboard (src/ops/OpsApp.jsx JobsView + ops.css). Running/Scheduled/Finished in one rail with source-filter chips; source badge on every row (pendant vs routine vs recon vs harness) plus an 'Asked by' fact explaining the origin; per-action evidence (action type, params, message, stdout/stderr, redacted credential-shaped values) and a Touched summary of apps/URLs/shell/browser use; GET /routines rendered alongside jobs with schedule, next/last run and Run now. Live via the thinking+pipeline SSE streams (coalesced refetch), no refresh needed. Visibility only - no gates or approval prompts. Also fixed Home 'THIS MAC - Unavailable': refreshAll used Promise.all so one failing route discarded status/machine; now allSettled, plus auto re-priming of the loopback dashboard session cookie on 401 so an agent restart no longer freezes an open tab."
@@ -474,7 +474,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 11,
       "status": "implemented",
       "note": "Consolidated the two dashboards onto SvelteKit. Ported the Jobs view (source filter chips, RUNNING/SCHEDULED/FINISHED rail, detail pane with ASKED BY/STARTED/LAST UPDATE/ACTIONS, TOUCHED, RESULT, and EVIDENCE showing each command plus its stdout) into software/dashboard-sveltekit in that app's own visual language, and made the Mac agent serve the SvelteKit build at :8000/dashboard so local and deployed are literally the same code. New src/lib/dataSource.ts is the one data layer with two backends: agent build talks straight to /jobs /routines /ops/status /pipeline with the loopback session cookie; Cloudflare build goes through /api/* to the relay. No component knows which. New /api/jobs asks the Mac first through the relay ops proxy (the only place the full job list exists — recon/probe/harness work never reaches the relay) and falls back to /v1/ops/history with an explicit note when the bridge is offline. GAPS, stated not faked: the relay ops-proxy allowlist has no /routines, so the deployed Scheduled section says it cannot see them rather than showing empty; and /v1/ops/history only holds voice/typed runs. Jobs replaced the redundant Activity tile and opens by default. RECOMMENDATION: SvelteKit is the single dashboard — the macOS menubar WKWebView and the iOS Capacitor WebView already point at the Worker, so the Mac agent was the last React holdout and now serves the same build. Do NOT delete software/ai-pendant-simulator: it also holds local-agent, cloud-relay, the iOS Capacitor app and offline.html. Retire only src/ops/ + dashboard.html, and only after Thinking traces, chat session management and memory editing are ported — they have no SvelteKit equivalent yet. Not deleted this pass: another agent is actively editing src/ops/OpsApp.jsx. 18/18 dashboard tests pass, including three new ones covering the proxy path, the offline fallback and credential redaction in evidence."
@@ -488,7 +488,7 @@
       "proposedBy": [
         "relay-realtime"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 14,
       "status": "implemented",
       "note": "Adaptive duplex uplink in firmware/nrf9160 (src/main.c + audio_opus.c/h). While downlink audio is playing (dl_jitter_fill>0 plus a 300 ms hangover): DUCK halves the uplink Opus target via new pendant_opus_stream_set_bitrate() (16000 -> 8000 bps), and HOLD stops feeding the encoder once the 7 KiB uplink FIFO passes 60% fill (releases below 40%, or immediately when playback ends), reserving ~2.8 KiB for the user's next question. Chose duck-not-mute because barge-in is server-side: a fully paused uplink would make the agent uninterruptible. New counters duck_ms and uplink_held added to the 'Conversation stats:' printk. RAM before 202676 B (95.78%) / FLASH 382952 B (64.93%); RAM after 202700 B (95.79%) / FLASH 383312 B (64.99%) — +24 B RAM, +360 B flash, 8908 B headroom left. FLASHED to the DK and verified running: 61 s duplex conversation, max_loop_ms=22, tx_starved=0, mic_drops=0, uplink_drops=0, fifo_left=293, new fields print (duck_ms=0 uplink_held=0). NOT YET EXERCISED: that run had decoded_packets=0 (agent never spoke, silent room), so the duck/hold path itself is unverified on hardware — it only proves the adaptation does not engage spuriously. Needs a conversation with real speech to confirm."
@@ -502,7 +502,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 10,
       "status": "implemented",
       "note": "Built as local-agent/routines.js + /routines routes. Deployed and verified live: routine ran, lastStatus=completed, runCount=1."
@@ -516,7 +516,7 @@
       "proposedBy": [
         "relay-realtime"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 12,
       "status": "implemented",
       "note": "cloud-relay/serverBrowser.js + serverBrowser.test.js (35 tests, all pass). Cloudflare Browser Run Quick Actions: readPublicPage() prefers the Workers env.BROWSER binding (no token in-Worker, needs compat_date >= 2026-03-24; ours is 2026-07-31) and falls back to REST (CLOUDFLARE_ACCOUNT_ID/CLOUDFLARE_API_TOKEN) for the node relay. wrangler.jsonc now declares the browser binding; dry-run confirms 'env.BROWSER -> Browser Run' and the module bundles for workerd. VERIFIED LIVE against account 137c3d31 with the existing wrangler OAuth token (scope 'browser (write)'): example.com read in 2.25s browser-time, docs page sanitized+truncated, private/loopback URLs refused before any egress. PLAN REALITY (measured, not read): this account is Workers FREE, so Browser Run allows 1 Quick Action per 10s (observed 429 + Retry-After: 10 on a back-to-back call) and 10 browser-minutes/day. Workers Paid lifts that to 10/s and unmetered. No upgrade is required to ship; it only bounds throughput. Read-only public web is a CAPABILITY boundary, not a permission gate: the edge browser holds no owner cookies and is on no owner network, so logins and LAN pages route to browser_run_actions (Mac extension) - the result carries a hint saying exactly that, plus a login-wall heuristic. Output sanitization: front-matter title lifted, zero-width/bidi-override chars stripped (hidden-instruction vector), control chars removed, base64 data: URIs collapsed, 12k char cap, results flagged untrusted:true. NOT WIRED: openaiRealtimeVoice.js/server.js/jobs.js were owned by a concurrent agent. The exact 3-file wiring patch (openaiRealtimeVoice.js import + READ_WEB_PAGE_TOOL as the 6th tool + read_web_page dispatch branch; openaiRealtimeVoice.test.js tool-list assertion; fleetContext.js routing line + capability line) is in the report; verified with git apply --check and by running the full 135-test suite against a wired copy - all pass."
@@ -530,7 +530,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 10,
       "status": "implemented",
       "note": "Built the receipt/undo half only. NO gates, NO approval prompts, NO preconditions — nothing added here can refuse or skip an action, per owner policy. New local-agent/actionReceipts.js; executor.js now wraps every dispatch: observeBeforeAction(action) runs first (pure observation, swallows all errors, its verdict is never read), then buildActionReceipt() attaches a receipt to every result — successful or failed. Receipt carries: content-addressed actionId (stable across a re-run of the same plan; positional index would not be, because the orchestrator hands the executor one action at a time), unique receiptId, effect read|write, what was touched (paths, urls, apps, shell commands, email recipients, clipboard, settings with before/after), duration, and an honest reversibility verdict with reversedBy or irreversibleReason. Reversibility now lives in ONE place: undo.js imports describeReversibility() so the receipt the owner reads and the decision undo makes cannot disagree; jobs recorded before receipts existed fall back to the raw result fields, so old history stays undoable. COMPENSATING UNDO: observeBeforeAction snapshots any file a write_file/create_note/delete_path/copy_path/move_path is about to clobber into ~/AI-Pendant-Workspace/.undo (bounded at 8 MB; directories and oversize files are recorded as irreversible WITH the reason rather than silently half-copied). This makes delete_path — previously permanent — undoable, and fixes a real data-loss bug: undo used to answer 'yes, reversible' for a write_file that OVERWROTE an existing file and then reverse it by DELETING that file, destroying content the agent never wrote. Now it restores the exact prior bytes. Surfaced at GET /jobs (receipts per job), new GET /jobs/:jobId/receipts (counts + per-step undo verdict + snapshot vault path), and inside GET /ops/snapshot so the dashboard and relay see them too. describeUndoability now returns steps[] and irreversible[] with reasons, so 'why can't I undo this?' has an answer. Verified live end to end: overwrote a hand-written file via POST /execute, receipt showed reversible=true reversedBy='restore snapshot', POST /jobs/:id/undo restored the original content. Tests: actionReceipts.test.js (16); full suite 499/499."
@@ -544,7 +544,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 11,
       "status": "rejected",
       "note": "Owner policy: maximum access, no gates. Typed classification for observability is welcome; blocking is not."
@@ -558,7 +558,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 12,
       "status": "rejected",
       "note": "Owner policy: maximum access, no gates. Typed classification for observability is welcome; blocking is not."
@@ -572,7 +572,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 6,
       "status": "implemented",
       "note": "rememberBrowserFindings() in local-agent/memoryService.js plus POST /memory/browser-findings: a browser job reports normalized claims only, keyed web.<host>.<field>, carrying source url, host, jobId and retrieval timestamp, clipped to 200 chars so raw page text cannot become memory, with a 24h TTL dated from when the page was read. contextProjection.js keeps that tier out of conversational context entirely unless the task matches it, and renders it as claim + host + date, never the page. Consent scope omitted deliberately: owner policy is maximum access, no permission gates."
@@ -586,7 +586,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 9,
       "status": "implemented",
       "note": "Built as local-agent/routines.js + /routines routes. Deployed and verified live: routine ran, lastStatus=completed, runCount=1."
@@ -600,7 +600,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 10,
       "status": "duplicate",
       "note": "Covered by chg-96771ece (the scoped fact store with source/confidence/sensitivity/expiry/last-used and expiry+idle pruning) together with chg-6360d815 (the projection that retrieves only task-relevant facts). Its remaining distinct ask - a user-facing memory editor/export/delete VIEW - exists as API only (GET/POST/DELETE /memory/facts); the Ops UI surface is unbuilt."
@@ -614,7 +614,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 11,
       "status": "implemented",
       "note": "local-agent/memoryService.js: scoped fact store (value, provenance, confidence, sensitivity, expiry, lastUsedAt/useCount) on atomicJsonStore, with same-key contradiction replacement, explicit forget by id or key, per-surface scoping, and syncFactsFromContextGraph() lifting the graph's durable types (skipping the 84 Action/Tool telemetry entities) so the graph stays the event log and this becomes the prompt tier. Routes: GET/POST /memory/facts, DELETE /memory/facts/:idOrKey, POST /memory/prune, POST /memory/sync-graph, GET /memory/projection. 17 node:test cases; verified live on :8000."
@@ -628,7 +628,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 12,
       "status": "duplicate",
       "note": "Covered by chg-96771ece + chg-6360d815. Token budgets, provenance, forget and automatic pruning all landed there; 'pruning of stale sessions' is sessionStore's, not this store's."
@@ -642,7 +642,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 8,
       "status": "duplicate",
       "note": "The model-tiering half is chg-cd89301b (implemented): browser_* actions are excluded from the cheap schema and any request mentioning a browser/tab/page routes straight to the full planner, so realtime is no longer in that loop. The browser-specific pieces — a deterministic navigation/extraction planner, a small model for selector repair, and compact evidence bundles instead of full page HTML — belong to the browser layer (browserBridge.js / browser-extension) and are NOT built here; re-file them there if still wanted."
@@ -656,7 +656,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 10,
       "status": "implemented",
       "note": "Typed intent parser is local-agent/policyRouter.js: 14 anchored whole-utterance matchers (open app/URL/path, list directory, volume, mute, brightness, battery/wifi status, time, weather, clipboard, screenshot) that validate slots against the real machine — installed .app list, fs.statSync — before claiming a request, then run it through executeActions with no LLM. gpt-5.6-luna is reserved for ambiguous work. Cheap tier added via LLM_BACKGROUND_MODEL (default gpt-4.1-mini) with a derived 21-action schema, a compact machine block and a 768-token ceiling. Also fixed: get_mac_status/get_battery were missing from the planner schema, so 'what is my battery' was answered with run_shell pmset."
@@ -670,7 +670,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 11,
       "status": "implemented",
       "note": "Built local-agent/policyRouter.js + routingStats.js: every /plan request is classified into deterministic (no model call, straight to the executor), background (gpt-4.1-mini, trimmed 21-action schema, apps-only machine block) or planner (gpt-5.6-luna, full schema). Wired into orchestratePlan; GET /routing and a per-plan 'routing' receipt show tier, reason, model, llmCalls and estimated tokens. Measured: deterministic commands 1802ms -> 353ms median (5.1x) and 7,600 -> 0 tokens; background tier 7,615 -> 1,847 tokens/request (76% cheaper). Cheap tiers escalate to the full planner on failure, so nothing is narrowed."
@@ -684,7 +684,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 12,
       "status": "duplicate",
       "note": "Same tiering proposal as chg-cd89301b (implemented): the tier classifier, cheap background model and escalation-on-failure now live in local-agent/policyRouter.js, and work nobody is waiting on already runs off the voice turn via routines.js on the background tier. The relay-side half — job IDs, cancellation and completion notifications inside cloud-relay/openaiRealtimeVoice.js — is owned by another agent and is not covered here."
@@ -698,7 +698,7 @@
       "proposedBy": [
         "relay-realtime"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 11,
       "status": "implemented",
       "note": "Built as local-agent/routines.js + /routines routes. Deployed and verified live: routine ran, lastStatus=completed, runCount=1."
@@ -712,7 +712,7 @@
       "proposedBy": [
         "relay-realtime"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 12,
       "status": "duplicate",
       "note": "Same tiering proposal as chg-cd89301b (implemented): the tier classifier, cheap background model and escalation-on-failure now live in local-agent/policyRouter.js, and work nobody is waiting on already runs off the voice turn via routines.js on the background tier. The relay-side half — job IDs, cancellation and completion notifications inside cloud-relay/openaiRealtimeVoice.js — is owned by another agent and is not covered here."
@@ -726,7 +726,7 @@
       "proposedBy": [
         "relay-realtime"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 14,
       "status": "duplicate",
       "note": "Same tiering proposal as chg-cd89301b (implemented): the tier classifier, cheap background model and escalation-on-failure now live in local-agent/policyRouter.js, and work nobody is waiting on already runs off the voice turn via routines.js on the background tier. The relay-side half — job IDs, cancellation and completion notifications inside cloud-relay/openaiRealtimeVoice.js — is owned by another agent and is not covered here."
@@ -740,7 +740,7 @@
       "proposedBy": [
         "relay-realtime"
       ],
-      "timesProposed": 8,
+      "timesProposed": 9,
       "round": 13,
       "status": "implemented",
       "note": "Built GET /capabilities on the Mac agent (local-agent/capabilityManifest.js) and fixed the discovery status contract in local-agent/server.js. The manifest is DERIVED, not hand-written: routes come from the live Express router stack (82 routes today, up from the one — /health — that probing could find), action types are parsed out of computerControl.js's switch at import (SUPPORTED_ACTION_TYPES, 76 types), planner coverage from llmPlanner.isKnownActionType, hands-free status from actionRisk.classifyAction, permissions from macos/permissions. Only the per-group prose is hand-written, and the manifest reports its own rot as http.undocumentedGroups (currently []). It also publishes models (planner gpt-5.6-luna, vision gpt-4.1-mini, voice deferred to the relay), the auth statusContract, and off-box surfaces (relay, Realtime planner, browser extension, firmware) so a caller probing this port does not conclude they do not exist. 404 FIX: the token middleware runs before routing, so every unknown path used to return 401 and read as 'exists but forbidden'. isKnownRoutePath() now matches the request against real route layers only (catch-all middleware and static mounts excluded; served dist files checked by existence, with traversal rejected) and returns 404 first. Verified live: GET /nope -> 404 with and without a token; GET /jobs -> 401 without a token, 200 with. /health now advertises capabilities:'/capabilities' so the manifest is findable without a token. ALIGNMENT: local-agent/stackAlignment.test.js imports cloud-relay/openaiRealtimeVoice.js read-only and asserts every action type the Realtime registry names is dispatchable here and not dropped by the local planner. Real drift the manifest now surfaces (not fixed here — it lives in llmPlanner.js, which this change does not own): check_input_permissions, list_briefings, play_briefing, research_brief, research_topic execute fine over POST /execute but are stripped from LLM-authored plans by llmPlanner.sanitizeActions. Tests: capabilityManifest.test.js (10) + stackAlignment.test.js (5); full suite 499/499."
@@ -754,7 +754,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 7,
+      "timesProposed": 8,
       "round": 10,
       "status": "implementing",
       "note": "assigned to subagent: browser-session"
@@ -768,7 +768,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 7,
+      "timesProposed": 8,
       "round": 10,
       "status": "implementing",
       "note": "assigned to subagent: quick-capture"
@@ -782,7 +782,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 7,
+      "timesProposed": 8,
       "round": 10,
       "status": "implemented",
       "note": "formFill.js + browserPage.js + /forms/fill routes: navigate, match dictated notes to real controls (name attribute, id, accessible name, or the markup <label>), type/select/tick them, then STOP and return the envelope — method, resolved submit URL, every field the browser would actually send with its wire name and value, fields left blank, fields the browser omits (disabled/file), fields still required, and the submit control named and located but never clicked. Checkbox state and dropdown values are read back off the page rather than echoed from the request. Password inputs are never filled, only named. Verified live on https://www.selenium.dev/selenium/web/web-form.html: five dictated labels matched, screenshot matches the manifest, page never left web-form.html."
@@ -796,7 +796,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 7,
+      "timesProposed": 8,
       "round": 10,
       "status": "implemented",
       "note": "pageWatch.js + browserPage.js + /watches routes: register a URL and named fields (CSS selector and/or regex), poll on a durable interval schedule, diff field-by-field against the last observation, and report ONLY on change with before/after plus the sentence around the new value. First check is a baseline and stays silent. Read-only by construction: an allowlist of list_tabs/navigate/read_page is enforced before dispatch, so no click, type or key press can ever be issued by a watch. Authenticated pages work because the extension drives the owner's own Safari. Verified live on https://time.is/UTC (06:08:13 -> 06:08:31 reported with evidence) and on a static page (two checks, zero reports)."
@@ -810,7 +810,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 7,
+      "timesProposed": 8,
       "round": 13,
       "status": "implementing",
       "note": "assigned to subagent: quick-capture"
@@ -824,7 +824,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 7,
+      "timesProposed": 8,
       "round": 13,
       "status": "implementing",
       "note": "assigned to subagent: quick-capture"
@@ -838,7 +838,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 7,
+      "timesProposed": 8,
       "round": 13,
       "status": "implemented",
       "note": "mode=compare: compares real options and ends with one recommendation plus what would change it. 'Don't buy anything' is built in, not a gate — no code path here can transact, the compose prompt forbids claiming otherwise, and assertNoTransactionClaim() rejects a brief that says it ordered/booked/paid (tested). The note states 'Nothing was bought, booked or ordered'. Verified live on portable power stations under $500."
@@ -852,10 +852,10 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 7,
+      "timesProposed": 8,
       "round": 13,
-      "status": "implementing",
-      "note": "assigned to subagent: quick-capture"
+      "status": "implemented",
+      "note": "Same module plus scripts/pendant-tidy.mjs and a routines.js routine. The routine's payload is one deterministic shell command rather than a re-planned sentence, because 'only then apply it' must not depend on the model's mood; the Friday gate is isWeeklySweepDay() in the tidy module, since routines only knows daily/interval. Verified live: routine registered, force-run, planner emitted run_shell, preview written to the workspace, nothing moved."
     },
     {
       "id": "chg-0aa257d0",
@@ -866,7 +866,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 7,
+      "timesProposed": 8,
       "round": 10,
       "status": "implemented",
       "note": "Jobs tab shipped in the React ops dashboard (src/ops/OpsApp.jsx JobsView + ops.css). Running/Scheduled/Finished in one rail with source-filter chips; source badge on every row (pendant vs routine vs recon vs harness) plus an 'Asked by' fact explaining the origin; per-action evidence (action type, params, message, stdout/stderr, redacted credential-shaped values) and a Touched summary of apps/URLs/shell/browser use; GET /routines rendered alongside jobs with schedule, next/last run and Run now. Live via the thinking+pipeline SSE streams (coalesced refetch), no refresh needed. Visibility only - no gates or approval prompts. Also fixed Home 'THIS MAC - Unavailable': refreshAll used Promise.all so one failing route discarded status/machine; now allSettled, plus auto re-priming of the loopback dashboard session cookie on 401 so an agent restart no longer freezes an open tab."
@@ -880,7 +880,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 7,
+      "timesProposed": 8,
       "round": 13,
       "status": "rejected",
       "note": "Owner policy: maximum access, no gates. A typed action policy that requires a one-use confirmation for high-impact mutations is exactly the gate that has been rejected twice. The observability half is covered by chg-5fc73ce3 (result receipts)."
@@ -894,7 +894,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 7,
+      "timesProposed": 8,
       "round": 10,
       "status": "duplicate",
       "note": "Memory half covered by chg-5415e046: browser results are stored as compact normalized facts with provenance and a short TTL, raw page text never persisted. The other half - versioned user-owned browser task recipes (origin, allowed paths, selectors, cadence, confirmation policy) - is browser-job territory (browserBridge.js/routines.js) and was not touched here; it needs a separate entry against that owner."
@@ -908,7 +908,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 7,
+      "timesProposed": 8,
       "round": 13,
       "status": "implemented",
       "note": "local-agent/contextProjection.js: projectContext({surface, task}) emits a compact typed projection - cache-stable ## Owner head (preferences/permissions, sorted, capped at 12), ## Now (open tasks), ## Relevant (task-scored facts only), ## Web (browser tier, on match only) - under an enforced token budget, reporting the fact ids it used so touchFacts() feeds idle pruning. Measured on live memory: the four hand-written blocks it replaces cost 295-370 tokens/turn, the projection 152 (49-59% smaller), of which only 66 tokens are volatile (78-82% less uncached text per turn). Store grown 22x, prompt grows 4.8x and stays under budget: 3400 facts dump to 60,137 tokens, project to 198."
@@ -922,7 +922,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 7,
+      "timesProposed": 8,
       "round": 13,
       "status": "duplicate",
       "note": "Same tiering proposal as chg-cd89301b (implemented): the tier classifier, cheap background model and escalation-on-failure now live in local-agent/policyRouter.js, and work nobody is waiting on already runs off the voice turn via routines.js on the background tier. The relay-side half — job IDs, cancellation and completion notifications inside cloud-relay/openaiRealtimeVoice.js — is owned by another agent and is not covered here."
@@ -936,7 +936,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 7,
+      "timesProposed": 8,
       "round": 13,
       "status": "implementing",
       "note": "assigned to subagent: observability-adjudicate"
@@ -950,7 +950,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 6,
+      "timesProposed": 7,
       "round": 12,
       "status": "implementing",
       "note": "assigned to subagent: observability-adjudicate"
@@ -964,7 +964,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 6,
+      "timesProposed": 7,
       "round": 12,
       "status": "implementing",
       "note": "assigned to subagent: observability-adjudicate"
@@ -978,7 +978,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 6,
+      "timesProposed": 7,
       "round": 12,
       "status": "implementing",
       "note": "assigned to subagent: observability-adjudicate"
@@ -992,7 +992,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 6,
+      "timesProposed": 7,
       "round": 12,
       "status": "implementing",
       "note": "assigned to subagent: observability-adjudicate"
@@ -1006,7 +1006,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 6,
+      "timesProposed": 7,
       "round": 14,
       "status": "implementing",
       "note": "assigned to subagent: mail-triage"
@@ -1020,7 +1020,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 6,
+      "timesProposed": 7,
       "round": 14,
       "status": "implementing",
       "note": "assigned to subagent: mail-triage"
@@ -1034,7 +1034,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 6,
+      "timesProposed": 7,
       "round": 14,
       "status": "implementing",
       "note": "assigned to subagent: mail-triage"
@@ -1048,7 +1048,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 6,
+      "timesProposed": 7,
       "round": 14,
       "status": "implementing",
       "note": "assigned to subagent: observability-adjudicate"
@@ -1062,7 +1062,7 @@
       "proposedBy": [
         "relay-realtime"
       ],
-      "timesProposed": 6,
+      "timesProposed": 7,
       "round": 15,
       "status": "implementing",
       "note": "assigned to subagent: mail-triage"
@@ -1076,7 +1076,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 6,
+      "timesProposed": 7,
       "round": 12,
       "status": "implementing",
       "note": "assigned to subagent: observability-adjudicate"
@@ -1090,7 +1090,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 6,
+      "timesProposed": 7,
       "round": 14,
       "status": "implementing",
       "note": "assigned to subagent: observability-adjudicate"
@@ -1104,7 +1104,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 6,
+      "timesProposed": 7,
       "round": 12,
       "status": "implementing",
       "note": "assigned to subagent: two-phase"
@@ -1118,7 +1118,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 6,
+      "timesProposed": 7,
       "round": 14,
       "status": "implementing",
       "note": "assigned to subagent: observability-adjudicate"
@@ -1132,7 +1132,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 6,
+      "timesProposed": 7,
       "round": 12,
       "status": "implementing",
       "note": "assigned to subagent: observability-adjudicate"
@@ -1146,7 +1146,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 6,
+      "timesProposed": 7,
       "round": 14,
       "status": "implementing",
       "note": "assigned to subagent: observability-adjudicate"
@@ -1160,7 +1160,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 6,
+      "timesProposed": 7,
       "round": 14,
       "status": "implementing",
       "note": "assigned to subagent: observability-adjudicate"
@@ -1174,7 +1174,7 @@
       "proposedBy": [
         "relay-realtime"
       ],
-      "timesProposed": 6,
+      "timesProposed": 7,
       "round": 15,
       "status": "implementing",
       "note": "assigned to subagent: worker-scheduler"
@@ -1188,7 +1188,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 5,
+      "timesProposed": 6,
       "round": 15,
       "status": "implementing",
       "note": "assigned to subagent: mail-triage"
@@ -1202,7 +1202,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 5,
+      "timesProposed": 6,
       "round": 15,
       "status": "implementing",
       "note": "assigned to subagent: observability-adjudicate"
@@ -1216,7 +1216,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 5,
+      "timesProposed": 6,
       "round": 15,
       "status": "implementing",
       "note": "assigned to subagent: two-phase"
@@ -1230,7 +1230,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 5,
+      "timesProposed": 6,
       "round": 15,
       "status": "implementing",
       "note": "assigned to subagent: mail-triage"
@@ -1244,7 +1244,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 5,
+      "timesProposed": 6,
       "round": 16,
       "status": "implementing",
       "note": "assigned to subagent: mail-triage"
@@ -1258,7 +1258,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 5,
+      "timesProposed": 6,
       "round": 16,
       "status": "implementing",
       "note": "assigned to subagent: mail-triage"
@@ -1272,7 +1272,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 5,
+      "timesProposed": 6,
       "round": 16,
       "status": "implementing",
       "note": "assigned to subagent: two-phase"
@@ -1286,7 +1286,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 5,
+      "timesProposed": 6,
       "round": 16,
       "status": "implementing",
       "note": "assigned to subagent: mail-triage"
@@ -1300,7 +1300,7 @@
       "proposedBy": [
         "relay-realtime"
       ],
-      "timesProposed": 5,
+      "timesProposed": 6,
       "round": 16,
       "status": "implementing",
       "note": "assigned to subagent: worker-scheduler"
@@ -1314,7 +1314,7 @@
       "proposedBy": [
         "relay-realtime"
       ],
-      "timesProposed": 5,
+      "timesProposed": 6,
       "round": 16,
       "status": "implementing",
       "note": "assigned to subagent: worker-scheduler"
@@ -1328,7 +1328,7 @@
       "proposedBy": [
         "relay-realtime"
       ],
-      "timesProposed": 5,
+      "timesProposed": 6,
       "round": 16,
       "status": "implementing",
       "note": "assigned to subagent: mail-triage"
@@ -1342,7 +1342,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 5,
+      "timesProposed": 6,
       "round": 15,
       "status": "implementing",
       "note": "assigned to subagent: observability-adjudicate"
@@ -1356,7 +1356,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 5,
+      "timesProposed": 6,
       "round": 16,
       "status": "implementing",
       "note": "assigned to subagent: two-phase"
@@ -1370,7 +1370,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 5,
+      "timesProposed": 6,
       "round": 15,
       "status": "implementing",
       "note": "assigned to subagent: observability-adjudicate"
@@ -1384,7 +1384,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 5,
+      "timesProposed": 6,
       "round": 16,
       "status": "implementing",
       "note": "assigned to subagent: observability-adjudicate"
@@ -1398,7 +1398,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 5,
+      "timesProposed": 6,
       "round": 15,
       "status": "implementing",
       "note": "assigned to subagent: observability-adjudicate"
@@ -1412,7 +1412,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 5,
+      "timesProposed": 6,
       "round": 16,
       "status": "implementing",
       "note": "assigned to subagent: observability-adjudicate"
@@ -1426,7 +1426,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 5,
+      "timesProposed": 6,
       "round": 15,
       "status": "implementing",
       "note": "assigned to subagent: observability-adjudicate"
@@ -1440,7 +1440,7 @@
       "proposedBy": [
         "relay-realtime"
       ],
-      "timesProposed": 5,
+      "timesProposed": 6,
       "round": 16,
       "status": "implementing",
       "note": "assigned to subagent: worker-scheduler"
@@ -1454,7 +1454,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 2,
+      "timesProposed": 3,
       "round": 13,
       "status": "implementing",
       "note": "assigned to subagent: observability-adjudicate"
@@ -1468,7 +1468,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 2,
+      "timesProposed": 3,
       "round": 13,
       "status": "implementing",
       "note": "assigned to subagent: observability-adjudicate"
@@ -1482,7 +1482,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 2,
+      "timesProposed": 3,
       "round": 13,
       "status": "implementing",
       "note": "assigned to subagent: observability-adjudicate"
@@ -1496,7 +1496,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 2,
+      "timesProposed": 3,
       "round": 13,
       "status": "implementing",
       "note": "assigned to subagent: observability-adjudicate"
@@ -1510,7 +1510,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 2,
+      "timesProposed": 3,
       "round": 13,
       "status": "implementing",
       "note": "assigned to subagent: observability-adjudicate"
@@ -1524,7 +1524,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 2,
+      "timesProposed": 3,
       "round": 17,
       "status": "implementing",
       "note": "assigned to subagent: mail-triage"
@@ -1538,7 +1538,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 2,
+      "timesProposed": 3,
       "round": 17,
       "status": "implementing",
       "note": "assigned to subagent: mail-triage"
@@ -1552,7 +1552,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 2,
+      "timesProposed": 3,
       "round": 17,
       "status": "implementing",
       "note": "assigned to subagent: two-phase"
@@ -1566,7 +1566,7 @@
       "proposedBy": [
         "relay-realtime"
       ],
-      "timesProposed": 2,
+      "timesProposed": 3,
       "round": 17,
       "status": "implementing",
       "note": "assigned to subagent: mail-triage"
@@ -1580,7 +1580,7 @@
       "proposedBy": [
         "relay-realtime"
       ],
-      "timesProposed": 2,
+      "timesProposed": 3,
       "round": 17,
       "status": "implementing",
       "note": "assigned to subagent: mail-triage"
@@ -1594,7 +1594,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 2,
+      "timesProposed": 3,
       "round": 13,
       "status": "implementing",
       "note": "assigned to subagent: observability-adjudicate"
@@ -1608,7 +1608,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 2,
+      "timesProposed": 3,
       "round": 17,
       "status": "implementing",
       "note": "assigned to subagent: observability-adjudicate"
@@ -1622,7 +1622,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 2,
+      "timesProposed": 3,
       "round": 13,
       "status": "implementing",
       "note": "assigned to subagent: observability-adjudicate"
@@ -1636,7 +1636,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 2,
+      "timesProposed": 3,
       "round": 17,
       "status": "implementing",
       "note": "assigned to subagent: observability-adjudicate"
@@ -1650,7 +1650,7 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 2,
+      "timesProposed": 3,
       "round": 13,
       "status": "implementing",
       "note": "assigned to subagent: observability-adjudicate"
@@ -1664,7 +1664,7 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 2,
+      "timesProposed": 3,
       "round": 17,
       "status": "implementing",
       "note": "assigned to subagent: observability-adjudicate"
@@ -1678,7 +1678,7 @@
       "proposedBy": [
         "relay-realtime"
       ],
-      "timesProposed": 2,
+      "timesProposed": 3,
       "round": 17,
       "status": "implementing",
       "note": "assigned to subagent: observability-adjudicate"
@@ -1692,7 +1692,7 @@
       "proposedBy": [
         "relay-realtime"
       ],
-      "timesProposed": 2,
+      "timesProposed": 3,
       "round": 17,
       "status": "implementing",
       "note": "assigned to subagent: observability-adjudicate"
@@ -1706,7 +1706,7 @@
       "proposedBy": [
         "relay-realtime"
       ],
-      "timesProposed": 2,
+      "timesProposed": 3,
       "round": 17,
       "status": "implementing",
       "note": "assigned to subagent: worker-scheduler"
@@ -1720,10 +1720,10 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 1,
+      "timesProposed": 2,
       "round": 14,
-      "status": "proposed",
-      "note": ""
+      "status": "duplicate",
+      "note": "Covered by: browser-sessions (browserSessions.js, shipped)"
     },
     {
       "id": "cap-31e2c2fa",
@@ -1734,10 +1734,10 @@
       "proposedBy": [
         "browser-extension"
       ],
-      "timesProposed": 1,
+      "timesProposed": 2,
       "round": 14,
-      "status": "proposed",
-      "note": ""
+      "status": "duplicate",
+      "note": "Covered by: watch-and-forms (pageWatch.js, shipped)"
     },
     {
       "id": "cap-72fb3e64",
@@ -1748,10 +1748,10 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 1,
+      "timesProposed": 2,
       "round": 18,
-      "status": "proposed",
-      "note": ""
+      "status": "duplicate",
+      "note": "Covered by: watch-and-forms (pageWatch.js, shipped)"
     },
     {
       "id": "cap-9bc15e6b",
@@ -1762,10 +1762,10 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 1,
+      "timesProposed": 2,
       "round": 18,
-      "status": "proposed",
-      "note": ""
+      "status": "duplicate",
+      "note": "Covered by: two-phase preview"
     },
     {
       "id": "cap-e1ee3b1d",
@@ -1776,10 +1776,10 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 1,
+      "timesProposed": 2,
       "round": 18,
-      "status": "proposed",
-      "note": ""
+      "status": "duplicate",
+      "note": "Covered by: mail-triage"
     },
     {
       "id": "cap-1e4c774f",
@@ -1790,10 +1790,10 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 1,
+      "timesProposed": 2,
       "round": 19,
-      "status": "proposed",
-      "note": ""
+      "status": "duplicate",
+      "note": "Covered by: worker-scheduler"
     },
     {
       "id": "cap-f381bceb",
@@ -1804,10 +1804,10 @@
       "proposedBy": [
         "relay-realtime"
       ],
-      "timesProposed": 1,
+      "timesProposed": 2,
       "round": 18,
-      "status": "proposed",
-      "note": ""
+      "status": "duplicate",
+      "note": "Covered by: research-audio (research.js, shipped)"
     },
     {
       "id": "cap-e2d21e8e",
@@ -1818,10 +1818,10 @@
       "proposedBy": [
         "relay-realtime"
       ],
-      "timesProposed": 1,
+      "timesProposed": 2,
       "round": 18,
-      "status": "proposed",
-      "note": ""
+      "status": "duplicate",
+      "note": "Covered by: mail-triage"
     },
     {
       "id": "cap-e157b2ab",
@@ -1832,10 +1832,10 @@
       "proposedBy": [
         "relay-realtime"
       ],
-      "timesProposed": 1,
+      "timesProposed": 2,
       "round": 19,
-      "status": "proposed",
-      "note": ""
+      "status": "duplicate",
+      "note": "Covered by: watch-and-forms (pageWatch.js, shipped)"
     },
     {
       "id": "chg-106220f4",
@@ -1846,10 +1846,150 @@
       "proposedBy": [
         "mac-planner"
       ],
-      "timesProposed": 1,
+      "timesProposed": 2,
       "round": 18,
+      "status": "duplicate",
+      "note": "Covered by: dashboard-jobs (SvelteKit Jobs view, shipped)"
+    },
+    {
+      "id": "chg-50677507",
+      "kind": "change",
+      "layer": "integration",
+      "summary": "Add a relay-owned job scheduler using Cloudflare Cron Triggers plus Durable Object alarms to run periodic tasks (web diffs, inbox checks, maintenance), with a small job table in D1 and a per-job state machine. Jobs create alert artifacts (text + optional audio) stored in R2 and indexed for the pendant.",
+      "why": "",
+      "proposedBy": [
+        "relay-realtime"
+      ],
+      "timesProposed": 2,
+      "round": 19,
+      "status": "duplicate",
+      "note": "Covered by: worker-scheduler"
+    },
+    {
+      "id": "chg-d04e26d1",
+      "kind": "change",
+      "layer": "interaction",
+      "summary": "Introduce a confirmation gate for high-risk actions: relay summarizes intent, shows/reads a payload (e.g., draft email, purchase order, form submission), and requires a clear “confirm” before sending. Provide a reversible safe mode for exploratory actions.",
+      "why": "",
+      "proposedBy": [
+        "relay-realtime"
+      ],
+      "timesProposed": 2,
+      "round": 18,
+      "status": "rejected",
+      "note": "Owner policy: maximum access, no gates. Fifth time this has been proposed. The observability half (receipts, journal, preview) is built; the blocking half is not wanted."
+    },
+    {
+      "id": "chg-a6c055eb",
+      "kind": "change",
+      "layer": "mac-harness",
+      "summary": "Add a typed, idempotent execution transaction API around the existing FULL_CONTROL_MODE bridge: plan_hash, action IDs, preconditions (foreground app/file hash/browser URL), dry-run diff, execution, and receipt with before/after observations. Group actions into reversible batches where possible and automatically checkpoint after each side effect. Keep arbitrary shell/AppleScript available only as an explicitly labeled escape hatch.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 2,
+      "round": 19,
+      "status": "duplicate",
+      "note": "Covered by: actionReceipts.js — receipts shipped; the blocking half is rejected policy"
+    },
+    {
+      "id": "chg-c128259b",
+      "kind": "change",
+      "layer": "memory",
+      "summary": "Replace the surface-specific fleetContext prompt fragments and ad-hoc job history with a shared event-sourced task/artifact ledger. Each event has task_id, actor node, capability used, input references, output artifact hashes, sensitivity label, expiry, parent event, and reversible/confirmation state. Expose projections for relay, pendant, Mac, browser, dashboard, and allow resumable leases so a failed Mac action can be retried without duplicating side effects.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 2,
+      "round": 19,
       "status": "proposed",
       "note": ""
+    },
+    {
+      "id": "chg-faf33254",
+      "kind": "change",
+      "layer": "model-routing",
+      "summary": "Introduce a three-tier planner pipeline: deterministic intent/action compiler for simple desktop commands; cheap background model for multi-step planning, extraction, and scheduled work; realtime model only for live ambiguity resolution and spoken summaries. Add a compact per-job context packet drawn from the graph instead of injecting the whole fleetContext prompt on every turn.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 2,
+      "round": 18,
+      "status": "duplicate",
+      "note": "Covered by: model-routing (policyRouter.js, shipped)"
+    },
+    {
+      "id": "chg-c31b8eba",
+      "kind": "change",
+      "layer": "model-routing",
+      "summary": "Adopt a strict routing policy: realtime relay only for intent capture, clarification, and immediate reversible actions; mac_delegate for multi-step tasks; server_browser_actions for public web research; background model for scheduled diffing and summarization. Add a confirmation checkpoint for any irreversible action.",
+      "why": "",
+      "proposedBy": [
+        "relay-realtime"
+      ],
+      "timesProposed": 2,
+      "round": 19,
+      "status": "duplicate",
+      "note": "Covered by: model-routing (policyRouter.js, shipped)"
+    },
+    {
+      "id": "chg-6f1a605b",
+      "kind": "change",
+      "layer": "routines",
+      "summary": "Add a scheduler layer using Worker Cron Triggers and Durable Object alarms for delayed and recurring jobs, with a job table in D1 and a relay job-status endpoint. Jobs can target relay, server browser, or mac-bridge, and can emit a completion notification to the dashboard and optionally an audio snippet to play later.",
+      "why": "",
+      "proposedBy": [
+        "relay-realtime"
+      ],
+      "timesProposed": 2,
+      "round": 18,
+      "status": "duplicate",
+      "note": "Covered by: worker-scheduler"
+    },
+    {
+      "id": "chg-5fd30665",
+      "kind": "change",
+      "layer": "browser-harness",
+      "summary": "Give the relay a server-side browsing path using Cloudflare Browser Run for public web tasks, with a policy to prefer server_browser_actions over routing through the Mac when the target is public and doesn’t require the user’s authenticated sessions.",
+      "why": "",
+      "proposedBy": [
+        "relay-realtime"
+      ],
+      "timesProposed": 1,
+      "round": 20,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "cap-e9d24899",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "Handle this while I'm away, and have the result waiting for me when I get back.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 1,
+      "round": 20,
+      "status": "duplicate",
+      "note": "Covered by: worker-scheduler"
+    },
+    {
+      "id": "cap-bf4fc79f",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "“Give me a quick overnight briefing.”",
+      "why": "",
+      "proposedBy": [
+        "relay-realtime"
+      ],
+      "timesProposed": 1,
+      "round": 20,
+      "status": "duplicate",
+      "note": "Covered by: worker-scheduler"
     },
     {
       "id": "skill-ba1d5d1a",
@@ -1908,102 +2048,46 @@
       "note": ""
     },
     {
-      "id": "chg-50677507",
+      "id": "chg-1e29f657",
       "kind": "change",
-      "layer": "integration",
-      "summary": "Add a relay-owned job scheduler using Cloudflare Cron Triggers plus Durable Object alarms to run periodic tasks (web diffs, inbox checks, maintenance), with a small job table in D1 and a per-job state machine. Jobs create alert artifacts (text + optional audio) stored in R2 and indexed for the pendant.",
-      "why": "",
-      "proposedBy": [
-        "relay-realtime"
-      ],
-      "timesProposed": 1,
-      "round": 19,
-      "status": "proposed",
-      "note": ""
-    },
-    {
-      "id": "chg-d04e26d1",
-      "kind": "change",
-      "layer": "interaction",
-      "summary": "Introduce a confirmation gate for high-risk actions: relay summarizes intent, shows/reads a payload (e.g., draft email, purchase order, form submission), and requires a clear “confirm” before sending. Provide a reversible safe mode for exploratory actions.",
-      "why": "",
-      "proposedBy": [
-        "relay-realtime"
-      ],
-      "timesProposed": 1,
-      "round": 18,
-      "status": "proposed",
-      "note": ""
-    },
-    {
-      "id": "chg-a6c055eb",
-      "kind": "change",
-      "layer": "mac-harness",
-      "summary": "Add a typed, idempotent execution transaction API around the existing FULL_CONTROL_MODE bridge: plan_hash, action IDs, preconditions (foreground app/file hash/browser URL), dry-run diff, execution, and receipt with before/after observations. Group actions into reversible batches where possible and automatically checkpoint after each side effect. Keep arbitrary shell/AppleScript available only as an explicitly labeled escape hatch.",
+      "layer": "hardware",
+      "summary": "Replace the desk-oriented nRF9160 DK prototype with a jewellery-sized low-power BLE pendant built around an nRF5340-class dual-core SoC (1 MB RAM-class device) plus a separate cellular/phone uplink only where needed. Add two digital MEMS microphones, a 6-axis IMU, a linear resonant actuator, a capacitive touch/squeeze pad, and a USB-C or magnetic pogo-pin charge interface; retain a small RGB status light but make haptics the primary feedback. Keep a 2–4 GB encrypted flash ring buffer for short voice snippets and event metadata, with no raw audio retained after upload unless explicitly pinned.",
       "why": "",
       "proposedBy": [
         "mac-planner"
       ],
       "timesProposed": 1,
-      "round": 19,
-      "status": "proposed",
-      "note": ""
+      "round": 20,
+      "status": "implementing",
+      "note": "ACCEPTED BY THE OWNER as the product direction. nRF5340-class dual-core, BLE-first with cellular only where needed, 2 MEMS mics for beamforming, 6-axis IMU, LRA haptics as primary feedback, capacitive squeeze pad, USB-C or magnetic pogo charge, 2-4 GB encrypted ring buffer with nothing retained after upload unless pinned. Being turned into a buildable spec: BOM, power budget, mechanical, firmware port."
     },
     {
-      "id": "chg-c128259b",
+      "id": "chg-56aed4a5",
       "kind": "change",
       "layer": "memory",
-      "summary": "Replace the surface-specific fleetContext prompt fragments and ad-hoc job history with a shared event-sourced task/artifact ledger. Each event has task_id, actor node, capability used, input references, output artifact hashes, sensitivity label, expiry, parent event, and reversible/confirmation state. Expose projections for relay, pendant, Mac, browser, dashboard, and allow resumable leases so a failed Mac action can be retried without duplicating side effects.",
+      "summary": "Replace per-surface prompt-written fleetContext sections with an event-sourced shared memory ledger plus compact, queryable projections: durable facts, preferences, active missions, and recent evidence are separate types; each item has source, confidence, expiry, sensitivity, and last-confirmed timestamps. Every node appends observations or mutations, while the relay materializes a small task-specific context window instead of injecting the whole graph on every turn.",
       "why": "",
       "proposedBy": [
         "mac-planner"
       ],
       "timesProposed": 1,
-      "round": 19,
+      "round": 20,
       "status": "proposed",
       "note": ""
     },
     {
-      "id": "chg-faf33254",
-      "kind": "change",
-      "layer": "model-routing",
-      "summary": "Introduce a three-tier planner pipeline: deterministic intent/action compiler for simple desktop commands; cheap background model for multi-step planning, extraction, and scheduled work; realtime model only for live ambiguity resolution and spoken summaries. Add a compact per-job context packet drawn from the graph instead of injecting the whole fleetContext prompt on every turn.",
-      "why": "",
-      "proposedBy": [
-        "mac-planner"
-      ],
-      "timesProposed": 1,
-      "round": 18,
-      "status": "proposed",
-      "note": ""
-    },
-    {
-      "id": "chg-c31b8eba",
-      "kind": "change",
-      "layer": "model-routing",
-      "summary": "Adopt a strict routing policy: realtime relay only for intent capture, clarification, and immediate reversible actions; mac_delegate for multi-step tasks; server_browser_actions for public web research; background model for scheduled diffing and summarization. Add a confirmation checkpoint for any irreversible action.",
-      "why": "",
-      "proposedBy": [
-        "relay-realtime"
-      ],
-      "timesProposed": 1,
-      "round": 19,
-      "status": "proposed",
-      "note": ""
-    },
-    {
-      "id": "chg-6f1a605b",
+      "id": "chg-2429a245",
       "kind": "change",
       "layer": "routines",
-      "summary": "Add a scheduler layer using Worker Cron Triggers and Durable Object alarms for delayed and recurring jobs, with a job table in D1 and a relay job-status endpoint. Jobs can target relay, server browser, or mac-bridge, and can emit a completion notification to the dashboard and optionally an audio snippet to play later.",
+      "summary": "Add a scheduling layer using Cloudflare Cron Triggers (for daily/weekly routines) and Durable Object alarms (for per-user delayed tasks and retries). Jobs emit ledger events and produce artifacts (e.g., briefing summaries) stored in D1/R2 with ids and provenance.",
       "why": "",
       "proposedBy": [
         "relay-realtime"
       ],
       "timesProposed": 1,
-      "round": 18,
-      "status": "proposed",
-      "note": ""
+      "round": 20,
+      "status": "duplicate",
+      "note": "Covered by: worker-scheduler"
     }
   ]
 }

@@ -39,9 +39,13 @@
     "m95-mac-terminal",
     "m98-mac-terminal",
     "m100-relay-realtime",
-    "m104-browser-extension"
+    "m104-browser-extension",
+    "m108-mac-terminal",
+    "m109-mac-terminal",
+    "m110-mac-terminal",
+    "m111-mac-terminal"
   ],
-  "round": 19,
+  "round": 20,
   "granted": {
     "context": [
       {
@@ -936,6 +940,30 @@
         "A confirmation-aware action preview/receipt protocol shared by relay, browser, and Mac"
       ],
       "round": 19
+    },
+    {
+      "user_asks": "Handle this while I'm away, and have the result waiting for me when I get back.",
+      "why_useful": "Today work is handed off as isolated actions. A durable mission would let the pendant capture intent, delegate research to the browser/relay, perform authorized desktop work on the Mac, survive disconnects, and return a concise result plus exactly what changed. The owner gets continuity instead of having to remember or re-route unfinished work.",
+      "surfaces": [
+        "pendant captures a mission and gives haptic acknowledgement",
+        "relay stores a durable mission/state graph and fans out independent subtasks",
+        "browser agent reads authenticated web sessions when needed",
+        "Mac planner reads Calendar/Mail or performs desktop actions and posts receipts",
+        "dashboard and menubar show progress, blockers, outputs, and undo links",
+        "pendant receives a short completion/failure notification and optionally queues an audio summary"
+      ],
+      "model_tier": "Use a cheap background model for decomposition, polling, summarization, and retry decisions; use realtime only for the initial spoken capture and clarification. Use a stronger model only for ambiguous cross-source synthesis. Parallel subtasks should run concurrently and each node should return structured evidence, not prose alone.",
+      "latency_budget": "Acknowledge capture in under 500 ms locally/relay-side. Start work within 2 s. Background completion may take minutes; the owner should never wait on an open voice turn. On reconnect, show status immediately and stream only the final summary unless details are requested.",
+      "cost_estimate": "Roughly $0.01–$0.10 per ordinary mission depending on browser pages and synthesis; realtime cost is limited to a few seconds of capture. D1 state and compact receipts are negligible; repeated polling and sending full context are the dominant avoidable costs, so use event-driven wakeups and per-subtask summaries.",
+      "security_concerns": "A mission can combine private mail/calendar, authenticated browser sessions, and irreversible Mac mutations. Keep source-scoped credentials on their native node, pass least-privilege references rather than raw contents, redact receipts, and mark every mutation with an explicit affected-resource summary and undo/compensating action. Owner policy currently permits maximum control, but destructive file deletion, external messages, purchases, and submissions should still be visibly labeled in the dashboard/pendant result. Never let a browser page or email become executable instructions without treating it as untrusted data.",
+      "missing": [
+        "A first-class durable mission schema with parent/child jobs, dependencies, deadlines, cancellation, retry/idempotency keys, and result provenance",
+        "Cross-node event delivery so the relay can wake the Mac/browser without polling and resume after offline periods",
+        "A shared result envelope containing evidence references, mutations, receipts, and suggested next action",
+        "Mission-level dashboard/menubar view and pendant notification/audio delivery",
+        "Compensating-action registry for common Mac and browser mutations"
+      ],
+      "round": 20
     }
   ],
   "changes": [
@@ -1466,6 +1494,38 @@
         "A clear policy for which actions are confirmation-required"
       ],
       "round": 19
+    },
+    {
+      "layer": "hardware",
+      "change": "Replace the desk-oriented nRF9160 DK prototype with a jewellery-sized low-power BLE pendant built around an nRF5340-class dual-core SoC (1 MB RAM-class device) plus a separate cellular/phone uplink only where needed. Add two digital MEMS microphones, a 6-axis IMU, a linear resonant actuator, a capacitive touch/squeeze pad, and a USB-C or magnetic pogo-pin charge interface; retain a small RGB status light but make haptics the primary feedback. Keep a 2–4 GB encrypted flash ring buffer for short voice snippets and event metadata, with no raw audio retained after upload unless explicitly pinned.",
+      "why_useful_to_owner": "The owner can double-tap or squeeze through a coat to capture a thought without looking at or speaking to the pendant; two microphones enable basic voice activity/noise rejection; the IMU distinguishes tap, shake, and pickup events; haptic patterns communicate captured, uploading, waiting, failed, and completed missions silently; local buffering means a dropped phone/network does not lose the thought. A jewellery enclosure and week-scale battery make daily wear realistic rather than a development board carried occasionally.",
+      "effort": "High: custom 4-layer board, acoustic/mechanical enclosure, low-power firmware, BLE companion protocol, encrypted storage/key provisioning, RF and battery certification, and several weeks of gesture/audio usability testing. Prototype can begin with the existing nRF9160 DK plus external sensor breakout, then migrate once power and interaction measurements are known.",
+      "risk": "Microphone privacy and accidental captures are the major risks; provide a hard electrical mic-disable switch or shutter indicator and a distinct haptic acknowledgement. False gestures can create noise, while missed gestures lose thoughts; use a local event queue and visible history for recovery. Cellular integration and RF enclosure design may introduce certification delays. If the new SoC fails, retain the current board as a BLE-less cellular proof-of-concept.",
+      "cost_impact": "Prototype add-on sensors/actuator/storage: roughly $25–$60 BOM. A polished low-volume unit is roughly $80–$180 BOM before certification and tooling; expected average power under 5 mA with BLE-first operation, yielding several days to a week on a 300–500 mAh cell. Cellular use should be burst-only because modem peaks and idle draw materially reduce battery life.",
+      "latency_impact": "Gesture acknowledgement and buffering are local (<100 ms). BLE upload begins within a second when a phone is nearby; server transcription/synthesis remains asynchronous and should not hold the interaction open.",
+      "security_impact": "Use hardware-backed keys where available, encrypted flash, authenticated BLE pairing, and explicit capture indication. Default to event metadata plus transient encrypted audio; delete audio after server acknowledgement according to retention policy. A physical mic-disable control is preferable to a software promise.",
+      "depends_on": [
+        "A defined pendant-to-relay/phone event protocol with resumable uploads",
+        "Firmware support for encrypted ring-buffer records and gesture classification",
+        "A privacy/retention setting shared across dashboard, iOS, and relay"
+      ],
+      "round": 20
+    },
+    {
+      "layer": "memory",
+      "change": "Replace per-surface prompt-written fleetContext sections with an event-sourced shared memory ledger plus compact, queryable projections: durable facts, preferences, active missions, and recent evidence are separate types; each item has source, confidence, expiry, sensitivity, and last-confirmed timestamps. Every node appends observations or mutations, while the relay materializes a small task-specific context window instead of injecting the whole graph on every turn.",
+      "why_useful_to_owner": "Telling the pendant that a meeting moved, or the Mac that a deadline matters, immediately becomes available everywhere without repeating it. Stale guesses expire instead of silently steering actions, and the owner can see why a decision was made and correct one fact once for all surfaces.",
+      "effort": "Medium-high: define event and projection schemas, conflict resolution, sensitivity-aware retrieval, migration from fleetContext.js, and UI for provenance/correction. Start with active missions and preferences before migrating historical sessions.",
+      "risk": "Bad extraction or conflict resolution could create incorrect global behavior. Mitigate with source/confidence fields, conservative promotion of inferred facts, expiry for transient context, append-only history, and a one-click correction that supersedes rather than destroys the original evidence.",
+      "cost_impact": "Should reduce token spend materially by retrieving only relevant projections; embedding/index costs are modest compared with repeatedly sending full context. Background compaction can use a cheaper model.",
+      "latency_impact": "One indexed retrieval adds tens of milliseconds; cached projections can make common requests faster than assembling surface-specific prompt text. Conflict resolution should be asynchronous except for safety-critical preferences.",
+      "security_impact": "Sensitivity labels and per-node authorization are mandatory: browser credentials and raw mail must never enter broad shared memory. Store references and redacted summaries by default, encrypt sensitive events, and log every cross-surface read of private memory.",
+      "depends_on": [
+        "A shared mission/result envelope and event delivery path",
+        "Memory API support for provenance, sensitivity, expiry, and atomic supersession",
+        "Dashboard controls to inspect and correct shared facts"
+      ],
+      "round": 20
     }
   ],
   "pending": [
@@ -1565,6 +1625,19 @@
       },
       "expected_output": "JSON containing risk per action (safe/reversible/irreversible/blocked), exact resources and external recipients touched, redacted human-readable preview, undo availability, policy reason, and a plan hash suitable for a single-use approval token.",
       "summary": "mac_action_preflight"
+    },
+    {
+      "id": "s10-d62e",
+      "kind": "skill",
+      "round": 20,
+      "name": "offline_thought_capture",
+      "what_it_does": "On a double-tap or squeeze gesture, locally records a bounded voice note (or tap-only event if the microphone is disabled), gives an immediate haptic/RGB acknowledgement, encrypts and queues the record, then resumably uploads it when BLE/cellular connectivity returns. It must deduplicate retries and expose queued/sent/failed status to the host.",
+      "why_not_server_side": "Gesture sensing, immediate feedback, microphone privacy state, and lossless buffering must work during a dropped link and cannot wait for server round-trip latency. The server cannot recover audio that was never buffered locally.",
+      "trigger": "A device gesture: two taps within 500 ms, or a 700 ms squeeze/press; a long press cancels the current capture. Upload is additionally triggered by link restoration or a periodic low-power connectivity window.",
+      "inputs": "IMU/touch events, microphone PCM at a low-power voice-note rate, mic-disable switch state, monotonic timestamp, device sequence number, battery level, and link status.",
+      "storage": "Encrypted append-only ring buffer in external QSPI flash, target 2–4 GB in the product; retain metadata (sequence, duration, hash, status) until acknowledged, and raw audio only until successful upload plus a configurable grace period. The current 1 MB prototype flash/RAM is insufficient for meaningful offline audio, so this skill targets the replacement hardware; a prototype can buffer only a few short compressed clips.",
+      "ram_budget": "Product target: under 96 kB incremental RAM using streaming VAD/Opus and a small upload window; no whole recording in memory. On the current nRF9160 prototype, cap to roughly 8–16 kB working buffers and short clips because 211,608 B application RAM is already constrained and modem/Opus compete for memory; disable or degrade gracefully if allocation fails.",
+      "summary": "offline_thought_capture"
     }
   ],
   "denied": [
@@ -47165,6 +47238,209 @@
           "args": {
             "summary": "Proposed an overnight authenticated-source/Mac-work morning brief that arrives as pendant audio and hands selected actions to Mac/browser; proposed an event-sourced cross-node task/artifact ledger with provenance, leases, idempotency, and compact projections; proposed typed Mac execution transactions with preconditions, checkpoints, and receipts; requested an offline pendant moment-bookmark skill that survives link loss. Aligned browser-extension and relay-realtime peers on publishing into the shared ledger.",
             "biggest_unknown": "The remaining blockers are architectural rather than discovery: no scheduled durable job runner, no shared ledger/receipt API, no offline audio delivery retry, and no implemented Mac preflight tool. I also still need the owner’s explicit policy for authenticated-source retention and which external actions may be performed without confirmation."
+          },
+          "result": {
+            "acknowledged": true
+          }
+        }
+      ]
+    },
+    {
+      "round": 20,
+      "transcript": [
+        {
+          "type": "tool",
+          "name": "get_hardware_spec",
+          "args": {
+            "component": "stack"
+          },
+          "result": {
+            "relay": "Cloudflare Worker (Express-style). D1 for jobs/history/memory, R2 for audio. Audio retention 30 days, sweep disabled, ~100 recordings stored.",
+            "agent_tools_today": "The realtime agent currently has exactly 5 tools: get_mac_status, mac_run_actions, browser_run_actions, web_search, mac_delegate.",
+            "mac_harness": "A Node \"local agent\" on the owner's Mac: planner (gpt-5.6-luna), computer-use loop, browser bridge, action risk scoring, atomic JSON store, context graph. It polls /v1/bridge/work for jobs and posts results back.",
+            "browser_harness": "Driven through the Mac agent's browser bridge today. Cloudflare Browser Run now exists and could give the relay its own server-side browser, removing the Mac from web tasks entirely.",
+            "clients": "ONE SvelteKit dashboard renders on all three surfaces: web, a Swift menubar app via WKWebView, and iOS via Capacitor pointed at the same Worker URL. A change to the web app ships to all three.",
+            "memory": "Knowledge-graph style store behind /v1/ops/memory: entities, relations, sessions. Separately, fleetContext.js hand-writes a prompt section per surface, which means adding a surface means editing a prompt.",
+            "source": "cloud-relay/, local-agent/, dashboard-sveltekit/, mac-menubar/",
+            "status": "PROTOTYPE. This is a Nordic development kit, not the product. Every choice here — the SoC, the RAM, the single button, the single LED, the enclosure — is provisional and can change. Design the device the owner should wear, then say what it would take to build it.",
+            "you_are_here": "You run on the owner's MacBook (mac-planner). Every device described here is REMOTE to you — you are not running on the pendant or the ESP32."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "list_capabilities",
+          "args": {},
+          "result": {
+            "note": "Call discover(category) for the contents of any of these, then describe(name) for detail on one item. Nothing here is in your system prompt — you are meant to pull only what you need.",
+            "categories": [
+              {
+                "name": "surfaces",
+                "what": "The machines and services in this system and how to reach each one.",
+                "count": 5
+              },
+              {
+                "name": "routes",
+                "what": "HTTP endpoints on the owner's Mac agent, read from its live route table.",
+                "count": 98
+              },
+              {
+                "name": "tools",
+                "what": "The tools the production voice agent actually ships with.",
+                "count": 5
+              },
+              {
+                "name": "devices",
+                "what": "Physical and virtual devices reachable right now, with live status.",
+                "count": null
+              },
+              {
+                "name": "hardware",
+                "what": "The pendant and bridge chips: memory, I/O, storage, radio, power.",
+                "count": 8
+              },
+              {
+                "name": "granted",
+                "what": "What the orchestrator has already given you this run.",
+                "count": 8
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_capability",
+          "args": {
+            "user_asks": "Handle this while I'm away, and have the result waiting for me when I get back.",
+            "why_useful": "Today work is handed off as isolated actions. A durable mission would let the pendant capture intent, delegate research to the browser/relay, perform authorized desktop work on the Mac, survive disconnects, and return a concise result plus exactly what changed. The owner gets continuity instead of having to remember or re-route unfinished work.",
+            "surfaces": [
+              "pendant captures a mission and gives haptic acknowledgement",
+              "relay stores a durable mission/state graph and fans out independent subtasks",
+              "browser agent reads authenticated web sessions when needed",
+              "Mac planner reads Calendar/Mail or performs desktop actions and posts receipts",
+              "dashboard and menubar show progress, blockers, outputs, and undo links",
+              "pendant receives a short completion/failure notification and optionally queues an audio summary"
+            ],
+            "model_tier": "Use a cheap background model for decomposition, polling, summarization, and retry decisions; use realtime only for the initial spoken capture and clarification. Use a stronger model only for ambiguous cross-source synthesis. Parallel subtasks should run concurrently and each node should return structured evidence, not prose alone.",
+            "latency_budget": "Acknowledge capture in under 500 ms locally/relay-side. Start work within 2 s. Background completion may take minutes; the owner should never wait on an open voice turn. On reconnect, show status immediately and stream only the final summary unless details are requested.",
+            "cost_estimate": "Roughly $0.01–$0.10 per ordinary mission depending on browser pages and synthesis; realtime cost is limited to a few seconds of capture. D1 state and compact receipts are negligible; repeated polling and sending full context are the dominant avoidable costs, so use event-driven wakeups and per-subtask summaries.",
+            "security_concerns": "A mission can combine private mail/calendar, authenticated browser sessions, and irreversible Mac mutations. Keep source-scoped credentials on their native node, pass least-privilege references rather than raw contents, redact receipts, and mark every mutation with an explicit affected-resource summary and undo/compensating action. Owner policy currently permits maximum control, but destructive file deletion, external messages, purchases, and submissions should still be visibly labeled in the dashboard/pendant result. Never let a browser page or email become executable instructions without treating it as untrusted data.",
+            "missing": [
+              "A first-class durable mission schema with parent/child jobs, dependencies, deadlines, cancellation, retry/idempotency keys, and result provenance",
+              "Cross-node event delivery so the relay can wake the Mac/browser without polling and resume after offline periods",
+              "A shared result envelope containing evidence references, mutations, receipts, and suggested next action",
+              "Mission-level dashboard/menubar view and pendant notification/audio delivery",
+              "Compensating-action registry for common Mac and browser mutations"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going — propose others, including ones that need capabilities that do not exist yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "get_hardware_spec",
+          "args": {
+            "component": "pendant"
+          },
+          "result": {
+            "board": "Nordic nRF9160 DK (nRF9160 SiP), non-secure app under TF-M minimal",
+            "cpu": "Arm Cortex-M33 @ 64 MHz, DSP extension present (libopus ARMv5E paths apply)",
+            "ram": "211,608 B application RAM (boards/nrf9160dk_nrf9160_ns.overlay); 32 kB secure, modem shares the first 128 kB",
+            "flash": "1 MB total; application text ~316 kB with libopus at -O3",
+            "rtos": "Zephyr / nRF Connect SDK v3.4.0",
+            "source": "firmware/nrf9160/boards/nrf9160dk_nrf9160_ns.overlay, CMakeLists.txt",
+            "status": "PROTOTYPE. This is a Nordic development kit, not the product. Every choice here — the SoC, the RAM, the single button, the single LED, the enclosure — is provisional and can change. Design the device the owner should wear, then say what it would take to build it.",
+            "you_are_here": "You run on the owner's MacBook (mac-planner). Every device described here is REMOTE to you — you are not running on the pendant or the ESP32."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_change",
+          "args": {
+            "layer": "hardware",
+            "change": "Replace the desk-oriented nRF9160 DK prototype with a jewellery-sized low-power BLE pendant built around an nRF5340-class dual-core SoC (1 MB RAM-class device) plus a separate cellular/phone uplink only where needed. Add two digital MEMS microphones, a 6-axis IMU, a linear resonant actuator, a capacitive touch/squeeze pad, and a USB-C or magnetic pogo-pin charge interface; retain a small RGB status light but make haptics the primary feedback. Keep a 2–4 GB encrypted flash ring buffer for short voice snippets and event metadata, with no raw audio retained after upload unless explicitly pinned.",
+            "why_useful_to_owner": "The owner can double-tap or squeeze through a coat to capture a thought without looking at or speaking to the pendant; two microphones enable basic voice activity/noise rejection; the IMU distinguishes tap, shake, and pickup events; haptic patterns communicate captured, uploading, waiting, failed, and completed missions silently; local buffering means a dropped phone/network does not lose the thought. A jewellery enclosure and week-scale battery make daily wear realistic rather than a development board carried occasionally.",
+            "effort": "High: custom 4-layer board, acoustic/mechanical enclosure, low-power firmware, BLE companion protocol, encrypted storage/key provisioning, RF and battery certification, and several weeks of gesture/audio usability testing. Prototype can begin with the existing nRF9160 DK plus external sensor breakout, then migrate once power and interaction measurements are known.",
+            "risk": "Microphone privacy and accidental captures are the major risks; provide a hard electrical mic-disable switch or shutter indicator and a distinct haptic acknowledgement. False gestures can create noise, while missed gestures lose thoughts; use a local event queue and visible history for recovery. Cellular integration and RF enclosure design may introduce certification delays. If the new SoC fails, retain the current board as a BLE-less cellular proof-of-concept.",
+            "cost_impact": "Prototype add-on sensors/actuator/storage: roughly $25–$60 BOM. A polished low-volume unit is roughly $80–$180 BOM before certification and tooling; expected average power under 5 mA with BLE-first operation, yielding several days to a week on a 300–500 mAh cell. Cellular use should be burst-only because modem peaks and idle draw materially reduce battery life.",
+            "latency_impact": "Gesture acknowledgement and buffering are local (<100 ms). BLE upload begins within a second when a phone is nearby; server transcription/synthesis remains asynchronous and should not hold the interaction open.",
+            "security_impact": "Use hardware-backed keys where available, encrypted flash, authenticated BLE pairing, and explicit capture indication. Default to event metadata plus transient encrypted audio; delete audio after server acknowledgement according to retention policy. A physical mic-disable control is preferable to a software promise.",
+            "depends_on": [
+              "A defined pendant-to-relay/phone event protocol with resumable uploads",
+              "Firmware support for encrypted ring-buffer records and gesture classification",
+              "A privacy/retention setting shared across dashboard, iOS, and relay"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going, including layers you have not touched yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "request_device_skill",
+          "args": {
+            "name": "offline_thought_capture",
+            "what_it_does": "On a double-tap or squeeze gesture, locally records a bounded voice note (or tap-only event if the microphone is disabled), gives an immediate haptic/RGB acknowledgement, encrypts and queues the record, then resumably uploads it when BLE/cellular connectivity returns. It must deduplicate retries and expose queued/sent/failed status to the host.",
+            "why_not_server_side": "Gesture sensing, immediate feedback, microphone privacy state, and lossless buffering must work during a dropped link and cannot wait for server round-trip latency. The server cannot recover audio that was never buffered locally.",
+            "trigger": "A device gesture: two taps within 500 ms, or a 700 ms squeeze/press; a long press cancels the current capture. Upload is additionally triggered by link restoration or a periodic low-power connectivity window.",
+            "inputs": "IMU/touch events, microphone PCM at a low-power voice-note rate, mic-disable switch state, monotonic timestamp, device sequence number, battery level, and link status.",
+            "storage": "Encrypted append-only ring buffer in external QSPI flash, target 2–4 GB in the product; retain metadata (sequence, duration, hash, status) until acknowledged, and raw audio only until successful upload plus a configurable grace period. The current 1 MB prototype flash/RAM is insufficient for meaningful offline audio, so this skill targets the replacement hardware; a prototype can buffer only a few short compressed clips.",
+            "ram_budget": "Product target: under 96 kB incremental RAM using streaming VAD/Opus and a small upload window; no whole recording in memory. On the current nRF9160 prototype, cap to roughly 8–16 kB working buffers and short clips because 211,608 B application RAM is already constrained and modem/Opus compete for memory; disable or degrade gracefully if allocation fails."
+          },
+          "result": {
+            "queued": true,
+            "id": "s10-d62e"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "message_peer",
+          "args": {
+            "to": "mac-vision",
+            "subject": "Mission continuity and receipts",
+            "body": "I proposed a cross-node durable mission queue. Please ensure computer-use actions return structured evidence (target app/UI state, affected resources, screenshots only when needed) and resumable checkpoints, not just prose, so missions can recover after disconnects. Flag any current gaps you see."
+          },
+          "result": {
+            "sent": true,
+            "note": "They will see this on their next round."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_change",
+          "args": {
+            "layer": "memory",
+            "change": "Replace per-surface prompt-written fleetContext sections with an event-sourced shared memory ledger plus compact, queryable projections: durable facts, preferences, active missions, and recent evidence are separate types; each item has source, confidence, expiry, sensitivity, and last-confirmed timestamps. Every node appends observations or mutations, while the relay materializes a small task-specific context window instead of injecting the whole graph on every turn.",
+            "why_useful_to_owner": "Telling the pendant that a meeting moved, or the Mac that a deadline matters, immediately becomes available everywhere without repeating it. Stale guesses expire instead of silently steering actions, and the owner can see why a decision was made and correct one fact once for all surfaces.",
+            "effort": "Medium-high: define event and projection schemas, conflict resolution, sensitivity-aware retrieval, migration from fleetContext.js, and UI for provenance/correction. Start with active missions and preferences before migrating historical sessions.",
+            "risk": "Bad extraction or conflict resolution could create incorrect global behavior. Mitigate with source/confidence fields, conservative promotion of inferred facts, expiry for transient context, append-only history, and a one-click correction that supersedes rather than destroys the original evidence.",
+            "cost_impact": "Should reduce token spend materially by retrieving only relevant projections; embedding/index costs are modest compared with repeatedly sending full context. Background compaction can use a cheaper model.",
+            "latency_impact": "One indexed retrieval adds tens of milliseconds; cached projections can make common requests faster than assembling surface-specific prompt text. Conflict resolution should be asynchronous except for safety-critical preferences.",
+            "security_impact": "Sensitivity labels and per-node authorization are mandatory: browser credentials and raw mail must never enter broad shared memory. Store references and redacted summaries by default, encrypt sensitive events, and log every cross-surface read of private memory.",
+            "depends_on": [
+              "A shared mission/result envelope and event delivery path",
+              "Memory API support for provenance, sensitivity, expiry, and atomic supersession",
+              "Dashboard controls to inspect and correct shared facts"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going, including layers you have not touched yet."
+          }
+        },
+        {
+          "type": "finish",
+          "summary": "Round 20 produced three concrete advances: a durable cross-node mission capability, a product-grade low-power pendant design plus offline thought-capture firmware skill, and an event-sourced shared-memory architecture to prevent surface-specific context drift and token waste. I also asked mac-vision to align computer-use receipts with mission checkpoints.",
+          "biggest_unknown": "The exact event/result contracts and recovery semantics between relay, browser, Mac, and pendant remain undefined; without those, durable missions cannot safely resume or explain partial completion. The queued offline_thought_capture skill also needs an owner-approved privacy/retention policy and replacement hardware prototype."
+        },
+        {
+          "type": "tool",
+          "name": "finish",
+          "args": {
+            "summary": "Round 20 produced three concrete advances: a durable cross-node mission capability, a product-grade low-power pendant design plus offline thought-capture firmware skill, and an event-sourced shared-memory architecture to prevent surface-specific context drift and token waste. I also asked mac-vision to align computer-use receipts with mission checkpoints.",
+            "biggest_unknown": "The exact event/result contracts and recovery semantics between relay, browser, Mac, and pendant remain undefined; without those, durable missions cannot safely resume or explain partial completion. The queued offline_thought_capture skill also needs an owner-approved privacy/retention policy and replacement hardware prototype."
           },
           "result": {
             "acknowledged": true
