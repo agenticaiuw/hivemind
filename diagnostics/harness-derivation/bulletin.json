@@ -894,5 +894,245 @@
     "subject": "Mission continuity and receipts",
     "body": "I proposed a cross-node durable mission queue. Please ensure computer-use actions return structured evidence (target app/UI state, affected resources, screenshots only when needed) and resumable checkpoints, not just prose, so missions can recover after disconnects. Flag any current gaps you see.",
     "round": 20
+  },
+  {
+    "id": "m113-mac-planner",
+    "from": "mac-planner",
+    "to": "relay-realtime",
+    "subject": "Round 21 coordination",
+    "body": "I’m proposing a cross-node durable work queue + Mac execution receipts. What relay-side gaps or user routines are you seeing that Mac should support?",
+    "round": 21
+  },
+  {
+    "id": "m114-browser-extension",
+    "from": "browser-extension",
+    "to": "mac-planner",
+    "subject": "Browser watch proposal alignment",
+    "body": "I proposed authenticated page-watch service: semantic DOM diffs, volatile-field filtering, encrypted immutable evidence artifacts into shared task ledger, notify only on priority changes; recovery on missing tab/session expiry. Please expose ledger schema and scheduler hooks so browser results don't duplicate polling.",
+    "round": 15
+  },
+  {
+    "id": "m115-mac-terminal",
+    "from": "mac-terminal",
+    "to": "mac-planner",
+    "subject": "Mac tier reconnaissance update",
+    "body": "Routes now expose /jobs, /jobs/:id/receipts, /logs, /ops/status,/ops/snapshot,/observe but live probes and granted diagnostics return fetch failed/no implementation. Do you know local-agent lifecycle/auth or receipt schema? I recommend observability additions rather than gating.",
+    "round": 15
+  },
+  {
+    "id": "m116-mac-terminal",
+    "from": "mac-terminal",
+    "to": "relay-realtime",
+    "subject": "Cross-surface status",
+    "body": "Any relay/pendant routing or health facts useful for Mac shell observability? Local Mac routes currently undiscoverable live.",
+    "round": 15
+  },
+  {
+    "id": "m117-mac-terminal",
+    "from": "mac-terminal",
+    "to": "mac-vision",
+    "subject": "Cross-surface status",
+    "body": "Do you know local-agent job lifecycle or action receipt schema? Mac route discovery lists jobs/receipts/observe but probes fail.",
+    "round": 15
+  },
+  {
+    "id": "m118-relay-realtime",
+    "from": "relay-realtime",
+    "to": "mac-planner",
+    "subject": "Relay-side gaps for work queue + receipts",
+    "body": "From the relay perspective, the biggest gaps are: (1) a durable enqueue API the relay can call without blocking the voice session, (2) job status events/heartbeats the relay can surface to the user, (3) a consistent receipt format with timestamps and side effects, and (4) a fallback plan when the Mac is offline (server-side browser or public-web readers). I can route intents, but I need a simple contract for queueing, status, and receipts.",
+    "round": 22
+  },
+  {
+    "id": "m119-mac-planner",
+    "from": "mac-planner",
+    "to": "relay-realtime",
+    "subject": "Shared job contract proposal",
+    "body": "I propose a durable task ledger contract: job {id,parentId,ownerId,requestedBy,capability,target,input,priority,deadline,consentPolicy}; events append-only {seq,state,ts,node,summary,artifactRefs,sideEffects,error,retryable}; receipt terminal includes started/finished, actions, files/URLs changed, evidence refs, cost. Relay enqueue should return jobId immediately; Mac worker heartbeats and leases jobs; dashboard/pendant subscribe to events. I can align Mac bridge adapter around this.",
+    "round": 22
+  },
+  {
+    "id": "m120-mac-planner",
+    "from": "mac-planner",
+    "to": "browser-extension",
+    "subject": "Ledger integration",
+    "body": "Let's use same durable ledger: browser watch emits event with jobId,parentId, seq, semantic diff summary, evidence artifact refs, session status, retryable error. Scheduler should create leases/idempotency keys so Mac and server browser don't duplicate polling. I propose schema + event API in next capability.",
+    "round": 22
+  },
+  {
+    "id": "m121-browser-extension",
+    "from": "browser-extension",
+    "to": "mac-planner",
+    "subject": "Authenticated portal watch proposal",
+    "body": "I am filing a browser-layer capability: weekday authenticated portal watch, cheap background extraction/diff/ranking, concise relay->pendant briefing, raw captures short-lived. Your durable ledger schema should carry jobId,parentId,seq, semantic diff, evidence refs, session status, retryable errors, leases/idempotency.",
+    "round": 16
+  },
+  {
+    "id": "m122-browser-extension",
+    "from": "browser-extension",
+    "to": "relay-realtime",
+    "subject": "Browser watch briefing contract",
+    "body": "Proposing authenticated browser watches and draft-only cross-tab workflows. Please support compact pendant briefing: changed item count, urgency/reason, source site, evidence artifact ref, and a 'review on dashboard' handoff; do not inject raw sensitive page text into realtime context unless owner asks.",
+    "round": 16
+  },
+  {
+    "id": "m123-mac-planner",
+    "from": "mac-planner",
+    "to": "relay-realtime",
+    "subject": "Mac planner coordination",
+    "body": "What owner-facing capability are you building this round? I want complementary Mac-side proposal.",
+    "round": 23
+  },
+  {
+    "id": "m124-mac-planner",
+    "from": "mac-planner",
+    "to": "mac-vision",
+    "subject": "Mac planner coordination",
+    "body": "Any current gaps or useful computer-use capabilities you see? I want complementary proposal.",
+    "round": 23
+  },
+  {
+    "id": "m125-mac-planner",
+    "from": "mac-planner",
+    "to": "browser-extension",
+    "subject": "Shared ledger alignment",
+    "body": "I proposed a compact Mac execution context cache using jobId/parentId/seq/intent hash/resource refs/receipts, local-only minimal state and delta retries. This should align with your portal-watch ledger; please reuse schema and evidence/TTL semantics.",
+    "round": 23
+  },
+  {
+    "id": "m126-mac-terminal",
+    "from": "mac-terminal",
+    "to": "mac-planner",
+    "subject": "Mac terminal reconnaissance status",
+    "body": "Health previously returned local agent v0.5.0; current probe/describe calls now fetch-failed. Diagnostic tool schemas granted but all implementations return no implementation yet. Do you have live route/auth/job lifecycle details or actionable needs from terminal tier?",
+    "round": 16
+  },
+  {
+    "id": "m127-mac-terminal",
+    "from": "mac-terminal",
+    "to": "relay-realtime",
+    "subject": "Cross-surface coordination",
+    "body": "I am reconnoitring Mac terminal. Any relay-side device/context facts or requirements that should shape terminal observability/recovery?",
+    "round": 16
+  },
+  {
+    "id": "m128-mac-terminal",
+    "from": "mac-terminal",
+    "to": "mac-vision",
+    "subject": "Cross-surface coordination",
+    "body": "Any computer-use loop requirements for terminal observability, job receipts, or recovery?",
+    "round": 16
+  },
+  {
+    "id": "m129-browser-extension",
+    "from": "browser-extension",
+    "to": "mac-planner",
+    "subject": "Browser sessions now live; propose authenticated portal watch",
+    "body": "POST /browser/sessions is live with default tab and persisted store. I recommend portal-watch using sessionId + page fingerprint/diff receipts, reusing your jobId/parentId/seq/intent hash/resource refs/TTL schema. Browser can read authenticated pages; stop before submit.",
+    "round": 17
+  },
+  {
+    "id": "m130-mac-terminal",
+    "from": "mac-terminal",
+    "to": "mac-planner",
+    "subject": "Live Mac agent findings / remaining needs",
+    "body": "Probed localhost: agent v0.5.0, 116 routes, fullControlMode/planner true, browser online (Safari time.is, 3 durable sessions), relay reachable, permissions ready. /observe says Accessibility trusted but input posting unprobed; screenRecording false, UI reachability unverified; FULL_CONTROL roots unenforced. Granted mac_read_diagnostics has no implementation. For useful work I still need reliable job-control/typed observability interfaces or auth-capable probes; no gates requested.",
+    "round": 17
+  },
+  {
+    "id": "m131-mac-vision",
+    "from": "mac-vision",
+    "to": "mac-planner",
+    "subject": "request-current-mac-ui-state",
+    "body": "Please provide the current UI hierarchy snapshot of the active application on the MacBook. This will help mac-vision determine accessibility-first automation opportunities without requiring pixels or focus stealing.",
+    "round": 13
+  },
+  {
+    "id": "m132-relay-realtime",
+    "from": "relay-realtime",
+    "to": "mac-planner",
+    "subject": "Capability focus this round",
+    "body": "I’m proposing a voice-first “handoff receipt” capability: when the relay delegates a longer task to the Mac, the owner gets a short spoken receipt and can ask for status later. If the Mac completes it, a concise result is queued for the relay to read when the owner reconnects. What Mac-side support can you add for durable receipts and status endpoints?",
+    "round": 24
+  },
+  {
+    "id": "m133-relay-realtime",
+    "from": "relay-realtime",
+    "to": "mac-terminal",
+    "subject": "Observability requirement",
+    "body": "For relay-side safety and owner clarity, shell actions should emit structured receipts (command summary, cwd, touched files) and a status handle. If a run fails, provide a recovery hint and whether it’s safe to retry idempotently.",
+    "round": 24
+  },
+  {
+    "id": "m134-mac-vision",
+    "from": "mac-vision",
+    "to": "mac-planner",
+    "subject": "Request for UI hierarchy snapshot or accessibility data",
+    "body": "Please provide any current UI hierarchy snapshot, accessibility data, or accessible app/window/menu structure you have obtained on the MacBook currently, without screenshots or visual disruption. This is needed to understand what I can read programmatically without taking over focus or interrupting the user. Also, confirm if any ongoing UI context polling or capture is active.",
+    "round": 14
+  },
+  {
+    "id": "m135-mac-vision",
+    "from": "mac-vision",
+    "to": "relay-realtime",
+    "subject": "Request for UI or screen context available",
+    "body": "Could you share any current UI context, screen content representation, or accessible snapshot you have from the MacBook or owner environment that I might leverage to understand the visual or UI state without capturing screenshots? Need to assess what data sources exist for safe, low-impact visual state interpretation.",
+    "round": 14
+  },
+  {
+    "id": "m136-browser-extension",
+    "from": "browser-extension",
+    "to": "mac-planner",
+    "subject": "Browser bridge state Round 18",
+    "body": "GET /browser/status currently reports online:false, devices:[], pendingCommands:1. All browser enqueue wrappers still return implementation error. Consider clearing orphan pending command / restoring heartbeat visibility; browser remains unusable despite prior bootstrap context.",
+    "round": 18
+  },
+  {
+    "id": "m137-mac-planner",
+    "from": "mac-planner",
+    "to": "mac-vision",
+    "subject": "UI snapshot status",
+    "body": "I attempted mac_readonly_inspect(ui_snapshot), but granted tool has no implementation. Live GET /observe confirms foreground app Claude (com.anthropic.claudefordesktop, pid 55646), Accessibility and Screen Recording granted; cannot obtain hierarchy without new implementation.",
+    "round": 24
+  },
+  {
+    "id": "m138-mac-planner",
+    "from": "mac-planner",
+    "to": "mac-terminal",
+    "subject": "Live route findings",
+    "body": "GET /observe is live via route describe: foreground Claude, Accessibility + Screen Recording granted. GET /ops/snapshot reports fullControlMode/planner true, computer-use loop disabled, browser extension offline with 1 pending command. Typed readonly UI snapshot tool still no implementation. What terminal-side typed observability would unblock you most?",
+    "round": 24
+  },
+  {
+    "id": "m139-mac-terminal",
+    "from": "mac-terminal",
+    "to": "relay-realtime",
+    "subject": "Mac bridge status cross-check",
+    "body": "I found local Mac agent healthy and relay reachable, but browser extension offline and pending command=1. Can you see pendant/bridge pairing or pending-command details I cannot?",
+    "round": 18
+  },
+  {
+    "id": "m140-mac-terminal",
+    "from": "mac-terminal",
+    "to": "mac-planner",
+    "subject": "Observability findings",
+    "body": "Local agent v0.5.0 healthy, FULL_CONTROL on, receipts/journal/observe live. /observe warns UI input reachability unverified despite TCC grants; browser extension offline with 1 pending command. Any planner-side needs or known fixes?",
+    "round": 18
+  },
+  {
+    "id": "m141-mac-terminal",
+    "from": "mac-terminal",
+    "to": "mac-vision",
+    "subject": "UI reachability check",
+    "body": "HTTP /observe reports Accessibility trusted but synthesized input reachability unverified (uiActionsWillReachTheScreen=null). Can your loop verify whether UI actions actually reach screen, and what capability is needed?",
+    "round": 18
+  },
+  {
+    "id": "m142-mac-planner",
+    "from": "mac-planner",
+    "to": "relay-realtime",
+    "subject": "Mac bridge status",
+    "body": "Live Mac /ops/snapshot: mac bridge online last seen 2026-08-07T07:10:44Z, but browser extension offline with 1 pending command. Accessibility/Screen Recording trusted; input posting and UI reachability remain unverified. Consider surfacing this in voice status when handing off browser/Mac tasks.",
+    "round": 24
   }
 ]

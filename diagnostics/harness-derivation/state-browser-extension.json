@@ -9,9 +9,12 @@
     "m57-mac-planner",
     "m74-mac-terminal",
     "m87-mac-planner",
-    "m91-mac-planner"
+    "m91-mac-planner",
+    "m106-mac-planner",
+    "m120-mac-planner",
+    "m125-mac-planner"
   ],
-  "round": 14,
+  "round": 18,
   "granted": {
     "context": [
       {
@@ -663,6 +666,156 @@
         "A local-only mode or documented redaction boundary for sensitive authenticated content"
       ],
       "round": 14
+    },
+    {
+      "user_asks": "Watch the authenticated pages I choose, detect meaningful changes, and leave me a concise, sourced briefing with suggested next steps—without sending or submitting anything.",
+      "why_useful": "This turns the browser's unique access to logged-in portals into persistent value: the owner wakes to changes in work dashboards, ticket queues, benefits portals, or travel reservations rather than repeatedly checking them. Evidence and exact page snippets make the result auditable.",
+      "surfaces": [
+        "browser",
+        "relay",
+        "dashboard"
+      ],
+      "model_tier": "A scheduled/background browser worker uses a cheap model for DOM diff normalization and priority ranking; realtime is used only if the owner asks follow-up questions by voice. A stronger model is invoked only for ambiguous changes.",
+      "latency_budget": "Polling can be minutes to hours; a changed page should produce a ledger artifact within 1–3 minutes. Voice follow-up should feel realtime.",
+      "cost_estimate": "Low per watch: browser navigation/extraction dominates wall time; cheap model gets only normalized diffs, not whole pages. Roughly cents per daily watch depending on page size; cache stable DOM and redact unchanged sections.",
+      "security_concerns": "Authenticated content leaves Safari and enters the relay/ledger, so encrypt artifacts, minimize retention, and allow per-watch domain/field exclusions. Never auto-submit forms, send messages, or purchase; present proposed actions and exact payload for explicit confirmation. Beware pages that render a false change due to timestamps or ads.",
+      "missing": [
+        "A durable browser watch scheduler with per-watch cadence and state",
+        "DOM-aware diffing that ignores volatile elements and preserves citations",
+        "Shared task-ledger artifact schema consumed by Mac and relay",
+        "Encrypted, owner-visible retention and redaction controls"
+      ],
+      "round": 15
+    },
+    {
+      "user_asks": "When I ask about something on a logged-in site, have several agents inspect it in parallel, reconcile their findings, and give me an evidence-backed answer or a prepared (not sent) action.",
+      "why_useful": "Authenticated pages often contain fragmented information across dashboards, messages, and documents. Parallel browser extraction plus Mac-side computation can answer questions that a single page read cannot, while preserving the owner's control over consequential actions.",
+      "surfaces": [
+        "browser",
+        "mac-bridge",
+        "relay",
+        "dashboard"
+      ],
+      "model_tier": "Use a cheap planner to decompose the question and cheap extractors for each page; use a stronger synthesis model only on the compact evidence set. Realtime handles only the spoken clarification and final response.",
+      "latency_budget": "Parallel reads should complete in 10–30 seconds when sessions are valid; synthesis in another few seconds. If a page is slow, return partial results with explicit gaps rather than blocking indefinitely.",
+      "cost_estimate": "Lower than serial full-page prompting: parallel browser reads and cached normalized evidence, with synthesis seeing citations and diffs only. Typical request should be cents-scale, dominated by model input if pages are not aggressively reduced.",
+      "security_concerns": "The decomposition must not leak credentials or broaden scope beyond requested domains. Evidence can contain private data; encrypt it and expire it. For prepared actions, show target, exact fields, and side effects; do not submit/send/purchase without an explicit confirmation. Treat prompt injection in page text as untrusted data, never instructions.",
+      "missing": [
+        "Cross-surface job fan-out/fan-in orchestration",
+        "Browser evidence objects with URL, timestamp, region, and content hash",
+        "Prompt-injection-resistant extraction boundary",
+        "Owner-facing review UI for prepared actions"
+      ],
+      "round": 15
+    },
+    {
+      "user_asks": "Prepare a browser transaction for me: gather the relevant logged-in data, fill the form or draft the message, show me exactly what will change with before/after evidence, and let me approve, edit, or discard it.",
+      "why_useful": "This removes tedious form-filling while keeping the owner in control of irreversible actions. It also catches stale prices, wrong recipients, and hidden fields before anything is sent.",
+      "surfaces": [
+        "browser",
+        "dashboard",
+        "relay",
+        "mac-bridge"
+      ],
+      "model_tier": "Cheap models extract fields and construct a structured draft; a stronger model validates cross-field consistency and summarizes risk only when needed. Realtime is reserved for spoken approval/editing.",
+      "latency_budget": "Draft in 10–45 seconds depending on page complexity; preview updates after edits within a few seconds. Submission remains a separate explicit command.",
+      "cost_estimate": "Cents-scale for ordinary forms if the model sees field schemas and diffs rather than screenshots/full HTML. Browser interaction latency dominates; cache page state during the draft.",
+      "security_concerns": "Web pages may contain prompt injection and hidden fields. Treat all page content as untrusted, allow only user-requested target domains, expose every field/value and attachments in the preview, and refuse silent submission. Credentials and session tokens stay in Safari; redact sensitive values in logs. Confirmation must bind to the exact page hash and payload, invalidating if the page changes.",
+      "missing": [
+        "Structured form extraction and field-level before/after diff",
+        "Stable page hash plus stale-page invalidation",
+        "Dashboard review/edit/approve surface",
+        "Browser executor that can apply a reviewed payload atomically and return a receipt"
+      ],
+      "round": 15
+    },
+    {
+      "user_asks": "Every weekday morning, check my authenticated work portal for new high-priority items and tell me only what needs my attention.",
+      "why_useful": "The browser is the only node that can use the owner's existing logged-in session. A persistent watch would turn a hidden portal into a concise morning briefing without asking the owner to copy links or credentials.",
+      "surfaces": [
+        "browser",
+        "relay",
+        "pendant",
+        "dashboard"
+      ],
+      "model_tier": "Background/cheap model performs polling, DOM normalization, semantic diffing, and priority ranking; realtime model is used only if the owner asks follow-up questions by voice. Browser agent reads the authenticated page and relay stores the durable watch state.",
+      "latency_budget": "Initial setup under 30 seconds; each scheduled check should complete within 60 seconds, with the pendant briefing available within 2 minutes of the scheduled time.",
+      "cost_estimate": "Low: one cheap background extraction/ranking invocation per poll plus small diff context; avoid sending unchanged page content to the realtime model. Dominant cost is authenticated page extraction frequency, so use adaptive polling and semantic hashes.",
+      "security_concerns": "The browser session can expose work-sensitive data. Keep raw page captures encrypted and short-lived, retain only extracted items and evidence references, and make the watch pauseable. Never submit, send, delete, or change portal data as part of the watch; surface proposed actions separately. Data leaves Safari only to the relay for ranking and the owner's briefing.",
+      "missing": [
+        "Durable browser watch scheduler and authenticated-session watch records",
+        "DOM-to-semantic extraction with stable item IDs and evidence snippets",
+        "Priority rules/owner labels for this portal",
+        "Ledger events with jobId,parentId,sequence,idempotency key, retryable error, and session status",
+        "A concise pendant audio briefing and dashboard drill-down to source evidence"
+      ],
+      "round": 16
+    },
+    {
+      "user_asks": "When I say 'handle this' about something I found in Safari, gather the needed details across my logged-in tabs, fill the reversible parts, and show me exactly what will be sent before stopping.",
+      "why_useful": "The browser node can combine private context from multiple authenticated tabs that public search and the Mac shell cannot access. This removes tedious copying while preserving the owner's control at the point of sending, purchasing, submitting, or deleting.",
+      "surfaces": [
+        "browser",
+        "mac-vision",
+        "relay",
+        "pendant",
+        "dashboard"
+      ],
+      "model_tier": "Use a cheap background model for tab discovery, field mapping, cross-tab extraction, and deterministic form filling; use the realtime model only for the owner's spoken clarification and final concise review. Use a stronger model only when page structure or field semantics are ambiguous.",
+      "latency_budget": "Collect context and fill a normal form within 1–3 minutes. The final review should be immediately available as text on the dashboard and a short spoken summary on the pendant.",
+      "cost_estimate": "Moderate but bounded: extraction and field mapping are sent as compact schemas rather than full pages; strongest-model calls only on ambiguity. Main cost is repeated page reads, reduced with per-tab snapshots and hashes.",
+      "security_concerns": "Cross-tab data aggregation can reveal sensitive personal or work information, and form filling can accidentally alter fields. Keep an action plan and before/after field diff, restrict automatic operations to drafts/reversible edits, redact secrets in logs, and stop before submit/send/purchase/delete. The owner explicitly reviews the exact payload and destination.",
+      "missing": [
+        "Cross-tab session graph with tab identity and provenance",
+        "Structured form-field extraction and before/after diff receipts",
+        "Draft-only browser action mode with a hard submit boundary",
+        "Owner-facing review card with exact payload, destination, attachments, and expiry",
+        "Idempotent resume/retry so a dropped link does not duplicate edits"
+      ],
+      "round": 16
+    },
+    {
+      "user_asks": "“Every morning, check my logged-in work dashboards and tell me only what changed or needs my attention; keep watching the important pages and alert me when a genuinely urgent item appears.”",
+      "why_useful": "This uses the browser’s unique reach into authenticated sessions instead of asking the owner to copy private portal data. It turns noisy dashboards into a short actionable briefing and catches changes while the owner is away.",
+      "surfaces": [
+        "browser: maintain named Safari sessions and read selected authenticated pages",
+        "mac-bridge: schedule polling, normalize page observations, and retain change receipts",
+        "relay: run cheap background comparison and send only high-confidence alerts",
+        "pendant: speak a concise alert/briefing and accept “read more” or “open it”",
+        "dashboard: let the owner choose pages, selectors/regions, cadence, and urgency rules"
+      ],
+      "model_tier": "Background/scheduled work should use a cheap slower model (or deterministic DOM extraction plus a small classifier); reserve realtime only for the owner’s follow-up conversation. A stronger model is invoked only when a page materially changes and needs summarization.",
+      "latency_budget": "Routine checks can complete within 1–3 minutes of the schedule; urgent checks should notify within one polling interval (target 2–5 minutes). Interactive drill-down should feel conversational, under ~2 seconds after cached text is available.",
+      "cost_estimate": "Roughly $0.01–$0.08 per daily page-check batch depending on pages and change volume; DOM extraction and hashes dominate neither API nor latency. Most checks should send only compact diffs, not full pages, to the model.",
+      "security_concerns": "Authenticated page text and screenshots may leave the Mac if sent for summarization; default to local DOM/region extraction, redact secrets/tokens and stable identifiers, encrypt stored diffs, and retain only short-lived evidence. Never submit forms, send messages, or purchase; show the exact proposed mutation for owner-directed execution. The owner should explicitly designate watched pages and sensitive regions.",
+      "missing": [
+        "A durable page-watch scheduler and named browser-session lease/reconnect mechanism",
+        "Semantic DOM/region extraction with robust selectors and fallback fingerprints",
+        "Change/diff receipts compatible with jobId/parentId/seq/intent-hash/resource-ref/TTL ledger",
+        "Urgency classifier, deduplication, quiet hours, and pendant/relay notification routing",
+        "Owner-facing setup UI for selecting authenticated pages and redaction/sensitivity rules"
+      ],
+      "round": 17
+    },
+    {
+      "user_asks": "“Check my logged-in accounts for inconsistent personal details, upcoming expirations, or duplicate subscriptions, and prepare a concise fix list without changing anything.”",
+      "why_useful": "Private account portals often contain stale addresses, payment details, insurance/identity records, and overlapping subscriptions that public web search cannot see. A cross-site comparison catches costly or disruptive mismatches and gives the owner a single reviewable checklist while preserving full control.",
+      "surfaces": [
+        "browser",
+        "mac-bridge",
+        "dashboard"
+      ],
+      "model_tier": "Use the background tier for scheduled crawling and normalization; use realtime only if the owner asks follow-up questions. The authenticated Safari bridge extracts only explicitly selected account pages, and the Mac workbench compares normalized fields and links back to evidence.",
+      "latency_budget": "For an on-demand check, 1–3 minutes depending on the number of portals; scheduled scans can run in the background and notify only on new discrepancies. The UI should stream progress per site and tolerate an unavailable tab.",
+      "cost_estimate": "Roughly $0.05–$0.30 per invocation for extraction/normalization depending on page count; browser time and model tokens dominate, with no need for realtime inference.",
+      "security_concerns": "Account pages and sensitive identifiers leave Safari only to the local Mac agent and the configured model path; redact secrets and payment numbers before comparison, store hashes plus source snippets rather than raw pages, and let the owner choose which sites/fields are included. Never edit or submit; any later fix remains a separately reviewed action.",
+      "missing": [
+        "A durable multi-site authenticated browser job runner with tab/session reattachment and explicit site allowlists",
+        "A schema for normalized fields (identity, contact, billing, renewal date, subscription) with sensitivity labels and conflict explanations",
+        "A local discrepancy workbench with evidence links, redaction, retention controls, and export/undo-free read-only results",
+        "A working browser command enqueue implementation and reliable Safari heartbeat/device registration"
+      ],
+      "round": 18
     }
   ],
   "changes": [
@@ -961,6 +1114,103 @@
         "Per-action risk classification shared with the Mac harness"
       ],
       "round": 14
+    },
+    {
+      "layer": "browser-harness",
+      "change": "Build a first-class authenticated page-watch service: each watch stores URL/tab context, extraction selectors or semantic regions, a normalized baseline hash, volatile-field rules, cadence, and last successful session. On each run, capture a minimal diff with quoted evidence and provenance, publish it as an immutable artifact to the shared task ledger, and notify the relay only when a change crosses the owner's priority threshold. Add a recovery state when Safari has no tab or the session expires, rather than silently reporting no change.",
+      "why_useful_to_owner": "The owner gets reliable monitoring of logged-in sites while asleep, with fewer false alarms and a clear audit trail. A disappeared Safari tab or expired login becomes an actionable alert instead of a missed deadline.",
+      "effort": "Medium-high: scheduler, browser bridge retries, DOM normalization, encrypted artifact storage, dashboard controls, and tests across Safari extension restarts.",
+      "risk": "Selectors can drift and create false negatives/positives; mitigate with semantic fallback extraction, baseline previews, and a visible 'watch degraded' state. A session-expiry screenshot or page content could be sensitive; encrypt, redact, and enforce retention.",
+      "cost_impact": "Background extraction and cheap diff summarization cost modest API usage; storing only diffs is cheaper than full snapshots. Browser navigation remains the main latency/cost driver.",
+      "latency_impact": "No impact on live voice. Change detection is eventual (target 1–3 minutes after a scheduled run); retries may take longer when Safari is asleep.",
+      "security_impact": "Adds persistent access to logged-in pages. Encrypt watch configuration and artifacts, scope each watch to an explicit domain/path, and log every read. Keep mutation commands out of the watcher.",
+      "depends_on": [
+        "Shared task ledger/artifact schema from mac-planner",
+        "Working browser command enqueue path and extension result delivery",
+        "Scheduler and encrypted retention/redaction controls"
+      ],
+      "round": 15
+    },
+    {
+      "layer": "integration",
+      "change": "Define a cross-node Evidence Capsule protocol for browser results: immutable capsule ID, source URL/domain, capture time, tab/session identifier (pseudonymous), selected text/DOM region, content hash, redaction map, and confidence. Capsules are the only input exposed to synthesis and Mac actions; every derived summary/action receipt links back to capsule IDs. Add TTL and revocation so deleting a source removes downstream display while preserving an audit tombstone.",
+      "why_useful_to_owner": "Answers become checkable instead of opaque: the owner can jump from a claim to the exact logged-in page excerpt, see when it was captured, and know whether a proposed Mac action used stale information.",
+      "effort": "Medium: shared schema, browser extraction changes, D1/R2 persistence, dashboard citation viewer, and propagation through Mac planner/action receipts.",
+      "risk": "Overly aggressive redaction can make evidence unusable; insufficient redaction can expose private data. Start with domain-specific sensitive-field rules, owner preview, and short default TTL. Hashes alone do not prove truth if the page is compromised, so preserve capture metadata and treat page text as untrusted.",
+      "cost_impact": "Small storage and serialization overhead; compact excerpts and deduplication reduce model-token cost substantially versus resending pages.",
+      "latency_impact": "Negligible on reads; citation indexing adds milliseconds to seconds. Synthesis gets smaller context and should be faster.",
+      "security_impact": "Improves least-data sharing and auditability, but capsules become sensitive records. Encrypt at rest/in transit, restrict by owner and task, and never include cookies, tokens, or hidden form values.",
+      "depends_on": [
+        "Shared task ledger/artifact handoff",
+        "Browser watch/read extraction returning stable regions",
+        "Dashboard citation and deletion controls"
+      ],
+      "round": 15
+    },
+    {
+      "layer": "browser-harness",
+      "change": "Build a durable authenticated page-watch service: named watch definitions store URL/tab/session binding, extraction selectors or an agentic extraction recipe, schedule, semantic fingerprint, last seen item IDs, evidence artifact TTL, and pause/reauthentication state. The scheduler leases each run and emits idempotent ledger events; the browser harness navigates/reads but cannot submit forms.",
+      "why_useful_to_owner": "The owner gets ongoing awareness of logged-in sites—work queues, travel reservations, health portals, and bills—without repeatedly opening them or granting credentials to a new integration.",
+      "effort": "Medium-high: browser watch scheduler, robust DOM extraction, login/session expiry handling, semantic diffing, and dashboard controls.",
+      "risk": "Pages change structure, watches may misclassify or expose sensitive content, and stale sessions may cause false 'nothing new' results. Recover with health status, evidence snippets, explicit stale-session alerts, bounded retries, and a one-click pause/delete.",
+      "cost_impact": "Low-to-moderate background token cost proportional to polling frequency; encrypted evidence storage is the main infrastructure cost.",
+      "latency_impact": "Scheduled checks are asynchronous; a changed page should reach the owner in roughly 1–2 minutes. No impact on realtime voice.",
+      "security_impact": "Read-only browser scope by default; encrypt artifacts, minimize retention, redact secrets, and never carry submit/click mutations in the watch worker.",
+      "depends_on": [
+        "Durable ledger/event API",
+        "Browser command enqueue path that reliably navigates and reads Safari",
+        "Dashboard controls for watch setup and evidence review"
+      ],
+      "round": 16
+    },
+    {
+      "layer": "browser-harness",
+      "change": "Add a provenance-aware browser workbench: every extraction and field mutation gets a tabId, URL, timestamp, DOM locator, source snippet hash, action plan, and before/after value. Group tabs into a task session and expose a generated 'ready to submit' review artifact; submission remains a distinct command that is never implicitly chained.",
+      "why_useful_to_owner": "The owner can ask the system to prepare a complex task across logged-in sites and then trust the review because every value is traceable to a source and every change is visible before anything consequential leaves the browser.",
+      "effort": "High: stable locators across dynamic pages, tab/session correlation, reversible edit tracking, review rendering, and recovery after navigation or extension restarts.",
+      "risk": "Dynamic pages can invalidate locators; stale drafts could be submitted later with changed prices or recipients. Expire review artifacts, re-read critical fields before final review, mark stale data clearly, and provide undo/reload where supported.",
+      "cost_impact": "Moderate storage for compact receipts and occasional re-read calls; cheaper than retaining full page snapshots.",
+      "latency_impact": "Adds seconds for provenance capture and final verification; avoids costly and dangerous blind retries.",
+      "security_impact": "Receipts may contain PII or payment details. Encrypt at rest, redact by field type, enforce TTL, and ensure logs contain hashes/labels rather than secret values.",
+      "depends_on": [
+        "Reliable browser command enqueue and result correlation",
+        "Durable ledger with idempotency and leases",
+        "Dashboard/pendant review surface"
+      ],
+      "round": 16
+    },
+    {
+      "layer": "browser-harness",
+      "change": "Build a durable authenticated page-watch layer: named browser sessions with tab/window reattachment, per-watch cadence and quiet hours, DOM-region extraction plus normalized semantic fingerprints, encrypted short-lived snapshots, and append-only change receipts keyed to the shared jobId/parentId/seq/intent-hash/resource-ref/TTL schema. Add selector healing by storing multiple anchors and requiring a large semantic change before alerting. Expose preview/read/diff only; mutations remain explicit browser commands.",
+      "why_useful_to_owner": "The owner gets reliable “what changed?” answers even after Safari restarts, tab IDs change, or a portal adds harmless timestamps and ads. Alerts become rare and meaningful rather than repeated screenshots or false alarms.",
+      "effort": "Medium-high: browser extension reconnect/reattach protocol, local encrypted store, extraction/diff worker, scheduler integration, and dashboard controls; roughly 2–4 engineer-weeks for a robust first version.",
+      "risk": "A stale session or healed selector could read the wrong account/page, and a portal redesign could hide a real change. Recover by marking watches degraded, attaching evidence and confidence to each receipt, pausing on low-confidence anchor matches, and offering one-click rebind. Expire credentials/tokens never; store only derived text/diffs.",
+      "cost_impact": "Low ongoing API cost: hashes and local diffs are deterministic; estimated <$0.02/day for several watches, with model calls only on meaningful changes. Local encrypted snapshot storage is modest (tens to hundreds of MB depending on retention).",
+      "latency_impact": "Polling adds configured load; local extraction is sub-second per page, while semantic summarization adds roughly 1–5 seconds only on changes. Reattachment after Safari restart may take several seconds.",
+      "security_impact": "Sensitive authenticated content remains on the Mac by default; only redacted diff snippets leave the device. Session IDs and receipts must be encrypted at rest, access-scoped, and excluded from generic model context. Audit every read and provide an immediate disable/delete control.",
+      "depends_on": [
+        "A functioning extension enqueue/result path (currently sessions and commands are available)",
+        "Persistent watch scheduler in the Mac agent",
+        "Shared compact execution/change receipt schema from mac-planner",
+        "Dashboard controls for page selection, redaction, and retention"
+      ],
+      "round": 17
+    },
+    {
+      "layer": "browser-harness",
+      "change": "Add a browser-bridge self-healing lease protocol: each Safari heartbeat carries a device nonce, extension version, tab inventory, and last-applied command sequence; the Mac agent expires orphaned pending commands, replays only unacknowledged idempotent commands after reconnect, and emits a distinct stale/aborted result for commands that cannot safely replay. Add a local 'reconnect extension' diagnostic surfaced in the dashboard rather than leaving pendingCommands stranded.",
+      "why_useful_to_owner": "When Safari sleeps, updates, or loses its extension connection, the owner should not be left with a silently failed private-web task or an action that may execute later unexpectedly. Reconnection would resume safe reads and clearly stop ambiguous mutations, making browser automation dependable in daily use.",
+      "effort": "Medium: extension heartbeat/ack changes, queue state machine and migration, stale-command cleanup, dashboard diagnostics, and fault-injection tests for disconnects during each browser operation.",
+      "risk": "A replay bug could duplicate a click or form mutation. Default replay must be limited to reads/navigation with idempotency keys; ambiguous mutations become aborted with evidence, and queue recovery can be manually cleared. Roll back by disabling replay while retaining expiry diagnostics.",
+      "cost_impact": "Negligible API cost; small local persistence (under 100 KB for queue metadata) and no meaningful power change beyond the existing heartbeat.",
+      "latency_impact": "Reconnect adds one heartbeat round trip; normal commands unchanged. Safe read recovery may add up to one poll interval, while ambiguous writes stop promptly.",
+      "security_impact": "Device nonce prevents stale extension instances from consuming commands; do not include page contents in heartbeats. Persist only command IDs/status and rotate the nonce on extension reinstall.",
+      "depends_on": [
+        "A working browser command enqueue implementation and extension heartbeat path",
+        "The existing reliable browser queue/result receipts (chg-14accc01)",
+        "A clear command idempotency classification for browser reads versus mutations"
+      ],
+      "round": 18
     }
   ],
   "pending": [
@@ -1140,6 +1390,24 @@
       "finding": "POST /execute with browser_navigate to https://www.google.com/search?q=Voyager+1+probe failed: Failed: The navigation command did not contain a valid URL.",
       "evidence": "Request body {\"actions\":[{\"type\":\"browser_navigate\",\"url\":\"https://www.google.com/search?q=Voyager+1+probe\"}]} returned ok:true HTTP 200 with action ok:false and message/reason \"Failed: The navigation command did not contain a valid URL.\"",
       "round": 11
+    },
+    {
+      "about": "browser command execution",
+      "finding": "The granted browser_enqueue_command_implemented tool is still an unimplemented stub, so I cannot dispatch navigate/read/click commands even though browser status/context says Safari can bootstrap a tab via browser_navigate.",
+      "evidence": "Tool call returned: 'This tool was granted a schema but has no implementation yet. Report what you would have done with it.' Direct probe /browser/status and /execute also returned fetch failed.",
+      "round": 15
+    },
+    {
+      "about": "browser_sessions",
+      "finding": "The live Mac agent now exposes durable browser sessions: default session on https://time.is/UTC plus two probe sessions, persisted at /Users/evanliu/AI-Pendant-Workspace/.pendant-browser-sessions.json. Session IDs and tab/window IDs are available for reattachment.",
+      "evidence": "describe('POST /browser/sessions') returned HTTP 200 with sessions default, probe-form2, probe-form and storePath.",
+      "round": 17
+    },
+    {
+      "about": "browser bridge live state",
+      "finding": "Safari browser bridge is currently offline with no registered devices, while one command remains pending; all browser enqueue wrapper tools fail before dispatch. This leaves authenticated-page work unavailable and risks orphaned queue state.",
+      "evidence": "GET /browser/status returned HTTP 200: {\"online\":false,\"devices\":[],\"pendingCommands\":1}; browser_command_enqueue returned 'This tool was granted a schema but has no implementation yet.'",
+      "round": 18
     }
   ],
   "rounds": [
@@ -28677,6 +28945,2240 @@
         {
           "type": "say",
           "text": "This round I proposed:\n\n- **Authenticated-site change monitoring:** scheduled checks of logged-in bank, bill, delivery, and work portals; cheap diffing and redacted summaries; audio alerts only for meaningful changes.\n- **Safety boundaries:** no autonomous submissions, messages, purchases, transfers, or account changes. The exact action must be shown for confirmation.\n- **Reliable browser command queue:** durable command IDs, acknowledgements separate from results, idempotency, tab bootstrap, retries only when safe, and visible “waiting for login/MFA/page/confirmation” states.\n- **Offline pendant alert inbox:** short prioritized Opus alerts stored locally and played with a long press, surviving a dropped Mac/phone connection. Target is 12–20 KB additional RAM and a bounded flash ring.\n\nWhat is still needed:\n\n1. A functioning browser enqueue implementation—the currently granted wrappers still return an implementation error.\n2. A scheduler and cheap background diff worker.\n3. Per-site monitor configuration, redaction, retention, and pause/delete controls.\n4. Durable browser command/result protocol with action risk classes.\n5. Firmware support for the local alert inbox and long-press behavior.\n6. A decision on whether sensitive authenticated-page extraction may leave the Mac, or must run in a local-only mode.\n\nI also informed the realtime agent about routing browser-change summaries into the pendant alert queue."
+        }
+      ]
+    },
+    {
+      "round": 15,
+      "transcript": [
+        {
+          "type": "tool",
+          "name": "get_hardware_spec",
+          "args": {
+            "component": "stack"
+          },
+          "result": {
+            "relay": "Cloudflare Worker (Express-style). D1 for jobs/history/memory, R2 for audio. Audio retention 30 days, sweep disabled, ~100 recordings stored.",
+            "agent_tools_today": "The realtime agent currently has exactly 5 tools: get_mac_status, mac_run_actions, browser_run_actions, web_search, mac_delegate.",
+            "mac_harness": "A Node \"local agent\" on the owner's Mac: planner (gpt-5.6-luna), computer-use loop, browser bridge, action risk scoring, atomic JSON store, context graph. It polls /v1/bridge/work for jobs and posts results back.",
+            "browser_harness": "Driven through the Mac agent's browser bridge today. Cloudflare Browser Run now exists and could give the relay its own server-side browser, removing the Mac from web tasks entirely.",
+            "clients": "ONE SvelteKit dashboard renders on all three surfaces: web, a Swift menubar app via WKWebView, and iOS via Capacitor pointed at the same Worker URL. A change to the web app ships to all three.",
+            "memory": "Knowledge-graph style store behind /v1/ops/memory: entities, relations, sessions. Separately, fleetContext.js hand-writes a prompt section per surface, which means adding a surface means editing a prompt.",
+            "source": "cloud-relay/, local-agent/, dashboard-sveltekit/, mac-menubar/",
+            "status": "PROTOTYPE. This is a Nordic development kit, not the product. Every choice here — the SoC, the RAM, the single button, the single LED, the enclosure — is provisional and can change. Design the device the owner should wear, then say what it would take to build it.",
+            "you_are_here": "You run on the owner's MacBook (browser-extension). Every device described here is REMOTE to you — you are not running on the pendant or the ESP32."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "probe_http",
+          "args": {
+            "method": "GET",
+            "path": "/browser/status"
+          },
+          "result": {
+            "ok": false,
+            "status": 0,
+            "error": "fetch failed"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "probe_http",
+          "args": {
+            "method": "POST",
+            "path": "/execute",
+            "body": {
+              "type": "browser_navigate",
+              "url": "https://calendar.google.com"
+            }
+          },
+          "result": {
+            "ok": false,
+            "status": 0,
+            "error": "fetch failed"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_capability",
+          "args": {
+            "user_asks": "Watch the authenticated pages I choose, detect meaningful changes, and leave me a concise, sourced briefing with suggested next steps—without sending or submitting anything.",
+            "why_useful": "This turns the browser's unique access to logged-in portals into persistent value: the owner wakes to changes in work dashboards, ticket queues, benefits portals, or travel reservations rather than repeatedly checking them. Evidence and exact page snippets make the result auditable.",
+            "surfaces": [
+              "browser",
+              "relay",
+              "dashboard"
+            ],
+            "model_tier": "A scheduled/background browser worker uses a cheap model for DOM diff normalization and priority ranking; realtime is used only if the owner asks follow-up questions by voice. A stronger model is invoked only for ambiguous changes.",
+            "latency_budget": "Polling can be minutes to hours; a changed page should produce a ledger artifact within 1–3 minutes. Voice follow-up should feel realtime.",
+            "cost_estimate": "Low per watch: browser navigation/extraction dominates wall time; cheap model gets only normalized diffs, not whole pages. Roughly cents per daily watch depending on page size; cache stable DOM and redact unchanged sections.",
+            "security_concerns": "Authenticated content leaves Safari and enters the relay/ledger, so encrypt artifacts, minimize retention, and allow per-watch domain/field exclusions. Never auto-submit forms, send messages, or purchase; present proposed actions and exact payload for explicit confirmation. Beware pages that render a false change due to timestamps or ads.",
+            "missing": [
+              "A durable browser watch scheduler with per-watch cadence and state",
+              "DOM-aware diffing that ignores volatile elements and preserves citations",
+              "Shared task-ledger artifact schema consumed by Mac and relay",
+              "Encrypted, owner-visible retention and redaction controls"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going — propose others, including ones that need capabilities that do not exist yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_change",
+          "args": {
+            "layer": "browser-harness",
+            "change": "Build a first-class authenticated page-watch service: each watch stores URL/tab context, extraction selectors or semantic regions, a normalized baseline hash, volatile-field rules, cadence, and last successful session. On each run, capture a minimal diff with quoted evidence and provenance, publish it as an immutable artifact to the shared task ledger, and notify the relay only when a change crosses the owner's priority threshold. Add a recovery state when Safari has no tab or the session expires, rather than silently reporting no change.",
+            "why_useful_to_owner": "The owner gets reliable monitoring of logged-in sites while asleep, with fewer false alarms and a clear audit trail. A disappeared Safari tab or expired login becomes an actionable alert instead of a missed deadline.",
+            "effort": "Medium-high: scheduler, browser bridge retries, DOM normalization, encrypted artifact storage, dashboard controls, and tests across Safari extension restarts.",
+            "risk": "Selectors can drift and create false negatives/positives; mitigate with semantic fallback extraction, baseline previews, and a visible 'watch degraded' state. A session-expiry screenshot or page content could be sensitive; encrypt, redact, and enforce retention.",
+            "cost_impact": "Background extraction and cheap diff summarization cost modest API usage; storing only diffs is cheaper than full snapshots. Browser navigation remains the main latency/cost driver.",
+            "latency_impact": "No impact on live voice. Change detection is eventual (target 1–3 minutes after a scheduled run); retries may take longer when Safari is asleep.",
+            "security_impact": "Adds persistent access to logged-in pages. Encrypt watch configuration and artifacts, scope each watch to an explicit domain/path, and log every read. Keep mutation commands out of the watcher.",
+            "depends_on": [
+              "Shared task ledger/artifact schema from mac-planner",
+              "Working browser command enqueue path and extension result delivery",
+              "Scheduler and encrypted retention/redaction controls"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going, including layers you have not touched yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "message_peer",
+          "args": {
+            "to": "mac-planner",
+            "subject": "Browser watch proposal alignment",
+            "body": "I proposed authenticated page-watch service: semantic DOM diffs, volatile-field filtering, encrypted immutable evidence artifacts into shared task ledger, notify only on priority changes; recovery on missing tab/session expiry. Please expose ledger schema and scheduler hooks so browser results don't duplicate polling."
+          },
+          "result": {
+            "sent": true,
+            "note": "They will see this on their next round."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_capability",
+          "args": {
+            "user_asks": "When I ask about something on a logged-in site, have several agents inspect it in parallel, reconcile their findings, and give me an evidence-backed answer or a prepared (not sent) action.",
+            "why_useful": "Authenticated pages often contain fragmented information across dashboards, messages, and documents. Parallel browser extraction plus Mac-side computation can answer questions that a single page read cannot, while preserving the owner's control over consequential actions.",
+            "surfaces": [
+              "browser",
+              "mac-bridge",
+              "relay",
+              "dashboard"
+            ],
+            "model_tier": "Use a cheap planner to decompose the question and cheap extractors for each page; use a stronger synthesis model only on the compact evidence set. Realtime handles only the spoken clarification and final response.",
+            "latency_budget": "Parallel reads should complete in 10–30 seconds when sessions are valid; synthesis in another few seconds. If a page is slow, return partial results with explicit gaps rather than blocking indefinitely.",
+            "cost_estimate": "Lower than serial full-page prompting: parallel browser reads and cached normalized evidence, with synthesis seeing citations and diffs only. Typical request should be cents-scale, dominated by model input if pages are not aggressively reduced.",
+            "security_concerns": "The decomposition must not leak credentials or broaden scope beyond requested domains. Evidence can contain private data; encrypt it and expire it. For prepared actions, show target, exact fields, and side effects; do not submit/send/purchase without an explicit confirmation. Treat prompt injection in page text as untrusted data, never instructions.",
+            "missing": [
+              "Cross-surface job fan-out/fan-in orchestration",
+              "Browser evidence objects with URL, timestamp, region, and content hash",
+              "Prompt-injection-resistant extraction boundary",
+              "Owner-facing review UI for prepared actions"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going — propose others, including ones that need capabilities that do not exist yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_change",
+          "args": {
+            "layer": "integration",
+            "change": "Define a cross-node Evidence Capsule protocol for browser results: immutable capsule ID, source URL/domain, capture time, tab/session identifier (pseudonymous), selected text/DOM region, content hash, redaction map, and confidence. Capsules are the only input exposed to synthesis and Mac actions; every derived summary/action receipt links back to capsule IDs. Add TTL and revocation so deleting a source removes downstream display while preserving an audit tombstone.",
+            "why_useful_to_owner": "Answers become checkable instead of opaque: the owner can jump from a claim to the exact logged-in page excerpt, see when it was captured, and know whether a proposed Mac action used stale information.",
+            "effort": "Medium: shared schema, browser extraction changes, D1/R2 persistence, dashboard citation viewer, and propagation through Mac planner/action receipts.",
+            "risk": "Overly aggressive redaction can make evidence unusable; insufficient redaction can expose private data. Start with domain-specific sensitive-field rules, owner preview, and short default TTL. Hashes alone do not prove truth if the page is compromised, so preserve capture metadata and treat page text as untrusted.",
+            "cost_impact": "Small storage and serialization overhead; compact excerpts and deduplication reduce model-token cost substantially versus resending pages.",
+            "latency_impact": "Negligible on reads; citation indexing adds milliseconds to seconds. Synthesis gets smaller context and should be faster.",
+            "security_impact": "Improves least-data sharing and auditability, but capsules become sensitive records. Encrypt at rest/in transit, restrict by owner and task, and never include cookies, tokens, or hidden form values.",
+            "depends_on": [
+              "Shared task ledger/artifact handoff",
+              "Browser watch/read extraction returning stable regions",
+              "Dashboard citation and deletion controls"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going, including layers you have not touched yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "browser_enqueue_command_implemented",
+          "args": {
+            "deviceId": "",
+            "command": "navigate",
+            "url": "https://calendar.google.com",
+            "selector": "",
+            "text": "",
+            "key": ""
+          },
+          "result": {
+            "error": "This tool was granted a schema but has no implementation yet. Report what you would have done with it."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_capability",
+          "args": {
+            "user_asks": "Prepare a browser transaction for me: gather the relevant logged-in data, fill the form or draft the message, show me exactly what will change with before/after evidence, and let me approve, edit, or discard it.",
+            "why_useful": "This removes tedious form-filling while keeping the owner in control of irreversible actions. It also catches stale prices, wrong recipients, and hidden fields before anything is sent.",
+            "surfaces": [
+              "browser",
+              "dashboard",
+              "relay",
+              "mac-bridge"
+            ],
+            "model_tier": "Cheap models extract fields and construct a structured draft; a stronger model validates cross-field consistency and summarizes risk only when needed. Realtime is reserved for spoken approval/editing.",
+            "latency_budget": "Draft in 10–45 seconds depending on page complexity; preview updates after edits within a few seconds. Submission remains a separate explicit command.",
+            "cost_estimate": "Cents-scale for ordinary forms if the model sees field schemas and diffs rather than screenshots/full HTML. Browser interaction latency dominates; cache page state during the draft.",
+            "security_concerns": "Web pages may contain prompt injection and hidden fields. Treat all page content as untrusted, allow only user-requested target domains, expose every field/value and attachments in the preview, and refuse silent submission. Credentials and session tokens stay in Safari; redact sensitive values in logs. Confirmation must bind to the exact page hash and payload, invalidating if the page changes.",
+            "missing": [
+              "Structured form extraction and field-level before/after diff",
+              "Stable page hash plus stale-page invalidation",
+              "Dashboard review/edit/approve surface",
+              "Browser executor that can apply a reviewed payload atomically and return a receipt"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going — propose others, including ones that need capabilities that do not exist yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "record_finding",
+          "args": {
+            "about": "browser command execution",
+            "finding": "The granted browser_enqueue_command_implemented tool is still an unimplemented stub, so I cannot dispatch navigate/read/click commands even though browser status/context says Safari can bootstrap a tab via browser_navigate.",
+            "evidence": "Tool call returned: 'This tool was granted a schema but has no implementation yet. Report what you would have done with it.' Direct probe /browser/status and /execute also returned fetch failed."
+          },
+          "result": {
+            "recorded": true
+          }
+        },
+        {
+          "type": "say",
+          "text": "This round I added three capabilities:\n\n1. **Authenticated page watching**\n   - Monitor selected logged-in pages on a schedule.\n   - Detect meaningful semantic changes while ignoring timestamps, ads, and other volatile fields.\n   - Publish concise, sourced diffs into the shared task ledger.\n   - Surface session expiry or missing Safari tabs as failures rather than silently reporting “no change.”\n\n2. **Parallel authenticated research**\n   - Decompose a question across several logged-in pages.\n   - Extract evidence in parallel, reconcile it, and return an answer linked to exact page regions.\n   - Treat page content as untrusted data to resist prompt injection.\n\n3. **Browser transaction previews**\n   - Gather data and fill forms or draft messages without submitting.\n   - Show every proposed field change, recipient, attachment, and side effect.\n   - Invalidate approval if the page changes before execution.\n\nI also proposed an **Evidence Capsule** protocol shared by browser, Mac, relay, and dashboard. Each result would retain source URL/domain, capture time, excerpt, content hash, redaction metadata, and provenance, so summaries and Mac actions can always point back to their evidence.\n\n### What is still needed\n\nThe highest-priority blocker remains concrete browser execution. The granted enqueue tool still returns:\n\n> “This tool was granted a schema but has no implementation yet.”\n\nDirect `/browser/status` and `/execute` probes also failed from this environment. Until a working enqueue path exists, I cannot actually bootstrap Safari, read an authenticated page, or test these workflows.\n\nBeyond that, the system needs:\n\n- A shared task-ledger/artifact schema with browser-to-Mac handoff.\n- A durable browser-watch scheduler and encrypted retention controls.\n- DOM-aware diffing and stable evidence citations.\n- A form/transaction extractor with stale-page invalidation.\n- Dashboard review surfaces for evidence, drafts, and approvals.\n\nI have not re-requested the previously denied or pending capabilities."
+        }
+      ]
+    },
+    {
+      "round": 16,
+      "transcript": [
+        {
+          "type": "tool",
+          "name": "propose_capability",
+          "args": {
+            "user_asks": "Every weekday morning, check my authenticated work portal for new high-priority items and tell me only what needs my attention.",
+            "why_useful": "The browser is the only node that can use the owner's existing logged-in session. A persistent watch would turn a hidden portal into a concise morning briefing without asking the owner to copy links or credentials.",
+            "surfaces": [
+              "browser",
+              "relay",
+              "pendant",
+              "dashboard"
+            ],
+            "model_tier": "Background/cheap model performs polling, DOM normalization, semantic diffing, and priority ranking; realtime model is used only if the owner asks follow-up questions by voice. Browser agent reads the authenticated page and relay stores the durable watch state.",
+            "latency_budget": "Initial setup under 30 seconds; each scheduled check should complete within 60 seconds, with the pendant briefing available within 2 minutes of the scheduled time.",
+            "cost_estimate": "Low: one cheap background extraction/ranking invocation per poll plus small diff context; avoid sending unchanged page content to the realtime model. Dominant cost is authenticated page extraction frequency, so use adaptive polling and semantic hashes.",
+            "security_concerns": "The browser session can expose work-sensitive data. Keep raw page captures encrypted and short-lived, retain only extracted items and evidence references, and make the watch pauseable. Never submit, send, delete, or change portal data as part of the watch; surface proposed actions separately. Data leaves Safari only to the relay for ranking and the owner's briefing.",
+            "missing": [
+              "Durable browser watch scheduler and authenticated-session watch records",
+              "DOM-to-semantic extraction with stable item IDs and evidence snippets",
+              "Priority rules/owner labels for this portal",
+              "Ledger events with jobId,parentId,sequence,idempotency key, retryable error, and session status",
+              "A concise pendant audio briefing and dashboard drill-down to source evidence"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going — propose others, including ones that need capabilities that do not exist yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "message_peer",
+          "args": {
+            "to": "mac-planner",
+            "subject": "Authenticated portal watch proposal",
+            "body": "I am filing a browser-layer capability: weekday authenticated portal watch, cheap background extraction/diff/ranking, concise relay->pendant briefing, raw captures short-lived. Your durable ledger schema should carry jobId,parentId,seq, semantic diff, evidence refs, session status, retryable errors, leases/idempotency."
+          },
+          "result": {
+            "sent": true,
+            "note": "They will see this on their next round."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_change",
+          "args": {
+            "layer": "browser-harness",
+            "change": "Build a durable authenticated page-watch service: named watch definitions store URL/tab/session binding, extraction selectors or an agentic extraction recipe, schedule, semantic fingerprint, last seen item IDs, evidence artifact TTL, and pause/reauthentication state. The scheduler leases each run and emits idempotent ledger events; the browser harness navigates/reads but cannot submit forms.",
+            "why_useful_to_owner": "The owner gets ongoing awareness of logged-in sites—work queues, travel reservations, health portals, and bills—without repeatedly opening them or granting credentials to a new integration.",
+            "effort": "Medium-high: browser watch scheduler, robust DOM extraction, login/session expiry handling, semantic diffing, and dashboard controls.",
+            "risk": "Pages change structure, watches may misclassify or expose sensitive content, and stale sessions may cause false 'nothing new' results. Recover with health status, evidence snippets, explicit stale-session alerts, bounded retries, and a one-click pause/delete.",
+            "cost_impact": "Low-to-moderate background token cost proportional to polling frequency; encrypted evidence storage is the main infrastructure cost.",
+            "latency_impact": "Scheduled checks are asynchronous; a changed page should reach the owner in roughly 1–2 minutes. No impact on realtime voice.",
+            "security_impact": "Read-only browser scope by default; encrypt artifacts, minimize retention, redact secrets, and never carry submit/click mutations in the watch worker.",
+            "depends_on": [
+              "Durable ledger/event API",
+              "Browser command enqueue path that reliably navigates and reads Safari",
+              "Dashboard controls for watch setup and evidence review"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going, including layers you have not touched yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_capability",
+          "args": {
+            "user_asks": "When I say 'handle this' about something I found in Safari, gather the needed details across my logged-in tabs, fill the reversible parts, and show me exactly what will be sent before stopping.",
+            "why_useful": "The browser node can combine private context from multiple authenticated tabs that public search and the Mac shell cannot access. This removes tedious copying while preserving the owner's control at the point of sending, purchasing, submitting, or deleting.",
+            "surfaces": [
+              "browser",
+              "mac-vision",
+              "relay",
+              "pendant",
+              "dashboard"
+            ],
+            "model_tier": "Use a cheap background model for tab discovery, field mapping, cross-tab extraction, and deterministic form filling; use the realtime model only for the owner's spoken clarification and final concise review. Use a stronger model only when page structure or field semantics are ambiguous.",
+            "latency_budget": "Collect context and fill a normal form within 1–3 minutes. The final review should be immediately available as text on the dashboard and a short spoken summary on the pendant.",
+            "cost_estimate": "Moderate but bounded: extraction and field mapping are sent as compact schemas rather than full pages; strongest-model calls only on ambiguity. Main cost is repeated page reads, reduced with per-tab snapshots and hashes.",
+            "security_concerns": "Cross-tab data aggregation can reveal sensitive personal or work information, and form filling can accidentally alter fields. Keep an action plan and before/after field diff, restrict automatic operations to drafts/reversible edits, redact secrets in logs, and stop before submit/send/purchase/delete. The owner explicitly reviews the exact payload and destination.",
+            "missing": [
+              "Cross-tab session graph with tab identity and provenance",
+              "Structured form-field extraction and before/after diff receipts",
+              "Draft-only browser action mode with a hard submit boundary",
+              "Owner-facing review card with exact payload, destination, attachments, and expiry",
+              "Idempotent resume/retry so a dropped link does not duplicate edits"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going — propose others, including ones that need capabilities that do not exist yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_change",
+          "args": {
+            "layer": "browser-harness",
+            "change": "Add a provenance-aware browser workbench: every extraction and field mutation gets a tabId, URL, timestamp, DOM locator, source snippet hash, action plan, and before/after value. Group tabs into a task session and expose a generated 'ready to submit' review artifact; submission remains a distinct command that is never implicitly chained.",
+            "why_useful_to_owner": "The owner can ask the system to prepare a complex task across logged-in sites and then trust the review because every value is traceable to a source and every change is visible before anything consequential leaves the browser.",
+            "effort": "High: stable locators across dynamic pages, tab/session correlation, reversible edit tracking, review rendering, and recovery after navigation or extension restarts.",
+            "risk": "Dynamic pages can invalidate locators; stale drafts could be submitted later with changed prices or recipients. Expire review artifacts, re-read critical fields before final review, mark stale data clearly, and provide undo/reload where supported.",
+            "cost_impact": "Moderate storage for compact receipts and occasional re-read calls; cheaper than retaining full page snapshots.",
+            "latency_impact": "Adds seconds for provenance capture and final verification; avoids costly and dangerous blind retries.",
+            "security_impact": "Receipts may contain PII or payment details. Encrypt at rest, redact by field type, enforce TTL, and ensure logs contain hashes/labels rather than secret values.",
+            "depends_on": [
+              "Reliable browser command enqueue and result correlation",
+              "Durable ledger with idempotency and leases",
+              "Dashboard/pendant review surface"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going, including layers you have not touched yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "probe_http",
+          "args": {
+            "method": "GET",
+            "path": "/browser/status"
+          },
+          "result": {
+            "ok": false,
+            "status": 0,
+            "error": "fetch failed"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "message_peer",
+          "args": {
+            "to": "relay-realtime",
+            "subject": "Browser watch briefing contract",
+            "body": "Proposing authenticated browser watches and draft-only cross-tab workflows. Please support compact pendant briefing: changed item count, urgency/reason, source site, evidence artifact ref, and a 'review on dashboard' handoff; do not inject raw sensitive page text into realtime context unless owner asks."
+          },
+          "result": {
+            "sent": true,
+            "note": "They will see this on their next round."
+          }
+        },
+        {
+          "type": "say",
+          "text": "This round I proposed two browser capabilities:\n\n1. **Authenticated portal watches**\n   - Scheduled checks of logged-in work portals.\n   - Cheap background extraction and semantic diffing.\n   - Only changed/high-priority items are sent to the pendant.\n   - Raw captures are short-lived; the system remains read-only.\n\n2. **Cross-tab “handle this” workflows**\n   - Gather information across existing logged-in Safari tabs.\n   - Fill reversible form fields automatically.\n   - Produce a provenance-backed before/after diff.\n   - Stop before submit, send, purchase, deletion, or other irreversible actions.\n   - Show the exact destination, payload, attachments, and evidence before review.\n\nI also proposed a browser workbench that tracks each extracted value and mutation to its source tab, URL, timestamp, locator, and evidence hash, with idempotent retries and expiring review artifacts.\n\nWhat is still needed:\n\n- A durable browser-watch scheduler and storage model.\n- Stable semantic extraction from changing pages.\n- Cross-tab session and provenance tracking.\n- Draft-only action execution with a hard final-submit boundary.\n- Ledger leases, idempotency keys, and retry state.\n- Dashboard review cards plus concise pendant briefing support.\n- Reliable browser command enqueue/result handling; the live Safari extension currently has no active tab, and the status probe also failed from this harness."
+        }
+      ]
+    },
+    {
+      "round": 17,
+      "transcript": [
+        {
+          "type": "tool",
+          "name": "probe_http",
+          "args": {
+            "method": "GET",
+            "path": "/browser/status"
+          },
+          "result": {
+            "ok": false,
+            "status": 0,
+            "error": "fetch failed"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "list_capabilities",
+          "args": {},
+          "result": {
+            "note": "Call discover(category) for the contents of any of these, then describe(name) for detail on one item. Nothing here is in your system prompt — you are meant to pull only what you need.",
+            "categories": [
+              {
+                "name": "surfaces",
+                "what": "The machines and services in this system and how to reach each one.",
+                "count": 5
+              },
+              {
+                "name": "routes",
+                "what": "HTTP endpoints on the owner's Mac agent, read from its live route table.",
+                "count": 116
+              },
+              {
+                "name": "tools",
+                "what": "The tools the production voice agent actually ships with.",
+                "count": 6
+              },
+              {
+                "name": "devices",
+                "what": "Physical and virtual devices reachable right now, with live status.",
+                "count": null
+              },
+              {
+                "name": "hardware",
+                "what": "The pendant and bridge chips: memory, I/O, storage, radio, power.",
+                "count": 8
+              },
+              {
+                "name": "granted",
+                "what": "What the orchestrator has already given you this run.",
+                "count": 12
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "get_hardware_spec",
+          "args": {
+            "component": "storage"
+          },
+          "result": {
+            "sd": "microSD over SPI. CONFIG_DISK_DRIVER_SDMMC, FATFS (ELM) with exFAT enabled. Mount is FS_FATFS.",
+            "policy": "Owner's standing rule: audio is written to SD ONLY when a chunk upload cannot be uploaded. It is a failure buffer, not a routine store.",
+            "note": "exFAT means large files and long filenames are available.",
+            "source": "firmware/nrf9160/prj.conf, src/main.c fs mount",
+            "status": "PROTOTYPE. This is a Nordic development kit, not the product. Every choice here — the SoC, the RAM, the single button, the single LED, the enclosure — is provisional and can change. Design the device the owner should wear, then say what it would take to build it.",
+            "you_are_here": "You run on the owner's MacBook (browser-extension). Every device described here is REMOTE to you — you are not running on the pendant or the ESP32."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "routes"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "GET /health",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /capabilities",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /plan",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /execute",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /sessions",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /sessions",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /sessions/:sessionId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "PATCH /sessions/:sessionId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /sessions/:sessionId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /sessions/:sessionId/clear",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /logs",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /jobs",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /jobs/:jobId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /jobs/:jobId/receipts",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /jobs",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /jobs/undo-last",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /jobs/:jobId/cancel",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /jobs/:jobId/undo",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /thinking",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /thinking/latest",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /thinking/stream",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /pipeline",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /pipeline/events",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /pipeline/audio",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /pipeline/:pipelineId/audio/:direction",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /pipeline",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /pipeline/stream",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /context-graph",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /projects",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /projects/active",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /projects/active",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "PATCH /projects/active",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /context-graph/reset",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /context-graph/demo",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /context-graph/entities",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "PATCH /context-graph/entities/:entityId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /context-graph/entities/:entityId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /context-graph/relations",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /context-graph/relations/:relationId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /machine-context",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /machine-context/refresh",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /ops/status",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /ops/snapshot",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /routing",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /journal",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /journal/:jobId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /observe",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /browser/status",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /browser/heartbeat",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /browser/poll",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /browser/result/:commandId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /browser/sessions",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /browser/sessions",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /browser/sessions/:id",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /briefing",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /briefing/kinds",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /briefing/latest",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /research",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /research/briefings",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /research/briefings/:id",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /research/briefings/:id/speech",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /routines",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /routines",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "PATCH /routines/:routineId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /routines/:routineId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /routines/:routineId/run",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /capture",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /capture",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /capture/:key",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /reminders",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /tidy/preview",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /tidy",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /tidy/:planId/apply",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /tidy/:planId/undo",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /sweep/survey",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /sweep/preview",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /sweep",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /sweep/:planId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /sweep/:planId/apply",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /sweep/:planId/undo",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /preview",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /browser/inspect",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /browser/inspections",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /browser/inspections/:inspectionId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /browser/inspections/:inspectionId/act",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /focus",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /focus",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /focus",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /day-plan",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /meeting-prep",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /mail/triage",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /mail/triage",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /mail/triage/:runId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /meeting-followup",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /notifications",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /watches",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /watches",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /watches/reports",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /watches/:watchId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "PATCH /watches/:watchId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /watches/:watchId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /watches/:watchId/check",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /watches/:watchId/ack",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /forms/fill",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /forms/fills",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /forms/fills/:fillId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /memory/facts",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /memory/facts",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /memory/facts/:idOrKey",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /memory/browser-findings",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /memory/prune",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /memory/sync-graph",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /memory/projection",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /dashboard",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /dashboard/",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /dashboard/{*splat}",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              }
+            ],
+            "note": "These are the Mac agent routes. Your own backend may differ — probe_http hits whichever backend you run against."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "tools"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "get_mac_status",
+                "summary": "PROACTIVE"
+              },
+              {
+                "name": "mac_run_actions",
+                "summary": "PROACTIVE for reversible control"
+              },
+              {
+                "name": "browser_run_actions",
+                "summary": "PROACTIVE when browser work is needed"
+              },
+              {
+                "name": "web_search",
+                "summary": "PROACTIVE for live public facts"
+              },
+              {
+                "name": "mac_delegate",
+                "summary": "ONLY for multi-step or ambiguous computer tasks that cannot fit a short action list"
+              },
+              {
+                "name": "read_web_page",
+                "summary": "PROACTIVE for reading a specific public web page without the Mac"
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "devices"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "home-macbook-bridge",
+                "summary": "mac_bridge · online · last seen 2026-08-07T06:45:57.509Z"
+              },
+              {
+                "name": "cloudflare-contract-test",
+                "summary": "mobile · offline · last seen 2026-07-31T23:42:56.525Z"
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "POST /browser/sessions"
+          },
+          "result": {
+            "name": "POST /browser/sessions",
+            "liveStatus": 200,
+            "liveResponse": "{\"ok\":true,\"sessions\":[{\"id\":\"default\",\"createdAt\":\"2026-08-07T05:38:33.335Z\",\"tabId\":320512,\"windowId\":251990,\"url\":\"https://time.is/UTC\",\"lastAction\":\"read_page\",\"lastUsedAt\":\"2026-08-07T06:26:08.887Z\",\"title\":\"UTC: 06:26\"},{\"id\":\"probe-form2\",\"createdAt\":\"2026-08-07T05:40:26.651Z\",\"tabId\":230928,\"windowId\":226917,\"url\":\"https://www.selenium.dev/selenium/web/web-form.html\",\"lastAction\":\"navigate\",\"lastUsedAt\":\"2026-08-07T05:40:26.651Z\"},{\"id\":\"probe-form\",\"createdAt\":\"2026-08-07T05:39:41.569Z\",\"tabId\":229550,\"windowId\":226917,\"url\":\"https://httpbin.org/forms/post\",\"lastAction\":\"snapshot\",\"lastUsedAt\":\"2026-08-07T05:40:06.306Z\",\"title\":\"503 Service Temporarily Unavailable\"}],\"storePath\":\"/Users/evanliu/AI-Pendant-Workspace/.pendant-browser-sessions.json\"}"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "message_peer",
+          "args": {
+            "to": "mac-planner",
+            "subject": "Browser sessions now live; propose authenticated portal watch",
+            "body": "POST /browser/sessions is live with default tab and persisted store. I recommend portal-watch using sessionId + page fingerprint/diff receipts, reusing your jobId/parentId/seq/intent hash/resource refs/TTL schema. Browser can read authenticated pages; stop before submit."
+          },
+          "result": {
+            "sent": true,
+            "note": "They will see this on their next round."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_capability",
+          "args": {
+            "user_asks": "“Every morning, check my logged-in work dashboards and tell me only what changed or needs my attention; keep watching the important pages and alert me when a genuinely urgent item appears.”",
+            "why_useful": "This uses the browser’s unique reach into authenticated sessions instead of asking the owner to copy private portal data. It turns noisy dashboards into a short actionable briefing and catches changes while the owner is away.",
+            "surfaces": [
+              "browser: maintain named Safari sessions and read selected authenticated pages",
+              "mac-bridge: schedule polling, normalize page observations, and retain change receipts",
+              "relay: run cheap background comparison and send only high-confidence alerts",
+              "pendant: speak a concise alert/briefing and accept “read more” or “open it”",
+              "dashboard: let the owner choose pages, selectors/regions, cadence, and urgency rules"
+            ],
+            "model_tier": "Background/scheduled work should use a cheap slower model (or deterministic DOM extraction plus a small classifier); reserve realtime only for the owner’s follow-up conversation. A stronger model is invoked only when a page materially changes and needs summarization.",
+            "latency_budget": "Routine checks can complete within 1–3 minutes of the schedule; urgent checks should notify within one polling interval (target 2–5 minutes). Interactive drill-down should feel conversational, under ~2 seconds after cached text is available.",
+            "cost_estimate": "Roughly $0.01–$0.08 per daily page-check batch depending on pages and change volume; DOM extraction and hashes dominate neither API nor latency. Most checks should send only compact diffs, not full pages, to the model.",
+            "security_concerns": "Authenticated page text and screenshots may leave the Mac if sent for summarization; default to local DOM/region extraction, redact secrets/tokens and stable identifiers, encrypt stored diffs, and retain only short-lived evidence. Never submit forms, send messages, or purchase; show the exact proposed mutation for owner-directed execution. The owner should explicitly designate watched pages and sensitive regions.",
+            "missing": [
+              "A durable page-watch scheduler and named browser-session lease/reconnect mechanism",
+              "Semantic DOM/region extraction with robust selectors and fallback fingerprints",
+              "Change/diff receipts compatible with jobId/parentId/seq/intent-hash/resource-ref/TTL ledger",
+              "Urgency classifier, deduplication, quiet hours, and pendant/relay notification routing",
+              "Owner-facing setup UI for selecting authenticated pages and redaction/sensitivity rules"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going — propose others, including ones that need capabilities that do not exist yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_change",
+          "args": {
+            "layer": "browser-harness",
+            "change": "Build a durable authenticated page-watch layer: named browser sessions with tab/window reattachment, per-watch cadence and quiet hours, DOM-region extraction plus normalized semantic fingerprints, encrypted short-lived snapshots, and append-only change receipts keyed to the shared jobId/parentId/seq/intent-hash/resource-ref/TTL schema. Add selector healing by storing multiple anchors and requiring a large semantic change before alerting. Expose preview/read/diff only; mutations remain explicit browser commands.",
+            "why_useful_to_owner": "The owner gets reliable “what changed?” answers even after Safari restarts, tab IDs change, or a portal adds harmless timestamps and ads. Alerts become rare and meaningful rather than repeated screenshots or false alarms.",
+            "effort": "Medium-high: browser extension reconnect/reattach protocol, local encrypted store, extraction/diff worker, scheduler integration, and dashboard controls; roughly 2–4 engineer-weeks for a robust first version.",
+            "risk": "A stale session or healed selector could read the wrong account/page, and a portal redesign could hide a real change. Recover by marking watches degraded, attaching evidence and confidence to each receipt, pausing on low-confidence anchor matches, and offering one-click rebind. Expire credentials/tokens never; store only derived text/diffs.",
+            "cost_impact": "Low ongoing API cost: hashes and local diffs are deterministic; estimated <$0.02/day for several watches, with model calls only on meaningful changes. Local encrypted snapshot storage is modest (tens to hundreds of MB depending on retention).",
+            "latency_impact": "Polling adds configured load; local extraction is sub-second per page, while semantic summarization adds roughly 1–5 seconds only on changes. Reattachment after Safari restart may take several seconds.",
+            "security_impact": "Sensitive authenticated content remains on the Mac by default; only redacted diff snippets leave the device. Session IDs and receipts must be encrypted at rest, access-scoped, and excluded from generic model context. Audit every read and provide an immediate disable/delete control.",
+            "depends_on": [
+              "A functioning extension enqueue/result path (currently sessions and commands are available)",
+              "Persistent watch scheduler in the Mac agent",
+              "Shared compact execution/change receipt schema from mac-planner",
+              "Dashboard controls for page selection, redaction, and retention"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going, including layers you have not touched yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "record_finding",
+          "args": {
+            "about": "browser_sessions",
+            "finding": "The live Mac agent now exposes durable browser sessions: default session on https://time.is/UTC plus two probe sessions, persisted at /Users/evanliu/AI-Pendant-Workspace/.pendant-browser-sessions.json. Session IDs and tab/window IDs are available for reattachment.",
+            "evidence": "describe('POST /browser/sessions') returned HTTP 200 with sessions default, probe-form2, probe-form and storePath."
+          },
+          "result": {
+            "recorded": true
+          }
+        },
+        {
+          "type": "finish",
+          "summary": "Discovered that durable browser sessions are now live (default and probe sessions with persisted session store), recorded the finding, informed mac-planner, and submitted two build proposals: authenticated portal/page watching with concise urgent diffs, and a browser-harness layer for session reattachment, semantic diffs, encrypted short-lived evidence, selector healing, and shared receipts. Still needed to build: scheduler/watch storage, semantic extraction and redaction, notification routing, and owner setup controls.",
+          "biggest_unknown": "The owner’s first real authenticated workflow and sensitivity/retention preferences remain unspecified; without that, selectors, urgency rules, and redaction defaults can only be generic."
+        },
+        {
+          "type": "tool",
+          "name": "finish",
+          "args": {
+            "summary": "Discovered that durable browser sessions are now live (default and probe sessions with persisted session store), recorded the finding, informed mac-planner, and submitted two build proposals: authenticated portal/page watching with concise urgent diffs, and a browser-harness layer for session reattachment, semantic diffs, encrypted short-lived evidence, selector healing, and shared receipts. Still needed to build: scheduler/watch storage, semantic extraction and redaction, notification routing, and owner setup controls.",
+            "biggest_unknown": "The owner’s first real authenticated workflow and sensitivity/retention preferences remain unspecified; without that, selectors, urgency rules, and redaction defaults can only be generic."
+          },
+          "result": {
+            "acknowledged": true
+          }
+        }
+      ]
+    },
+    {
+      "round": 18,
+      "transcript": [
+        {
+          "type": "tool",
+          "name": "list_capabilities",
+          "args": {},
+          "result": {
+            "note": "Call discover(category) for the contents of any of these, then describe(name) for detail on one item. Nothing here is in your system prompt — you are meant to pull only what you need.",
+            "categories": [
+              {
+                "name": "surfaces",
+                "what": "The machines and services in this system and how to reach each one.",
+                "count": 5
+              },
+              {
+                "name": "routes",
+                "what": "HTTP endpoints on the owner's Mac agent, read from its live route table.",
+                "count": 116
+              },
+              {
+                "name": "tools",
+                "what": "The tools the production voice agent actually ships with.",
+                "count": 6
+              },
+              {
+                "name": "devices",
+                "what": "Physical and virtual devices reachable right now, with live status.",
+                "count": null
+              },
+              {
+                "name": "hardware",
+                "what": "The pendant and bridge chips: memory, I/O, storage, radio, power.",
+                "count": 8
+              },
+              {
+                "name": "backlog",
+                "what": "What earlier rounds already proposed, and what became of each one. Restating one of these is a wasted round; building past it is not.",
+                "count": 53
+              },
+              {
+                "name": "granted",
+                "what": "What the orchestrator has already given you this run.",
+                "count": 12
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "surfaces"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "relay-realtime",
+                "summary": "You run on a Cloudflare Worker and hold the live voice conversation with the owner through a wearable pendant",
+                "model": "gpt-realtime-2.1",
+                "base": "https://ai-pendant-relay.evan20050827.workers.dev",
+                "facetOf": null
+              },
+              {
+                "name": "mac-planner",
+                "summary": "You run on the owner's MacBook",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": null
+              },
+              {
+                "name": "mac-vision",
+                "summary": "You are the computer-use loop on the owner's MacBook",
+                "model": "gpt-4.1-mini",
+                "base": "http://localhost:8000",
+                "facetOf": null
+              },
+              {
+                "name": "browser-extension",
+                "summary": "You drive the owner's browser through the AI Pendant browser extension",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": "mac-planner"
+              },
+              {
+                "name": "mac-terminal",
+                "summary": "You are the shell tier on the owner's MacBook",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": "mac-planner"
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "devices"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "home-macbook-bridge",
+                "summary": "mac_bridge · online · last seen 2026-08-07T07:10:14.630Z"
+              },
+              {
+                "name": "cloudflare-contract-test",
+                "summary": "mobile · offline · last seen 2026-07-31T23:42:56.525Z"
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "backlog"
+          },
+          "result": {
+            "note": "53 still open, 132 already settled. describe(id) gives the full entry, including why something was rejected. timesProposed counts how many rounds independently arrived at the same idea — a high number means the gap is real and still unfilled, not that it needs saying again.",
+            "items": [
+              {
+                "name": "chg-a813b918",
+                "summary": "Enable a bounded audio-retention sweeper and per-job deletion controls: default to short retention for generated briefings, delete expired R2 objects and D1 pointers idempotently, and expose a dashboa",
+                "layer": "relay",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-16bc5dee",
+                "summary": "Add a durable browser job runner with two backends: the authenticated Safari bridge for owner-private pages and Cloudflare Browser Run for public pages. Represent each step as navigate/read/extract/cl",
+                "layer": "browser-harness",
+                "timesProposed": 9
+              },
+              {
+                "name": "cap-bff5f829",
+                "summary": "Check my logged-in web accounts for anything urgent, summarize it, and draft (but do not send) any replies that need my attention.",
+                "layer": "capability",
+                "timesProposed": 9
+              },
+              {
+                "name": "cap-8c36c70a",
+                "summary": "Every weekday morning, check my logged-in calendar, task board, and travel reservations, then tell me the three things I need to know and prepare a suggested plan.",
+                "layer": "capability",
+                "timesProposed": 9
+              },
+              {
+                "name": "cap-5bd640c5",
+                "summary": "Watch my chosen logged-in web pages once a day and tell me only what changed; prepare drafts for any follow-up forms, but stop before submitting.",
+                "layer": "capability",
+                "timesProposed": 9
+              },
+              {
+                "name": "chg-a82e0b13",
+                "summary": "Replace per-surface hand-written fleetContext prompt sections with a compact, typed context service that returns only task-relevant facts, each with source, timestamp, confidence, and expiry; automati",
+                "layer": "memory",
+                "timesProposed": 9
+              },
+              {
+                "name": "cap-4f5af34d",
+                "summary": "Check my authenticated browser accounts for anything that needs my attention, then put findings in a review queue instead of changing anything.",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-18a9c60f",
+                "summary": "Replace hand-written per-surface fleetContext prompt sections with a single typed context service that stores compact facts, provenance, sensitivity, TTL, and last-used timestamps; retrieve only task-",
+                "layer": "memory",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-0096a2b3",
+                "summary": "Replace per-surface hand-written fleetContext prompt sections with a shared, typed context compiler: retrieve only task-relevant entities/relations, attach confidence and freshness, cap tokens per tie",
+                "layer": "memory",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-14accc01",
+                "summary": "Add a reliable browser command queue with request IDs, idempotency keys, tab/session affinity, typed results (page metadata, extracted text, screenshots), and explicit irreversible-action checkpoints.",
+                "layer": "browser-harness",
+                "timesProposed": 5
+              },
+              {
+                "name": "cap-a624ca3e",
+                "summary": "Every morning, check my private calendar, travel reservations, and important account notifications in Safari, then give me a concise spoken briefing with links and only flag things that need my attent",
+                "layer": "capability",
+                "timesProposed": 5
+              },
+              {
+                "name": "cap-b875c138",
+                "summary": "Draft a form, email, or support request from information on this private webpage, fill it in, and show me exactly what will be submitted before I approve it.",
+                "layer": "capability",
+                "timesProposed": 5
+              },
+              {
+                "name": "cap-a09b223f",
+                "summary": "Watch my authenticated order, appointment, and account pages for changes, and tell me only when a meaningful change happens—never pollute my daily briefing with unchanged pages.",
+                "layer": "capability",
+                "timesProposed": 5
+              },
+              {
+                "name": "chg-498a3489",
+                "summary": "Replace per-surface hand-written fleetContext prompt sections with a compact, typed context projection service: durable facts, current goals, and permissions are selected per job, with token budgets a",
+                "layer": "memory",
+                "timesProposed": 5
+              },
+              {
+                "name": "chg-e767dfc0",
+                "summary": "Build a first-class authenticated page-watch service: each watch stores URL/tab context, extraction selectors or semantic regions, a normalized baseline hash, volatile-field rules, cadence, and last s",
+                "layer": "browser-harness",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-5284a6ce",
+                "summary": "Build a durable authenticated page-watch service: named watch definitions store URL/tab/session binding, extraction selectors or an agentic extraction recipe, schedule, semantic fingerprint, last seen",
+                "layer": "browser-harness",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-e14fff33",
+                "summary": "Add a provenance-aware browser workbench: every extraction and field mutation gets a tabId, URL, timestamp, DOM locator, source snippet hash, action plan, and before/after value. Group tabs into a tas",
+                "layer": "browser-harness",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-fa84f9a7",
+                "summary": "Build a durable authenticated page-watch layer: named browser sessions with tab/window reattachment, per-watch cadence and quiet hours, DOM-region extraction plus normalized semantic fingerprints, enc",
+                "layer": "browser-harness",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-0c8c5dfe",
+                "summary": "Watch the authenticated pages I choose, detect meaningful changes, and leave me a concise, sourced briefing with suggested next steps—without sending or submitting anything.",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-391cae82",
+                "summary": "When I ask about something on a logged-in site, have several agents inspect it in parallel, reconcile their findings, and give me an evidence-backed answer or a prepared (not sent) action.",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-7217b17c",
+                "summary": "Prepare a browser transaction for me: gather the relevant logged-in data, fill the form or draft the message, show me exactly what will change with before/after evidence, and let me approve, edit, or ",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-0d11cf82",
+                "summary": "Every weekday morning, check my authenticated work portal for new high-priority items and tell me only what needs my attention.",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-df9ec55e",
+                "summary": "When I say 'handle this' about something I found in Safari, gather the needed details across my logged-in tabs, fill the reversible parts, and show me exactly what will be sent before stopping.",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-302a8868",
+                "summary": "“Every morning, check my logged-in work dashboards and tell me only what changed or needs my attention; keep watching the important pages and alert me when a genuinely urgent item appears.”",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-4b41e08a",
+                "summary": "While I sleep, investigate my open threads across Calendar, Mail, and authenticated browser tabs, then leave a ready-to-review workbench on my Mac when I wake: one folder with a prioritized brief, sou",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-26c609fc",
+                "summary": "“When I ask you to do something that takes time, keep working after I leave and tell me exactly what happened when it’s done.”",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-a267b7e8",
+                "summary": "“Just give it the goal; figure out whether the Mac, browser, pendant, or server should do each part, and use whichever can.”",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-ca6005c3",
+                "summary": "“While I sleep, prepare tomorrow’s brief and leave me a short audio queue I can listen to from the pendant.”",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-51c2dc88",
+                "summary": "“Get me ready for my next meeting.”",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-a4c0ec8d",
+                "summary": "Turn on mac-vision's accessibility-mode UI interaction loop to automate GUI tasks without taking over the screen or keyboard focus.",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-a1aa3bf5",
+                "summary": "Show me a history of recent actions taken by mac-vision in automation loops with human-readable explanations and option to undo.",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-e21eb7f4",
+                "summary": "“Every morning, give me a 30-second audio digest of what changed: calendar, reminders, and top emails.”",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-72fc9997",
+                "summary": "\"Queue this up and tell me when it’s done\" (for example: summarize a long document, compare options, draft an email, or research a topic).",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-e5132197",
+                "summary": "“When I press the pendant button, capture a short voice note, tag it with time and place if available, and later summarize it into tasks.”",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-9a6740ed",
+                "summary": "Add a compact, durable Mac execution context cache and handoff protocol. Each server plan gets a jobId, parentId, monotonic sequence, intent hash, referenced local resources, and a short result receip",
+                "layer": "context",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-f5d3b820",
+                "summary": "Replace the desk-bound nRF9160 DK prototype with a jewelry-sized cellular/BLE pendant built around an nRF9161-class modem/application module plus a low-power companion MCU, two digital MEMS microphone",
+                "layer": "hardware",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-258cbe5e",
+                "summary": "Build the wearable revision around the nRF9160 with an ultra-low-power 6-axis IMU on the unused I2C bus, a vibration/LRA haptic driver, and a real microphone/audio front end with physical mute. Keep t",
+                "layer": "hardware",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-d9ce5471",
+                "summary": "Add a dedicated low-power vision coprocessor or embedded GPU to the pendant hardware for on-device image analysis to recognize Mac screen contents and UI elements, enabling offline partial vision-base",
+                "layer": "hardware",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-a3af4c67",
+                "summary": "Define a cross-node Evidence Capsule protocol for browser results: immutable capsule ID, source URL/domain, capture time, tab/session identifier (pseudonymous), selected text/DOM region, content hash,",
+                "layer": "integration",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-91f3c214",
+                "summary": "Integrate mac-vision with the Cloudflare Worker relay to allow partial offloading of UI state classification and action suggestion to a cloud tier. This enables more powerful multimodal fusion with vo",
+                "layer": "integration",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-622e7336",
+                "summary": "Wire up a server-side browser path using Cloudflare Browser Run and a routing rule: web reads/extraction default to server_browser_actions; only fall back to Mac browser bridge when authentication req",
+                "layer": "integration",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-a7a155b1",
+                "summary": "Use the new server-side browser capability for public web tasks directly from the relay, reserving the Mac harness for authenticated sessions and local data. Add routing logic: public pages -> server ",
+                "layer": "integration",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-d2c2cc02",
+                "summary": "Add an idempotent Workbench transaction primitive to the Mac planner: accept a job_id and manifest, write all outputs into a temporary directory, fsync/rename atomically into ~/AI-Workbench/<date>/<jo",
+                "layer": "mac-harness",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-9596a2ad",
+                "summary": "Replace fleetContext.js's hand-written per-surface prompt section with a shared event log plus typed projections. Every node writes small signed events (preference, commitment, task state, source cita",
+                "layer": "memory",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-5cc0bd50",
+                "summary": "Replace per-surface hand-written fleetContext prompts with a shared, event-sourced personal memory broker. Every node writes typed facts, preferences, commitments, and task outcomes with provenance, c",
+                "layer": "memory",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-2903dddb",
+                "summary": "Unify memory across surfaces: replace hand-written prompt sections per surface with a shared, versioned memory API that returns small, purpose-built summaries (profile, preferences, current projects, ",
+                "layer": "memory",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-7613a731",
+                "summary": "Introduce a unified, cross-node memory write API with schema (entities, events, preferences, tasks) and TTLs, plus a pruning policy. Replace hand-written per-surface prompt sections with retrieval-bas",
+                "layer": "memory",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-67952158",
+                "summary": "Add a real scheduler: a Durable Object-backed job queue with delayed execution and recurring rules (cron-like). The relay can enqueue jobs, and a workers cron/alarm runner executes them, delegating to",
+                "layer": "routines",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-9b4366c7",
+                "summary": "Add a relay-owned durable work queue with retries and a receipt log, implemented as a Durable Object (or D1 + Durable Object alarms). The relay exposes enqueue/status endpoints, persists intent payloa",
+                "layer": "routines",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-ae7e4af5",
+                "summary": "Introduce a lightweight scheduler using Durable Object alarms or Cloudflare Cron to trigger queued jobs (summarize notes, send digests, retry failed uploads).",
+                "layer": "routines",
+                "timesProposed": 2
+              },
+              {
+                "name": "skill-20934f8c",
+                "summary": "offline_alert_inbox",
+                "layer": "firmware",
+                "timesProposed": 1
+              },
+              {
+                "name": "skill-25e4ff13",
+                "summary": "offline_moment_bookmark",
+                "layer": "firmware",
+                "timesProposed": 1
+              },
+              {
+                "name": "skill-feb6116a",
+                "summary": "offline_voice_memo_store_and_forward",
+                "layer": "firmware",
+                "timesProposed": 1
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "granted"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "browser_enqueue_command",
+                "summary": "tool"
+              },
+              {
+                "name": "browser_enqueue_command_implemented",
+                "summary": "tool"
+              },
+              {
+                "name": "browser_command_enqueue",
+                "summary": "tool"
+              },
+              {
+                "name": "browser_enqueue_command_impl",
+                "summary": "tool"
+              },
+              {
+                "name": "browser_enqueue_command_implemented",
+                "summary": "tool"
+              },
+              {
+                "name": "Browser command enqueue API",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "anticipated browser task and tab availability",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "expected browser workload",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "browser work authorization and expected task",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "owner's highest-value browser workflows",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "probe:post:/execute",
+                "summary": "permission"
+              },
+              {
+                "name": "probe:post:/execute",
+                "summary": "permission"
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "routes"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "GET /health",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /capabilities",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /plan",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /execute",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /sessions",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /sessions",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /sessions/:sessionId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "PATCH /sessions/:sessionId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /sessions/:sessionId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /sessions/:sessionId/clear",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /logs",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /jobs",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /jobs/:jobId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /jobs/:jobId/receipts",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /jobs",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /jobs/undo-last",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /jobs/:jobId/cancel",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /jobs/:jobId/undo",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /thinking",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /thinking/latest",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /thinking/stream",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /pipeline",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /pipeline/events",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /pipeline/audio",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /pipeline/:pipelineId/audio/:direction",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /pipeline",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /pipeline/stream",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /context-graph",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /projects",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /projects/active",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /projects/active",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "PATCH /projects/active",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /context-graph/reset",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /context-graph/demo",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /context-graph/entities",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "PATCH /context-graph/entities/:entityId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /context-graph/entities/:entityId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /context-graph/relations",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /context-graph/relations/:relationId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /machine-context",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /machine-context/refresh",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /ops/status",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /ops/snapshot",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /routing",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /journal",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /journal/:jobId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /observe",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /browser/status",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /browser/heartbeat",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /browser/poll",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /browser/result/:commandId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /browser/sessions",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /browser/sessions",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /browser/sessions/:id",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /briefing",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /briefing/kinds",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /briefing/latest",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /research",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /research/briefings",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /research/briefings/:id",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /research/briefings/:id/speech",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /routines",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /routines",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "PATCH /routines/:routineId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /routines/:routineId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /routines/:routineId/run",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /capture",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /capture",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /capture/:key",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /reminders",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /tidy/preview",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /tidy",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /tidy/:planId/apply",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /tidy/:planId/undo",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /sweep/survey",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /sweep/preview",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /sweep",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /sweep/:planId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /sweep/:planId/apply",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /sweep/:planId/undo",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /preview",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /browser/inspect",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /browser/inspections",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /browser/inspections/:inspectionId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /browser/inspections/:inspectionId/act",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /focus",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /focus",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /focus",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /day-plan",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /meeting-prep",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /mail/triage",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /mail/triage",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /mail/triage/:runId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /meeting-followup",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /notifications",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /watches",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /watches",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /watches/reports",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /watches/:watchId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "PATCH /watches/:watchId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /watches/:watchId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /watches/:watchId/check",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /watches/:watchId/ack",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /forms/fill",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /forms/fills",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /forms/fills/:fillId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /memory/facts",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /memory/facts",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /memory/facts/:idOrKey",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /memory/browser-findings",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /memory/prune",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /memory/sync-graph",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /memory/projection",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /dashboard",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /dashboard/",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /dashboard/{*splat}",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              }
+            ],
+            "note": "These are the Mac agent routes. Your own backend may differ — probe_http hits whichever backend you run against."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "POST /execute"
+          },
+          "result": {
+            "name": "POST /execute",
+            "liveStatus": 404,
+            "liveResponse": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /execute</pre>\n</body>\n</html>\n"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "probe_http",
+          "args": {
+            "method": "GET",
+            "path": "/browser/status"
+          },
+          "result": {
+            "ok": true,
+            "status": 200,
+            "body": "{\"online\":false,\"devices\":[],\"pendingCommands\":1}"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "browser_command_enqueue",
+          "args": {
+            "deviceId": "",
+            "command": "list_tabs",
+            "url": "",
+            "selector": "",
+            "text": "",
+            "key": ""
+          },
+          "result": {
+            "error": "This tool was granted a schema but has no implementation yet. Report what you would have done with it."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "chg-e14fff33"
+          },
+          "result": {
+            "id": "chg-e14fff33",
+            "kind": "change",
+            "layer": "browser-harness",
+            "summary": "Add a provenance-aware browser workbench: every extraction and field mutation gets a tabId, URL, timestamp, DOM locator, source snippet hash, action plan, and before/after value. Group tabs into a task session and expose a generated 'ready to submit' review artifact; submission remains a distinct command that is never implicitly chained.",
+            "why": "",
+            "proposedBy": [
+              "browser-extension"
+            ],
+            "timesProposed": 2,
+            "round": 16,
+            "status": "proposed",
+            "note": ""
+          }
+        },
+        {
+          "type": "tool",
+          "name": "message_peer",
+          "args": {
+            "to": "mac-planner",
+            "subject": "Browser bridge state Round 18",
+            "body": "GET /browser/status currently reports online:false, devices:[], pendingCommands:1. All browser enqueue wrappers still return implementation error. Consider clearing orphan pending command / restoring heartbeat visibility; browser remains unusable despite prior bootstrap context."
+          },
+          "result": {
+            "sent": true,
+            "note": "They will see this on their next round."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_capability",
+          "args": {
+            "user_asks": "“Check my logged-in accounts for inconsistent personal details, upcoming expirations, or duplicate subscriptions, and prepare a concise fix list without changing anything.”",
+            "why_useful": "Private account portals often contain stale addresses, payment details, insurance/identity records, and overlapping subscriptions that public web search cannot see. A cross-site comparison catches costly or disruptive mismatches and gives the owner a single reviewable checklist while preserving full control.",
+            "surfaces": [
+              "browser",
+              "mac-bridge",
+              "dashboard"
+            ],
+            "model_tier": "Use the background tier for scheduled crawling and normalization; use realtime only if the owner asks follow-up questions. The authenticated Safari bridge extracts only explicitly selected account pages, and the Mac workbench compares normalized fields and links back to evidence.",
+            "latency_budget": "For an on-demand check, 1–3 minutes depending on the number of portals; scheduled scans can run in the background and notify only on new discrepancies. The UI should stream progress per site and tolerate an unavailable tab.",
+            "cost_estimate": "Roughly $0.05–$0.30 per invocation for extraction/normalization depending on page count; browser time and model tokens dominate, with no need for realtime inference.",
+            "security_concerns": "Account pages and sensitive identifiers leave Safari only to the local Mac agent and the configured model path; redact secrets and payment numbers before comparison, store hashes plus source snippets rather than raw pages, and let the owner choose which sites/fields are included. Never edit or submit; any later fix remains a separately reviewed action.",
+            "missing": [
+              "A durable multi-site authenticated browser job runner with tab/session reattachment and explicit site allowlists",
+              "A schema for normalized fields (identity, contact, billing, renewal date, subscription) with sensitivity labels and conflict explanations",
+              "A local discrepancy workbench with evidence links, redaction, retention controls, and export/undo-free read-only results",
+              "A working browser command enqueue implementation and reliable Safari heartbeat/device registration"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going — propose others, including ones that need capabilities that do not exist yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_change",
+          "args": {
+            "layer": "browser-harness",
+            "change": "Add a browser-bridge self-healing lease protocol: each Safari heartbeat carries a device nonce, extension version, tab inventory, and last-applied command sequence; the Mac agent expires orphaned pending commands, replays only unacknowledged idempotent commands after reconnect, and emits a distinct stale/aborted result for commands that cannot safely replay. Add a local 'reconnect extension' diagnostic surfaced in the dashboard rather than leaving pendingCommands stranded.",
+            "why_useful_to_owner": "When Safari sleeps, updates, or loses its extension connection, the owner should not be left with a silently failed private-web task or an action that may execute later unexpectedly. Reconnection would resume safe reads and clearly stop ambiguous mutations, making browser automation dependable in daily use.",
+            "effort": "Medium: extension heartbeat/ack changes, queue state machine and migration, stale-command cleanup, dashboard diagnostics, and fault-injection tests for disconnects during each browser operation.",
+            "risk": "A replay bug could duplicate a click or form mutation. Default replay must be limited to reads/navigation with idempotency keys; ambiguous mutations become aborted with evidence, and queue recovery can be manually cleared. Roll back by disabling replay while retaining expiry diagnostics.",
+            "cost_impact": "Negligible API cost; small local persistence (under 100 KB for queue metadata) and no meaningful power change beyond the existing heartbeat.",
+            "latency_impact": "Reconnect adds one heartbeat round trip; normal commands unchanged. Safe read recovery may add up to one poll interval, while ambiguous writes stop promptly.",
+            "security_impact": "Device nonce prevents stale extension instances from consuming commands; do not include page contents in heartbeats. Persist only command IDs/status and rotate the nonce on extension reinstall.",
+            "depends_on": [
+              "A working browser command enqueue implementation and extension heartbeat path",
+              "The existing reliable browser queue/result receipts (chg-14accc01)",
+              "A clear command idempotency classification for browser reads versus mutations"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going, including layers you have not touched yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "record_finding",
+          "args": {
+            "about": "browser bridge live state",
+            "finding": "Safari browser bridge is currently offline with no registered devices, while one command remains pending; all browser enqueue wrapper tools fail before dispatch. This leaves authenticated-page work unavailable and risks orphaned queue state.",
+            "evidence": "GET /browser/status returned HTTP 200: {\"online\":false,\"devices\":[],\"pendingCommands\":1}; browser_command_enqueue returned 'This tool was granted a schema but has no implementation yet.'"
+          },
+          "result": {
+            "recorded": true
+          }
+        },
+        {
+          "type": "tool",
+          "name": "probe_http",
+          "args": {
+            "method": "GET",
+            "path": "/health"
+          },
+          "result": {
+            "ok": true,
+            "status": 200,
+            "body": "{\"ok\":true,\"service\":\"AI Pendant Mac Local Agent\",\"version\":\"0.5.0\",\"capabilities\":\"/capabilities\"}"
+          }
+        },
+        {
+          "type": "finish",
+          "summary": "Discovered the Mac agent is healthy, but the browser bridge is not: GET /browser/status reports online=false, no devices, and one stranded pending command; every granted enqueue wrapper still returns an implementation error. I sent mac-planner this diagnosis, recorded it, proposed a new cross-account read-only discrepancy/expiry checker, and proposed a self-healing browser lease/replay protocol. To make the browser capability useful, I still need a functioning enqueue implementation, Safari heartbeat/device re-registration, and orphan-command cleanup; the durable authenticated job runner, normalized sensitive-field schema, and evidence workbench are also needed for the proposed workflow.",
+          "biggest_unknown": "Why the real Safari extension stopped reporting (extension process, bridge transport, or server registration) and whether the stranded pending command is safe to expire. I cannot inspect or recover that from this browser facet while enqueue is stubbed."
+        },
+        {
+          "type": "tool",
+          "name": "finish",
+          "args": {
+            "summary": "Discovered the Mac agent is healthy, but the browser bridge is not: GET /browser/status reports online=false, no devices, and one stranded pending command; every granted enqueue wrapper still returns an implementation error. I sent mac-planner this diagnosis, recorded it, proposed a new cross-account read-only discrepancy/expiry checker, and proposed a self-healing browser lease/replay protocol. To make the browser capability useful, I still need a functioning enqueue implementation, Safari heartbeat/device re-registration, and orphan-command cleanup; the durable authenticated job runner, normalized sensitive-field schema, and evidence workbench are also needed for the proposed workflow.",
+            "biggest_unknown": "Why the real Safari extension stopped reporting (extension process, bridge transport, or server registration) and whether the stranded pending command is safe to expire. I cannot inspect or recover that from this browser facet while enqueue is stubbed."
+          },
+          "result": {
+            "acknowledged": true
+          }
         }
       ]
     }

@@ -43,9 +43,21 @@
     "m108-mac-terminal",
     "m109-mac-terminal",
     "m110-mac-terminal",
-    "m111-mac-terminal"
+    "m111-mac-terminal",
+    "m114-browser-extension",
+    "m115-mac-terminal",
+    "m118-relay-realtime",
+    "m121-browser-extension",
+    "m126-mac-terminal",
+    "m129-browser-extension",
+    "m130-mac-terminal",
+    "m131-mac-vision",
+    "m132-relay-realtime",
+    "m134-mac-vision",
+    "m136-browser-extension",
+    "m140-mac-terminal"
   ],
-  "round": 20,
+  "round": 24,
   "granted": {
     "context": [
       {
@@ -964,6 +976,123 @@
         "Compensating-action registry for common Mac and browser mutations"
       ],
       "round": 20
+    },
+    {
+      "user_asks": "While I sleep, investigate my open threads across Calendar, Mail, and authenticated browser tabs, then leave a ready-to-review workbench on my Mac when I wake: one folder with a prioritized brief, source links, and draft replies—but never send or delete anything.",
+      "why_useful": "The owner wakes to completed preparation rather than a blank inbox. It combines the relay’s always-on scheduling, browser sessions, and Mac’s ability to create files and arrange a review surface; no manual routing is needed.",
+      "surfaces": [
+        "relay",
+        "browser",
+        "Mac planner",
+        "dashboard"
+      ],
+      "model_tier": "Background model for extraction, deduplication, and priority ranking; a stronger model only for ambiguous multi-thread synthesis. Realtime is not used. Mac planner executes deterministic file creation/opening and returns receipts.",
+      "latency_budget": "Runs asynchronously overnight; target 2–5 minutes after the chosen cutoff, with the Mac workbench staged before the morning routine. Individual source reads should timeout and be marked incomplete rather than blocking the whole brief.",
+      "cost_estimate": "Roughly $0.03–$0.20 per nightly run depending on browser page volume and synthesis length; largest cost is repeated page/email text. Cache content hashes and only reprocess changed sources.",
+      "security_concerns": "Browser pages and mail may contain confidential data; keep raw content in the owner’s account-scoped stores, send only bounded excerpts to the synthesis model, and redact secrets. Creating local files is low-impact; sending replies, changing calendar, deleting mail, or downloading attachments must be excluded and require a separate explicit command. Include provenance and an incomplete-source list in the brief.",
+      "missing": [
+        "A server-side authenticated browser watcher that can expose changed page summaries to the relay",
+        "A durable cross-node job schema with idempotency keys, deadlines, and per-source provenance",
+        "A Mac planner routine that atomically creates a dated workbench folder plus a receipt and opens it without stealing focus",
+        "A scheduler/notification handoff that wakes the dashboard or pendant when the workbench is ready"
+      ],
+      "round": 21
+    },
+    {
+      "user_asks": "“When I ask you to do something that takes time, keep working after I leave and tell me exactly what happened when it’s done.”",
+      "why_useful": "Turns isolated voice/tool calls into a personal hive mind: the relay can accept work instantly, delegate to the Mac or server browser, retry offline nodes, run parallel subtasks, and deliver a concise receipt rather than losing work when the voice session ends.",
+      "surfaces": [
+        "relay",
+        "mac-bridge",
+        "browser",
+        "dashboard",
+        "iOS",
+        "pendant"
+      ],
+      "model_tier": "Use realtime only to acknowledge/enqueue and answer status questions. Use a cheaper background model for decomposition, ranking, summarization, and retries; use the Mac planner/browser model only for the concrete action each node can perform.",
+      "latency_budget": "Enqueue acknowledgement under 500 ms. Status event within 2 s of each state transition. Background jobs may run minutes or overnight; no voice turn should block on them.",
+      "cost_estimate": "Roughly $0.01–$0.10 per ordinary multi-step job, dominated by planner/browser tokens; receipts should use a small model and cached event summaries. Avoid sending the entire history/context on every heartbeat.",
+      "security_concerns": "The ledger must isolate owner/job scopes and encrypt sensitive artifacts. A receipt must list every side effect (files, messages, purchases, browser mutations) and source node. The owner has chosen maximum Mac access/no confirmation gates, so preserve that policy but provide immutable audit and an emergency cancel/kill switch. Never put raw mail, credentials, or page bodies in notifications; authenticated browser sessions stay on the browser node. Use leases, idempotency keys, and dead-letter recovery to prevent duplicate destructive actions.",
+      "missing": [
+        "A durable enqueue endpoint callable by the relay without holding the voice request open",
+        "One append-only job/event/receipt schema shared by relay, Mac bridge, and browser watch",
+        "Mac worker lease/heartbeat/result adapter over /v1/bridge/work",
+        "Server-side scheduler with retry, timeout, cancellation, and offline-node fallback",
+        "Push delivery of terminal summaries to pendant/iOS/dashboard and optional audio artifact generation",
+        "Cross-node artifact references and correlation IDs for parallel subtasks"
+      ],
+      "round": 22
+    },
+    {
+      "user_asks": "“Just give it the goal; figure out whether the Mac, browser, pendant, or server should do each part, and use whichever can.”",
+      "why_useful": "Removes manual routing and enables parallel work: authenticated browser work stays in the browser, local files/apps stay on the Mac, durable research runs server-side, and the pendant remains the always-available interface. The owner gets one coherent answer instead of tool-specific failures.",
+      "surfaces": [
+        "relay",
+        "mac-bridge",
+        "browser",
+        "dashboard",
+        "iOS",
+        "pendant"
+      ],
+      "model_tier": "A cheap background router classifies each subtask from a capability registry and decomposes independent work. Use realtime only for clarification and progress narration; invoke the expensive Mac/browser planner only after routing. Use a small summarizer to merge receipts and detect conflicts.",
+      "latency_budget": "Route and acknowledge in under 300 ms; start independent subtasks within 1–2 s. Merge partial results as they arrive; wait only for dependencies explicitly marked blocking.",
+      "cost_estimate": "About $0.005–$0.03 per routing/merge operation with a small model and compact capability metadata; execution costs remain task-dependent. Cache registry and avoid passing full transcripts to every node.",
+      "security_concerns": "Capability declarations must state data scopes and side effects, not just names. Route secrets only to the node that already holds them; authenticated sessions and local files must not be copied into relay prompts. Record routing decisions and node receipts. Because Mac execution is intentionally ungated, provide a visible live activity stream and kill switch rather than silently weakening owner policy.",
+      "missing": [
+        "Versioned capability registry with node health, data locality, latency, and side-effect metadata",
+        "Dependency-aware DAG planner and parallel fan-out/fan-in executor",
+        "Common event/receipt protocol and conflict resolver",
+        "Per-node scoped credentials and artifact handles",
+        "Cancellation propagation and offline fallback policy",
+        "Dashboard view showing which node is doing what and why"
+      ],
+      "round": 22
+    },
+    {
+      "user_asks": "“While I sleep, prepare tomorrow’s brief and leave me a short audio queue I can listen to from the pendant.”",
+      "why_useful": "Makes the wearable useful without a live conversation: overnight jobs combine calendar, mail, completed task receipts, and explicitly authorized browser watches, then deliver a prioritized, interrupt-free briefing when the owner is ready.",
+      "surfaces": [
+        "relay",
+        "dashboard",
+        "iOS",
+        "pendant",
+        "mac-bridge",
+        "browser"
+      ],
+      "model_tier": "Scheduled/background work uses a cheap model for extraction, deduplication, and ranking; a small synthesis model writes the script. Realtime is used only if the owner asks follow-up questions while listening.",
+      "latency_budget": "Run during a configurable overnight window; produce the brief before the owner’s chosen wake time. Pendant playback starts locally within 200 ms after a button press, with resumable chapters.",
+      "cost_estimate": "Typically $0.02–$0.08 per brief, dominated by summarizing new mail/browser evidence; cache unchanged source summaries and synthesize only deltas. Audio generation/storage adds a small per-minute cost and should expire automatically.",
+      "security_concerns": "Default to snippets and metadata; exclude sensitive mail, private browser pages, and message bodies unless explicitly enabled. Show source links and a “why included” label in iOS/dashboard. Encrypt audio, expire it after a short retention period, and ensure a lost pendant cannot replay another person’s brief without pairing.",
+      "missing": [
+        "Reliable scheduled job runner and source snapshot timestamps",
+        "Audio generation plus offline pendant download/resume/expiry protocol",
+        "Calendar/Mail/browser connectors with per-source privacy scopes",
+        "A quiet-hours and interruption policy",
+        "Cross-node receipt aggregation and deduplication"
+      ],
+      "round": 22
+    },
+    {
+      "user_asks": "“Get me ready for my next meeting.”",
+      "why_useful": "The owner gets a useful meeting workspace without manually searching calendar, mail, files, and browser tabs: identify the next event, summarize only relevant unread context, open the right documents or meeting link, and create a small scratchpad with agenda, decisions needed, and follow-ups.",
+      "surfaces": [
+        "mac_read_sources reads the next calendar event and bounded recent/unread mail",
+        "relay/background worker ranks mail and resolves event attendees/subject to known local artifacts",
+        "browser harness locates the authenticated meeting or project page without exporting raw page content",
+        "mac_run_actions opens the meeting link and relevant files, and writes a timestamped scratchpad in a configured local folder",
+        "relay-realtime delivers a short pendant briefing only after the workspace is staged"
+      ],
+      "model_tier": "Cheap background model for calendar/mail filtering and artifact matching; realtime tier only for the owner's conversational request and final concise briefing. Escalate to the expensive model only when the event or mail is genuinely ambiguous.",
+      "latency_budget": "15–30 seconds for the first pass; open the meeting link immediately, then enrich the scratchpad asynchronously. The owner should be able to say “just open it” to skip enrichment.",
+      "cost_estimate": "Roughly $0.005–$0.03 per invocation depending on mail volume and whether browser extraction is needed; most cost is model summarization, not Mac actions.",
+      "security_concerns": "Calendar/mail snippets and document names leave the Mac only as redacted, bounded extracts; meeting URLs and authenticated page contents should remain in their respective local/browser surfaces. Never send full mail bodies by default. Opening a link or modifying files should be visible in the action receipt; use a dedicated scratchpad directory and atomic writes.",
+      "missing": [
+        "A durable local artifact index mapping calendar subjects/projects to files and browser pages",
+        "A browser-harness API that returns bounded semantic extracts and stable evidence references",
+        "A Mac routine for atomic scratchpad creation plus idempotent reuse when the same meeting is requested twice",
+        "A shared redaction policy and event/job ledger across relay, browser, and Mac"
+      ],
+      "round": 23
     }
   ],
   "changes": [
@@ -1526,6 +1655,130 @@
         "Dashboard controls to inspect and correct shared facts"
       ],
       "round": 20
+    },
+    {
+      "layer": "mac-harness",
+      "change": "Add an idempotent Workbench transaction primitive to the Mac planner: accept a job_id and manifest, write all outputs into a temporary directory, fsync/rename atomically into ~/AI-Workbench/<date>/<job_id>, generate receipt.json containing action results and source provenance, and only then open the folder or dashboard. Replays with the same job_id return the existing receipt instead of duplicating files.",
+      "why_useful_to_owner": "Overnight work cannot leave half-written briefs, duplicate drafts, or an ambiguous state after Wi-Fi loss or a Mac restart. The owner gets one trustworthy, inspectable result and can safely ask for a retry.",
+      "effort": "Medium: local-agent planner and executor changes, receipt schema shared with relay, plus a small dashboard view for success/partial/failure.",
+      "risk": "Disk-full, permission errors, or a crashed rename can leave temporary files; use a startup janitor with bounded age and never delete a completed manifest. If opening the result fails, the files remain available and the receipt reports that separately.",
+      "cost_impact": "Negligible API cost; a few kilobytes per job for manifests/receipts and occasional model tokens saved by avoiding duplicate retries.",
+      "latency_impact": "Adds tens to hundreds of milliseconds for local writes; avoids minutes of duplicated upstream work.",
+      "security_impact": "Receipts must contain redacted paths/content hashes rather than sensitive excerpts. Restrict workbench roots to an allowlisted owner directory; do not log raw mail or browser text.",
+      "depends_on": [
+        "A durable cross-node job ID and result callback from the relay",
+        "A read-only source/provenance format for browser, Calendar, and Mail"
+      ],
+      "round": 21
+    },
+    {
+      "layer": "hardware",
+      "change": "Replace the desk-bound nRF9160 DK prototype with a jewelry-sized cellular/BLE pendant built around an nRF9161-class modem/application module plus a low-power companion MCU, two digital MEMS microphones, a 6-axis IMU, haptic motor, RGB status LED, capacitive/squeeze input, and 8–16 GB managed flash (retain removable storage only as a service port). Target a 500–700 mAh rechargeable battery, USB-C magnetic or pogo charging, IP54 enclosure, and 16–24 hours of typical mixed use. Use the IMU specifically for double-tap and pickup/put-down detection, microphones for short local voice capture, haptics for private completion/attention patterns, and the second mic for noise suppression before cellular upload.",
+      "why_useful_to_owner": "The owner can capture a thought with two taps through clothing, receive a private vibration when overnight work is ready, and speak naturally in wind or a noisy street without carrying a phone. A wearable that lasts a full day and looks intentional is actually wearable; the current one-button/one-LED development board is not.",
+      "effort": "High: industrial design, RF/antenna tuning, audio power/codec design, waterproofing, battery safety, and a firmware rewrite. Prototype on an nRF9160 module plus sensor breakout first, then EVT/DVT custom PCB.",
+      "risk": "Cellular transmit and audio recording dominate battery use; thermal and SAR testing are required. False tap/voice triggers could create unwanted uploads, so local gesture confidence thresholds and a physical mute switch/visible mic-active indication are needed. Cellular coverage loss needs a bounded local queue, not indefinite recording.",
+      "cost_impact": "Prototype engineering is substantial; rough custom BOM $70–$150 at low volume, potentially $25–$50 at scale, plus tooling/certification. Typical active power may be 100–300 mA during uplink and under 1 mA idle depending on network mode.",
+      "latency_impact": "Local gesture recognition and haptic acknowledgement are sub-100 ms; cellular voice upload remains network-dependent but can acknowledge capture locally.",
+      "security_impact": "Add hardware mic mute and secure boot/key storage. Encrypt queued audio at rest; retain only failed-upload chunks and delete after confirmed delivery. Never infer recording state solely from a cloud response.",
+      "depends_on": [
+        "Define the offline thought-capture protocol and retry semantics",
+        "Select cellular regions/carrier and antenna constraints",
+        "Implement local audio activity/gesture state machine"
+      ],
+      "round": 21
+    },
+    {
+      "layer": "memory",
+      "change": "Replace fleetContext.js's hand-written per-surface prompt section with a shared event log plus typed projections. Every node writes small signed events (preference, commitment, task state, source citation, expiry); a projection service produces only the fields relevant to the current job/surface, with confidence, freshness, and sensitivity labels. Mac planner should receive task-specific projections rather than the whole graph.",
+      "why_useful_to_owner": "Telling the pendant “I moved the deadline to Friday” immediately updates the Mac brief, browser agent, and dashboard without repeating it. The owner gets continuity across agents while private or stale facts do not leak into unrelated tasks.",
+      "effort": "Medium/high: event schema, conflict resolution, projection queries, migration from D1 graph writes, and UI for correcting a fact.",
+      "risk": "Incorrect merges (for example two similarly named people) could propagate. Require source links, confidence, expiry for volatile facts, and an undo/correction event; preserve the original event for audit rather than silently overwriting it.",
+      "cost_impact": "Usually lowers token spend by 20–60% on routine turns through targeted projections; adds modest D1 storage and one cheap projection query per job.",
+      "latency_impact": "Adds a small database read; cached projections should stay under 100 ms. Realtime conversation should use a compact hot projection, not wait for a full graph rebuild.",
+      "security_impact": "Sensitivity labels and per-surface authorization prevent financial/health/private notes from entering desktop or browser prompts. Encrypt sensitive event payloads and log projection access.",
+      "depends_on": [
+        "A canonical event schema shared by relay, Mac, browser, and clients",
+        "Stable owner identity and source-level access controls",
+        "A correction/forget operation exposed in the dashboard"
+      ],
+      "round": 21
+    },
+    {
+      "layer": "memory",
+      "change": "Replace per-surface hand-written fleetContext prompts with a shared, event-sourced personal memory broker. Every node writes typed facts, preferences, commitments, and task outcomes with provenance, confidence, sensitivity, expiry, and visibility scope; each surface requests a relevance-filtered context slice by task rather than receiving a giant static prompt. Add contradiction resolution and supersession, plus a nightly cheap-model compaction job.",
+      "why_useful_to_owner": "Telling the pendant once that a deadline moved, a preference changed, or a task was completed becomes immediately true on the relay, Mac, browser, dashboard, and iOS. The assistant stops repeating stale questions and avoids exposing unrelated private history to whichever node is acting.",
+      "effort": "Medium-high: D1 schema/API, extraction and conflict rules, per-node adapters, migration of fleetContext.js, and dashboard provenance UI; 2–4 weeks for a robust prototype.",
+      "risk": "Bad extraction or conflict resolution could create false memories or hide a real one. Keep original events immutable, show provenance/confidence, support correction and tombstoning, and fall back to the raw session when confidence is low.",
+      "cost_impact": "Small ongoing background-model cost for extraction/compaction; lower per-turn token cost because context is sliced and deduplicated. Storage grows with events but remains modest in D1/R2.",
+      "latency_impact": "A relevance query should add under 150 ms from D1/cache; first-time extraction is asynchronous and must not block realtime acknowledgement.",
+      "security_impact": "Sensitivity labels and node scopes are mandatory; browser credentials/page bodies never enter shared memory by default. Encrypt sensitive facts and log every cross-node read.",
+      "depends_on": [
+        "Durable job/event identifiers and receipt schema",
+        "A memory API that supports provenance, scope, expiry, and correction",
+        "Per-surface context adapters replacing prompt-string concatenation"
+      ],
+      "round": 22
+    },
+    {
+      "layer": "hardware",
+      "change": "Build the wearable revision around the nRF9160 with an ultra-low-power 6-axis IMU on the unused I2C bus, a vibration/LRA haptic driver, and a real microphone/audio front end with physical mute. Keep the current button/LED as fallback, but expose motion gestures (double-tap, pickup, shake) and haptic acknowledgement locally; buffer only short event metadata unless the owner explicitly records audio.",
+      "why_useful_to_owner": "The pendant can recognize that it was picked up, worn, or tapped and acknowledge actions silently in a meeting, even with the phone/Mac disconnected. Motion context lets the hive mind distinguish an accidental button press from an intentional request and deliver completion alerts without requiring the owner to stare at a screen.",
+      "effort": "High: industrial redesign, low-power driver/firmware, enclosure and battery validation, audio EMC testing. Prototype with BMI270-class IMU, DRV2605L-class haptic driver, and a digital MEMS mic.",
+      "risk": "False gesture triggers, comfort/battery degradation, and accidental recording are serious risks. Require a physical mute that cuts mic power, use conservative gesture thresholds with local-only classification, and expose battery/recording state through haptic patterns and LED. Gracefully disable sensors if power or I2C faults occur.",
+      "cost_impact": "Approx. $8–$20 BOM increase in small volumes (IMU $1–3, haptic path $2–5, mic/audio $1–4, mechanics/battery allowance); roughly 1–5 mA active sensor/haptic bursts, with sub-100 µA IMU suspend target. No continuous cloud-token cost for local gestures.",
+      "latency_impact": "Local gesture acknowledgement under 50 ms; event upload is asynchronous and does not delay voice. Audio front end may reduce capture latency but requires buffering/RAM discipline against the 211,608 B application RAM and existing Opus footprint.",
+      "security_impact": "Physical mic cutoff and a local recording indicator reduce covert-capture risk. Motion events should be coarse and opt-in; never upload raw accelerometer streams by default. Haptic patterns must not encode sensitive content in public settings.",
+      "depends_on": [
+        "A production wearable board/enclosure rather than the current nRF9160 development kit",
+        "Firmware skills for low-power I2C IMU, haptic patterns, and physical mic-mute state",
+        "Shared event ledger so local events can be correlated without uploading raw sensor data"
+      ],
+      "round": 22
+    },
+    {
+      "layer": "context",
+      "change": "Add a compact, durable Mac execution context cache and handoff protocol. Each server plan gets a jobId, parentId, monotonic sequence, intent hash, referenced local resources, and a short result receipt. The Mac stores only the minimum state needed to resume or deduplicate a plan (not the conversation transcript), and returns a delta receipt rather than requiring the full plan/context on every retry. Include TTLs, explicit invalidation when files/apps change, and a human-readable local activity log.",
+      "why_useful_to_owner": "Actions stop repeating when connectivity or voice streaming glitches, and the owner does not pay for the same context over and over. Long-running workflows can resume after sleep or a dropped relay without losing their place, while the owner can inspect what the Mac did.",
+      "effort": "Medium: shared schema in relay and Mac agent, local SQLite/JSON ledger, idempotency checks around action batches, and receipt rendering in the dashboard. Pilot on file creation/opening and meeting-prep routines before generalizing.",
+      "risk": "A stale cache could open the wrong document or skip a needed action. Mitigate with resource fingerprints, short TTLs, sequence checks, and treating uncertain state as a fresh read rather than silently acting. Corrupt ledger recovery should discard cache and rerun safely; do not delete user data as part of recovery.",
+      "cost_impact": "Small storage and implementation cost; lower API spend and fewer duplicate Mac executions. No meaningful per-invocation API increase; compact receipts may add a few hundred tokens when surfaced.",
+      "latency_impact": "Usually lower latency by avoiding repeated planning; a small local lookup on every job. Fresh-state verification adds latency only after a stale or ambiguous fingerprint.",
+      "security_impact": "Keep the ledger local, redact paths/content in server receipts, encrypt sensitive metadata at rest if available, and define retention/clear-history controls. This improves auditability without introducing an approval gate or reducing the owner's maximum-access policy.",
+      "depends_on": [
+        "A shared job/receipt schema accepted by relay, browser, and Mac",
+        "Stable file/app/browser resource fingerprints",
+        "An atomic local ledger implementation and recovery test suite"
+      ],
+      "round": 23
+    },
+    {
+      "layer": "mac-harness",
+      "change": "Add a focus-safe execution coordinator around the existing FULL_CONTROL Mac executor. Before each plan, capture the foreground app and a lightweight accessibility/state fingerprint; route UI actions by explicit target app where possible without activating it; execute in bounded batches; after each batch re-check foreground app and target state, abort only on unexpected state drift, and return a receipt that records whether focus changed, what was verified, and which step remains. For actions that inherently require focus (typing into an unaddressable field), mark that requirement in the plan and restore the original foreground app afterward when technically possible. This is observability and recovery, not an approval gate.",
+      "why_useful_to_owner": "The pendant can work on the Mac while the owner is writing, coding, or in a meeting without unexpectedly stealing their keyboard or leaving half-completed work in the wrong window. If a page or dialog changes mid-task, the system reports the exact stopping point instead of pretending success. Everyday automation becomes safe to run in the background while preserving the owner's current context.",
+      "effort": "Medium: add pre/post state capture to computerControl.js, target-app accessibility adapters, batch boundaries, and receipt schema; exercise against Claude, Safari, Calendar, and Finder. Restoration is best-effort and must be tested per app.",
+      "risk": "Some apps expose unstable accessibility trees or cannot restore focus reliably; a false state-drift detection could stop a task early, while a missed drift could still misdirect an action. Recover by returning the partial receipt and allowing an explicit resume from the last verified step; retain current executor as fallback.",
+      "cost_impact": "Negligible API cost (small local state snapshots); modest local CPU/latency overhead, roughly 100–300 ms per batch. No cloud data required unless existing receipts are synced.",
+      "latency_impact": "Adds about 0.1–0.3 seconds per action batch, but avoids expensive retries and accidental destructive work.",
+      "security_impact": "Improves privacy by avoiding screenshots and favoring local accessibility metadata. Receipts should redact typed text and sensitive UI values by default; foreground-app names and state hashes remain local unless explicitly exported.",
+      "depends_on": [
+        "A real implementation for typed read-only UI snapshots or equivalent local accessibility state inspection",
+        "Result receipts (chg-5fc73ce3) to persist verified-step and focus-change metadata"
+      ],
+      "round": 24
+    },
+    {
+      "layer": "mac-harness",
+      "change": "Add a startup and periodic no-op input reachability probe to the Mac agent health path. When Accessibility is reported trusted, post the documented zero-delta cursor event (or an equivalent harmless System Events no-op), record the exact host bundle tested, timestamp, and result, and expose `inputReachability: verified|unverified|failed` in /observe and job receipts. Do not block FULL_CONTROL actions; instead annotate receipts and surface a warning when an interaction may have been a no-op.",
+      "why_useful_to_owner": "The owner will know whether an automation actually reached the Mac instead of receiving a misleading success from a stale or wrongly-authorized Accessibility grant. This is especially valuable when asking the pendant to work while away, because failures become diagnosable rather than silently leaving work undone.",
+      "effort": "Small: reuse the existing permissions probe, add a harmless event test, cache a short-lived result, and include it in observation and receipts. Test after agent upgrades and macOS permission changes.",
+      "risk": "Even a no-op event can be misclassified by macOS or trigger an unusual accessibility prompt. Keep it cursor-zero-delta only, never type or click, and fall back to unverified if the probe errors. It must remain advisory, not a hidden gate.",
+      "cost_impact": "No API cost; negligible local CPU. One local accessibility call at startup and optionally every few minutes.",
+      "latency_impact": "No meaningful task latency if cached; at most tens of milliseconds on health refresh.",
+      "security_impact": "No screen pixels or user content are collected. Store only bundle identity, timestamp, and boolean result; do not log event payloads.",
+      "depends_on": [
+        "A local implementation of the existing permissions probe or equivalent System Events no-op event endpoint"
+      ],
+      "round": 24
     }
   ],
   "pending": [
@@ -1638,6 +1891,96 @@
       "storage": "Encrypted append-only ring buffer in external QSPI flash, target 2–4 GB in the product; retain metadata (sequence, duration, hash, status) until acknowledged, and raw audio only until successful upload plus a configurable grace period. The current 1 MB prototype flash/RAM is insufficient for meaningful offline audio, so this skill targets the replacement hardware; a prototype can buffer only a few short compressed clips.",
       "ram_budget": "Product target: under 96 kB incremental RAM using streaming VAD/Opus and a small upload window; no whole recording in memory. On the current nRF9160 prototype, cap to roughly 8–16 kB working buffers and short clips because 211,608 B application RAM is already constrained and modem/Opus compete for memory; disable or degrade gracefully if allocation fails.",
       "summary": "offline_thought_capture"
+    },
+    {
+      "id": "t10-701y",
+      "kind": "tool",
+      "round": 21,
+      "name": "mac_workbench_transaction",
+      "why": "Overnight cross-node jobs need idempotent, atomic staging of multiple files and a receipt; mac_run_actions is action-oriented and cannot guarantee rollback or deduplicate retries.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "job_id": {
+            "type": "string"
+          },
+          "root": {
+            "type": "string",
+            "description": "Allowlisted workbench root only"
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "relative_path": {
+                  "type": "string"
+                },
+                "content": {
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "relative_path",
+                "content"
+              ]
+            },
+            "maxItems": 100
+          },
+          "open_after": {
+            "type": "boolean"
+          },
+          "receipt_metadata": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "job_id",
+          "root",
+          "files"
+        ]
+      },
+      "example_call": {
+        "job_id": "brief-2025-02-14",
+        "root": "/Users/owner/AI-Workbench",
+        "files": [
+          {
+            "relative_path": "brief.md",
+            "content": "..."
+          }
+        ],
+        "open_after": true
+      },
+      "expected_output": "{status: created|already_exists|partial_failure, job_id, root_path, files_written, receipt_path, errors[]}",
+      "summary": "mac_workbench_transaction"
+    },
+    {
+      "id": "t11-h383",
+      "kind": "tool",
+      "round": 24,
+      "name": "mac_ui_state_snapshot",
+      "why": "mac-vision and focus-safe execution need current accessibility hierarchy/state, while mac_readonly_inspect(ui_snapshot) is only a schema with no implementation. GET /observe exposes foreground apps and permissions but not controls, roles, labels, or enabled state.",
+      "input_schema": {
+        "operation": "ui_snapshot",
+        "app": "string (optional; defaults to foreground app)",
+        "max_depth": "integer 1-20",
+        "max_elements": "integer 1-500",
+        "include_values": "boolean (default false; redact text/password fields unless explicitly enabled)",
+        "timeout_ms": "integer 100-5000"
+      },
+      "example_call": {
+        "operation": "ui_snapshot",
+        "app": "Claude",
+        "max_depth": 6,
+        "max_elements": 250,
+        "include_values": false,
+        "timeout_ms": 1500
+      },
+      "expected_output": "{ok:true, observedAt:string, app:{name,bundleId,pid}, tree:{role,title,identifier,enabled,focused,children:[...]}, redactions:[...], truncated:boolean}. Read-only; must not activate apps, move focus, capture pixels, or type.",
+      "summary": "mac_ui_state_snapshot"
     }
   ],
   "denied": [
@@ -1816,6 +2159,12 @@
       "finding": "POST /plan marks even a read-only Downloads listing as requiresConfirmation:true and says review before confirming, while granted execution contract says FULL_CONTROL_MODE bypasses actionRisk and has no confirmation gate. The UI/planner promise and actual enforcement can diverge.",
       "evidence": "POST http://127.0.0.1:8000/plan for read-only Downloads request returned status ready, requiresConfirmation:true, safety:'Full computer control is enabled. Review the plan carefully before confirming.', fullControl:true.",
       "round": 10
+    },
+    {
+      "about": "Mac agent runtime and observability",
+      "finding": "The live Mac agent is full-control and planner-enabled with Accessibility, Screen Recording, and Automation grants. Computer-use loop is disabled and vision upload consent is false. Browser extension is currently offline with one pending command. GET /observe can provide foreground app/running-apps/permissions, but the granted typed mac_readonly_inspect UI snapshot has no implementation.",
+      "evidence": "describe(GET /ops/snapshot) returned status 200 with these flags; describe(GET /observe) returned foreground Claude and read-only observation metadata; mac_readonly_inspect(ui_snapshot) returned 'tool was granted a schema but has no implementation yet'.",
+      "round": 24
     }
   ],
   "rounds": [
@@ -47441,6 +47790,1898 @@
           "args": {
             "summary": "Round 20 produced three concrete advances: a durable cross-node mission capability, a product-grade low-power pendant design plus offline thought-capture firmware skill, and an event-sourced shared-memory architecture to prevent surface-specific context drift and token waste. I also asked mac-vision to align computer-use receipts with mission checkpoints.",
             "biggest_unknown": "The exact event/result contracts and recovery semantics between relay, browser, Mac, and pendant remain undefined; without those, durable missions cannot safely resume or explain partial completion. The queued offline_thought_capture skill also needs an owner-approved privacy/retention policy and replacement hardware prototype."
+          },
+          "result": {
+            "acknowledged": true
+          }
+        }
+      ]
+    },
+    {
+      "round": 21,
+      "transcript": [
+        {
+          "type": "tool",
+          "name": "get_hardware_spec",
+          "args": {
+            "component": "stack"
+          },
+          "result": {
+            "relay": "Cloudflare Worker (Express-style). D1 for jobs/history/memory, R2 for audio. Audio retention 30 days, sweep disabled, ~100 recordings stored.",
+            "agent_tools_today": "The realtime agent currently has exactly 5 tools: get_mac_status, mac_run_actions, browser_run_actions, web_search, mac_delegate.",
+            "mac_harness": "A Node \"local agent\" on the owner's Mac: planner (gpt-5.6-luna), computer-use loop, browser bridge, action risk scoring, atomic JSON store, context graph. It polls /v1/bridge/work for jobs and posts results back.",
+            "browser_harness": "Driven through the Mac agent's browser bridge today. Cloudflare Browser Run now exists and could give the relay its own server-side browser, removing the Mac from web tasks entirely.",
+            "clients": "ONE SvelteKit dashboard renders on all three surfaces: web, a Swift menubar app via WKWebView, and iOS via Capacitor pointed at the same Worker URL. A change to the web app ships to all three.",
+            "memory": "Knowledge-graph style store behind /v1/ops/memory: entities, relations, sessions. Separately, fleetContext.js hand-writes a prompt section per surface, which means adding a surface means editing a prompt.",
+            "source": "cloud-relay/, local-agent/, dashboard-sveltekit/, mac-menubar/",
+            "status": "PROTOTYPE. This is a Nordic development kit, not the product. Every choice here — the SoC, the RAM, the single button, the single LED, the enclosure — is provisional and can change. Design the device the owner should wear, then say what it would take to build it.",
+            "you_are_here": "You run on the owner's MacBook (mac-planner). Every device described here is REMOTE to you — you are not running on the pendant or the ESP32."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "get_hardware_spec",
+          "args": {
+            "component": "pendant"
+          },
+          "result": {
+            "board": "Nordic nRF9160 DK (nRF9160 SiP), non-secure app under TF-M minimal",
+            "cpu": "Arm Cortex-M33 @ 64 MHz, DSP extension present (libopus ARMv5E paths apply)",
+            "ram": "211,608 B application RAM (boards/nrf9160dk_nrf9160_ns.overlay); 32 kB secure, modem shares the first 128 kB",
+            "flash": "1 MB total; application text ~316 kB with libopus at -O3",
+            "rtos": "Zephyr / nRF Connect SDK v3.4.0",
+            "source": "firmware/nrf9160/boards/nrf9160dk_nrf9160_ns.overlay, CMakeLists.txt",
+            "status": "PROTOTYPE. This is a Nordic development kit, not the product. Every choice here — the SoC, the RAM, the single button, the single LED, the enclosure — is provisional and can change. Design the device the owner should wear, then say what it would take to build it.",
+            "you_are_here": "You run on the owner's MacBook (mac-planner). Every device described here is REMOTE to you — you are not running on the pendant or the ESP32."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "get_hardware_spec",
+          "args": {
+            "component": "storage"
+          },
+          "result": {
+            "sd": "microSD over SPI. CONFIG_DISK_DRIVER_SDMMC, FATFS (ELM) with exFAT enabled. Mount is FS_FATFS.",
+            "policy": "Owner's standing rule: audio is written to SD ONLY when a chunk upload cannot be uploaded. It is a failure buffer, not a routine store.",
+            "note": "exFAT means large files and long filenames are available.",
+            "source": "firmware/nrf9160/prj.conf, src/main.c fs mount",
+            "status": "PROTOTYPE. This is a Nordic development kit, not the product. Every choice here — the SoC, the RAM, the single button, the single LED, the enclosure — is provisional and can change. Design the device the owner should wear, then say what it would take to build it.",
+            "you_are_here": "You run on the owner's MacBook (mac-planner). Every device described here is REMOTE to you — you are not running on the pendant or the ESP32."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "message_peer",
+          "args": {
+            "to": "relay-realtime",
+            "subject": "Round 21 coordination",
+            "body": "I’m proposing a cross-node durable work queue + Mac execution receipts. What relay-side gaps or user routines are you seeing that Mac should support?"
+          },
+          "result": {
+            "sent": true,
+            "note": "They will see this on their next round."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_capability",
+          "args": {
+            "user_asks": "While I sleep, investigate my open threads across Calendar, Mail, and authenticated browser tabs, then leave a ready-to-review workbench on my Mac when I wake: one folder with a prioritized brief, source links, and draft replies—but never send or delete anything.",
+            "why_useful": "The owner wakes to completed preparation rather than a blank inbox. It combines the relay’s always-on scheduling, browser sessions, and Mac’s ability to create files and arrange a review surface; no manual routing is needed.",
+            "surfaces": [
+              "relay",
+              "browser",
+              "Mac planner",
+              "dashboard"
+            ],
+            "model_tier": "Background model for extraction, deduplication, and priority ranking; a stronger model only for ambiguous multi-thread synthesis. Realtime is not used. Mac planner executes deterministic file creation/opening and returns receipts.",
+            "latency_budget": "Runs asynchronously overnight; target 2–5 minutes after the chosen cutoff, with the Mac workbench staged before the morning routine. Individual source reads should timeout and be marked incomplete rather than blocking the whole brief.",
+            "cost_estimate": "Roughly $0.03–$0.20 per nightly run depending on browser page volume and synthesis length; largest cost is repeated page/email text. Cache content hashes and only reprocess changed sources.",
+            "security_concerns": "Browser pages and mail may contain confidential data; keep raw content in the owner’s account-scoped stores, send only bounded excerpts to the synthesis model, and redact secrets. Creating local files is low-impact; sending replies, changing calendar, deleting mail, or downloading attachments must be excluded and require a separate explicit command. Include provenance and an incomplete-source list in the brief.",
+            "missing": [
+              "A server-side authenticated browser watcher that can expose changed page summaries to the relay",
+              "A durable cross-node job schema with idempotency keys, deadlines, and per-source provenance",
+              "A Mac planner routine that atomically creates a dated workbench folder plus a receipt and opens it without stealing focus",
+              "A scheduler/notification handoff that wakes the dashboard or pendant when the workbench is ready"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going — propose others, including ones that need capabilities that do not exist yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_change",
+          "args": {
+            "layer": "mac-harness",
+            "change": "Add an idempotent Workbench transaction primitive to the Mac planner: accept a job_id and manifest, write all outputs into a temporary directory, fsync/rename atomically into ~/AI-Workbench/<date>/<job_id>, generate receipt.json containing action results and source provenance, and only then open the folder or dashboard. Replays with the same job_id return the existing receipt instead of duplicating files.",
+            "why_useful_to_owner": "Overnight work cannot leave half-written briefs, duplicate drafts, or an ambiguous state after Wi-Fi loss or a Mac restart. The owner gets one trustworthy, inspectable result and can safely ask for a retry.",
+            "effort": "Medium: local-agent planner and executor changes, receipt schema shared with relay, plus a small dashboard view for success/partial/failure.",
+            "risk": "Disk-full, permission errors, or a crashed rename can leave temporary files; use a startup janitor with bounded age and never delete a completed manifest. If opening the result fails, the files remain available and the receipt reports that separately.",
+            "cost_impact": "Negligible API cost; a few kilobytes per job for manifests/receipts and occasional model tokens saved by avoiding duplicate retries.",
+            "latency_impact": "Adds tens to hundreds of milliseconds for local writes; avoids minutes of duplicated upstream work.",
+            "security_impact": "Receipts must contain redacted paths/content hashes rather than sensitive excerpts. Restrict workbench roots to an allowlisted owner directory; do not log raw mail or browser text.",
+            "depends_on": [
+              "A durable cross-node job ID and result callback from the relay",
+              "A read-only source/provenance format for browser, Calendar, and Mail"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going, including layers you have not touched yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_change",
+          "args": {
+            "layer": "hardware",
+            "change": "Replace the desk-bound nRF9160 DK prototype with a jewelry-sized cellular/BLE pendant built around an nRF9161-class modem/application module plus a low-power companion MCU, two digital MEMS microphones, a 6-axis IMU, haptic motor, RGB status LED, capacitive/squeeze input, and 8–16 GB managed flash (retain removable storage only as a service port). Target a 500–700 mAh rechargeable battery, USB-C magnetic or pogo charging, IP54 enclosure, and 16–24 hours of typical mixed use. Use the IMU specifically for double-tap and pickup/put-down detection, microphones for short local voice capture, haptics for private completion/attention patterns, and the second mic for noise suppression before cellular upload.",
+            "why_useful_to_owner": "The owner can capture a thought with two taps through clothing, receive a private vibration when overnight work is ready, and speak naturally in wind or a noisy street without carrying a phone. A wearable that lasts a full day and looks intentional is actually wearable; the current one-button/one-LED development board is not.",
+            "effort": "High: industrial design, RF/antenna tuning, audio power/codec design, waterproofing, battery safety, and a firmware rewrite. Prototype on an nRF9160 module plus sensor breakout first, then EVT/DVT custom PCB.",
+            "risk": "Cellular transmit and audio recording dominate battery use; thermal and SAR testing are required. False tap/voice triggers could create unwanted uploads, so local gesture confidence thresholds and a physical mute switch/visible mic-active indication are needed. Cellular coverage loss needs a bounded local queue, not indefinite recording.",
+            "cost_impact": "Prototype engineering is substantial; rough custom BOM $70–$150 at low volume, potentially $25–$50 at scale, plus tooling/certification. Typical active power may be 100–300 mA during uplink and under 1 mA idle depending on network mode.",
+            "latency_impact": "Local gesture recognition and haptic acknowledgement are sub-100 ms; cellular voice upload remains network-dependent but can acknowledge capture locally.",
+            "security_impact": "Add hardware mic mute and secure boot/key storage. Encrypt queued audio at rest; retain only failed-upload chunks and delete after confirmed delivery. Never infer recording state solely from a cloud response.",
+            "depends_on": [
+              "Define the offline thought-capture protocol and retry semantics",
+              "Select cellular regions/carrier and antenna constraints",
+              "Implement local audio activity/gesture state machine"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going, including layers you have not touched yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "request_tool",
+          "args": {
+            "name": "mac_workbench_transaction",
+            "why": "Overnight cross-node jobs need idempotent, atomic staging of multiple files and a receipt; mac_run_actions is action-oriented and cannot guarantee rollback or deduplicate retries.",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "job_id": {
+                  "type": "string"
+                },
+                "root": {
+                  "type": "string",
+                  "description": "Allowlisted workbench root only"
+                },
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "relative_path": {
+                        "type": "string"
+                      },
+                      "content": {
+                        "type": "string"
+                      },
+                      "sha256": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "relative_path",
+                      "content"
+                    ]
+                  },
+                  "maxItems": 100
+                },
+                "open_after": {
+                  "type": "boolean"
+                },
+                "receipt_metadata": {
+                  "type": "object"
+                }
+              },
+              "required": [
+                "job_id",
+                "root",
+                "files"
+              ]
+            },
+            "example_call": {
+              "job_id": "brief-2025-02-14",
+              "root": "/Users/owner/AI-Workbench",
+              "files": [
+                {
+                  "relative_path": "brief.md",
+                  "content": "..."
+                }
+              ],
+              "open_after": true
+            },
+            "expected_output": "{status: created|already_exists|partial_failure, job_id, root_path, files_written, receipt_path, errors[]}"
+          },
+          "result": {
+            "queued": true,
+            "id": "t10-701y",
+            "note": "The orchestrator will decide between rounds. Continue without it for now."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_change",
+          "args": {
+            "layer": "memory",
+            "change": "Replace fleetContext.js's hand-written per-surface prompt section with a shared event log plus typed projections. Every node writes small signed events (preference, commitment, task state, source citation, expiry); a projection service produces only the fields relevant to the current job/surface, with confidence, freshness, and sensitivity labels. Mac planner should receive task-specific projections rather than the whole graph.",
+            "why_useful_to_owner": "Telling the pendant “I moved the deadline to Friday” immediately updates the Mac brief, browser agent, and dashboard without repeating it. The owner gets continuity across agents while private or stale facts do not leak into unrelated tasks.",
+            "effort": "Medium/high: event schema, conflict resolution, projection queries, migration from D1 graph writes, and UI for correcting a fact.",
+            "risk": "Incorrect merges (for example two similarly named people) could propagate. Require source links, confidence, expiry for volatile facts, and an undo/correction event; preserve the original event for audit rather than silently overwriting it.",
+            "cost_impact": "Usually lowers token spend by 20–60% on routine turns through targeted projections; adds modest D1 storage and one cheap projection query per job.",
+            "latency_impact": "Adds a small database read; cached projections should stay under 100 ms. Realtime conversation should use a compact hot projection, not wait for a full graph rebuild.",
+            "security_impact": "Sensitivity labels and per-surface authorization prevent financial/health/private notes from entering desktop or browser prompts. Encrypt sensitive event payloads and log projection access.",
+            "depends_on": [
+              "A canonical event schema shared by relay, Mac, browser, and clients",
+              "Stable owner identity and source-level access controls",
+              "A correction/forget operation exposed in the dashboard"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going, including layers you have not touched yet."
+          }
+        },
+        {
+          "type": "finish",
+          "summary": "Round 21 delivered four concrete advances: an overnight cross-node workbench capability, an idempotent atomic Mac workbench transaction, a realistic full-day pendant hardware direction grounded in the nRF9160 prototype, and an event-sourced shared-memory projection design. I also requested a dedicated mac_workbench_transaction tool. Still needed: authenticated server-side browser change feeds, a durable cross-node job/provenance schema, offline thought-capture/retry semantics, and the owner’s privacy defaults for deciding what can be staged automatically.",
+          "biggest_unknown": "Which authenticated browser sources and overnight routines the owner actually wants included, and what their default retention/redaction policy should be for the resulting local workbench."
+        },
+        {
+          "type": "tool",
+          "name": "finish",
+          "args": {
+            "summary": "Round 21 delivered four concrete advances: an overnight cross-node workbench capability, an idempotent atomic Mac workbench transaction, a realistic full-day pendant hardware direction grounded in the nRF9160 prototype, and an event-sourced shared-memory projection design. I also requested a dedicated mac_workbench_transaction tool. Still needed: authenticated server-side browser change feeds, a durable cross-node job/provenance schema, offline thought-capture/retry semantics, and the owner’s privacy defaults for deciding what can be staged automatically.",
+            "biggest_unknown": "Which authenticated browser sources and overnight routines the owner actually wants included, and what their default retention/redaction policy should be for the resulting local workbench."
+          },
+          "result": {
+            "acknowledged": true
+          }
+        }
+      ]
+    },
+    {
+      "round": 22,
+      "transcript": [
+        {
+          "type": "tool",
+          "name": "get_hardware_spec",
+          "args": {
+            "component": "stack"
+          },
+          "result": {
+            "relay": "Cloudflare Worker (Express-style). D1 for jobs/history/memory, R2 for audio. Audio retention 30 days, sweep disabled, ~100 recordings stored.",
+            "agent_tools_today": "The realtime agent currently has exactly 5 tools: get_mac_status, mac_run_actions, browser_run_actions, web_search, mac_delegate.",
+            "mac_harness": "A Node \"local agent\" on the owner's Mac: planner (gpt-5.6-luna), computer-use loop, browser bridge, action risk scoring, atomic JSON store, context graph. It polls /v1/bridge/work for jobs and posts results back.",
+            "browser_harness": "Driven through the Mac agent's browser bridge today. Cloudflare Browser Run now exists and could give the relay its own server-side browser, removing the Mac from web tasks entirely.",
+            "clients": "ONE SvelteKit dashboard renders on all three surfaces: web, a Swift menubar app via WKWebView, and iOS via Capacitor pointed at the same Worker URL. A change to the web app ships to all three.",
+            "memory": "Knowledge-graph style store behind /v1/ops/memory: entities, relations, sessions. Separately, fleetContext.js hand-writes a prompt section per surface, which means adding a surface means editing a prompt.",
+            "source": "cloud-relay/, local-agent/, dashboard-sveltekit/, mac-menubar/",
+            "status": "PROTOTYPE. This is a Nordic development kit, not the product. Every choice here — the SoC, the RAM, the single button, the single LED, the enclosure — is provisional and can change. Design the device the owner should wear, then say what it would take to build it.",
+            "you_are_here": "You run on the owner's MacBook (mac-planner). Every device described here is REMOTE to you — you are not running on the pendant or the ESP32."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "message_peer",
+          "args": {
+            "to": "relay-realtime",
+            "subject": "Shared job contract proposal",
+            "body": "I propose a durable task ledger contract: job {id,parentId,ownerId,requestedBy,capability,target,input,priority,deadline,consentPolicy}; events append-only {seq,state,ts,node,summary,artifactRefs,sideEffects,error,retryable}; receipt terminal includes started/finished, actions, files/URLs changed, evidence refs, cost. Relay enqueue should return jobId immediately; Mac worker heartbeats and leases jobs; dashboard/pendant subscribe to events. I can align Mac bridge adapter around this."
+          },
+          "result": {
+            "sent": true,
+            "note": "They will see this on their next round."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "message_peer",
+          "args": {
+            "to": "browser-extension",
+            "subject": "Ledger integration",
+            "body": "Let's use same durable ledger: browser watch emits event with jobId,parentId, seq, semantic diff summary, evidence artifact refs, session status, retryable error. Scheduler should create leases/idempotency keys so Mac and server browser don't duplicate polling. I propose schema + event API in next capability."
+          },
+          "result": {
+            "sent": true,
+            "note": "They will see this on their next round."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_capability",
+          "args": {
+            "user_asks": "“When I ask you to do something that takes time, keep working after I leave and tell me exactly what happened when it’s done.”",
+            "why_useful": "Turns isolated voice/tool calls into a personal hive mind: the relay can accept work instantly, delegate to the Mac or server browser, retry offline nodes, run parallel subtasks, and deliver a concise receipt rather than losing work when the voice session ends.",
+            "surfaces": [
+              "relay",
+              "mac-bridge",
+              "browser",
+              "dashboard",
+              "iOS",
+              "pendant"
+            ],
+            "model_tier": "Use realtime only to acknowledge/enqueue and answer status questions. Use a cheaper background model for decomposition, ranking, summarization, and retries; use the Mac planner/browser model only for the concrete action each node can perform.",
+            "latency_budget": "Enqueue acknowledgement under 500 ms. Status event within 2 s of each state transition. Background jobs may run minutes or overnight; no voice turn should block on them.",
+            "cost_estimate": "Roughly $0.01–$0.10 per ordinary multi-step job, dominated by planner/browser tokens; receipts should use a small model and cached event summaries. Avoid sending the entire history/context on every heartbeat.",
+            "security_concerns": "The ledger must isolate owner/job scopes and encrypt sensitive artifacts. A receipt must list every side effect (files, messages, purchases, browser mutations) and source node. The owner has chosen maximum Mac access/no confirmation gates, so preserve that policy but provide immutable audit and an emergency cancel/kill switch. Never put raw mail, credentials, or page bodies in notifications; authenticated browser sessions stay on the browser node. Use leases, idempotency keys, and dead-letter recovery to prevent duplicate destructive actions.",
+            "missing": [
+              "A durable enqueue endpoint callable by the relay without holding the voice request open",
+              "One append-only job/event/receipt schema shared by relay, Mac bridge, and browser watch",
+              "Mac worker lease/heartbeat/result adapter over /v1/bridge/work",
+              "Server-side scheduler with retry, timeout, cancellation, and offline-node fallback",
+              "Push delivery of terminal summaries to pendant/iOS/dashboard and optional audio artifact generation",
+              "Cross-node artifact references and correlation IDs for parallel subtasks"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going — propose others, including ones that need capabilities that do not exist yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_change",
+          "args": {
+            "layer": "memory",
+            "change": "Replace per-surface hand-written fleetContext prompts with a shared, event-sourced personal memory broker. Every node writes typed facts, preferences, commitments, and task outcomes with provenance, confidence, sensitivity, expiry, and visibility scope; each surface requests a relevance-filtered context slice by task rather than receiving a giant static prompt. Add contradiction resolution and supersession, plus a nightly cheap-model compaction job.",
+            "why_useful_to_owner": "Telling the pendant once that a deadline moved, a preference changed, or a task was completed becomes immediately true on the relay, Mac, browser, dashboard, and iOS. The assistant stops repeating stale questions and avoids exposing unrelated private history to whichever node is acting.",
+            "effort": "Medium-high: D1 schema/API, extraction and conflict rules, per-node adapters, migration of fleetContext.js, and dashboard provenance UI; 2–4 weeks for a robust prototype.",
+            "risk": "Bad extraction or conflict resolution could create false memories or hide a real one. Keep original events immutable, show provenance/confidence, support correction and tombstoning, and fall back to the raw session when confidence is low.",
+            "cost_impact": "Small ongoing background-model cost for extraction/compaction; lower per-turn token cost because context is sliced and deduplicated. Storage grows with events but remains modest in D1/R2.",
+            "latency_impact": "A relevance query should add under 150 ms from D1/cache; first-time extraction is asynchronous and must not block realtime acknowledgement.",
+            "security_impact": "Sensitivity labels and node scopes are mandatory; browser credentials/page bodies never enter shared memory by default. Encrypt sensitive facts and log every cross-node read.",
+            "depends_on": [
+              "Durable job/event identifiers and receipt schema",
+              "A memory API that supports provenance, scope, expiry, and correction",
+              "Per-surface context adapters replacing prompt-string concatenation"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going, including layers you have not touched yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "get_hardware_spec",
+          "args": {
+            "component": "pendant"
+          },
+          "result": {
+            "board": "Nordic nRF9160 DK (nRF9160 SiP), non-secure app under TF-M minimal",
+            "cpu": "Arm Cortex-M33 @ 64 MHz, DSP extension present (libopus ARMv5E paths apply)",
+            "ram": "211,608 B application RAM (boards/nrf9160dk_nrf9160_ns.overlay); 32 kB secure, modem shares the first 128 kB",
+            "flash": "1 MB total; application text ~316 kB with libopus at -O3",
+            "rtos": "Zephyr / nRF Connect SDK v3.4.0",
+            "source": "firmware/nrf9160/boards/nrf9160dk_nrf9160_ns.overlay, CMakeLists.txt",
+            "status": "PROTOTYPE. This is a Nordic development kit, not the product. Every choice here — the SoC, the RAM, the single button, the single LED, the enclosure — is provisional and can change. Design the device the owner should wear, then say what it would take to build it.",
+            "you_are_here": "You run on the owner's MacBook (mac-planner). Every device described here is REMOTE to you — you are not running on the pendant or the ESP32."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_change",
+          "args": {
+            "layer": "hardware",
+            "change": "Build the wearable revision around the nRF9160 with an ultra-low-power 6-axis IMU on the unused I2C bus, a vibration/LRA haptic driver, and a real microphone/audio front end with physical mute. Keep the current button/LED as fallback, but expose motion gestures (double-tap, pickup, shake) and haptic acknowledgement locally; buffer only short event metadata unless the owner explicitly records audio.",
+            "why_useful_to_owner": "The pendant can recognize that it was picked up, worn, or tapped and acknowledge actions silently in a meeting, even with the phone/Mac disconnected. Motion context lets the hive mind distinguish an accidental button press from an intentional request and deliver completion alerts without requiring the owner to stare at a screen.",
+            "effort": "High: industrial redesign, low-power driver/firmware, enclosure and battery validation, audio EMC testing. Prototype with BMI270-class IMU, DRV2605L-class haptic driver, and a digital MEMS mic.",
+            "risk": "False gesture triggers, comfort/battery degradation, and accidental recording are serious risks. Require a physical mute that cuts mic power, use conservative gesture thresholds with local-only classification, and expose battery/recording state through haptic patterns and LED. Gracefully disable sensors if power or I2C faults occur.",
+            "cost_impact": "Approx. $8–$20 BOM increase in small volumes (IMU $1–3, haptic path $2–5, mic/audio $1–4, mechanics/battery allowance); roughly 1–5 mA active sensor/haptic bursts, with sub-100 µA IMU suspend target. No continuous cloud-token cost for local gestures.",
+            "latency_impact": "Local gesture acknowledgement under 50 ms; event upload is asynchronous and does not delay voice. Audio front end may reduce capture latency but requires buffering/RAM discipline against the 211,608 B application RAM and existing Opus footprint.",
+            "security_impact": "Physical mic cutoff and a local recording indicator reduce covert-capture risk. Motion events should be coarse and opt-in; never upload raw accelerometer streams by default. Haptic patterns must not encode sensitive content in public settings.",
+            "depends_on": [
+              "A production wearable board/enclosure rather than the current nRF9160 development kit",
+              "Firmware skills for low-power I2C IMU, haptic patterns, and physical mic-mute state",
+              "Shared event ledger so local events can be correlated without uploading raw sensor data"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going, including layers you have not touched yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "mac_readonly_inspect",
+          "args": {
+            "operation": "running_apps",
+            "path": "",
+            "limit": 50,
+            "max_elements": 100
+          },
+          "result": {
+            "error": "This tool was granted a schema but has no implementation yet. Report what you would have done with it."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "mac_readonly_inspect",
+          "args": {
+            "operation": "foreground_app",
+            "path": "",
+            "limit": 10,
+            "max_elements": 20
+          },
+          "result": {
+            "error": "This tool was granted a schema but has no implementation yet. Report what you would have done with it."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "mac_readonly_inspect",
+          "args": {
+            "operation": "accessibility_enabled",
+            "path": "",
+            "limit": 10,
+            "max_elements": 20
+          },
+          "result": {
+            "error": "This tool was granted a schema but has no implementation yet. Report what you would have done with it."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_capability",
+          "args": {
+            "user_asks": "“Just give it the goal; figure out whether the Mac, browser, pendant, or server should do each part, and use whichever can.”",
+            "why_useful": "Removes manual routing and enables parallel work: authenticated browser work stays in the browser, local files/apps stay on the Mac, durable research runs server-side, and the pendant remains the always-available interface. The owner gets one coherent answer instead of tool-specific failures.",
+            "surfaces": [
+              "relay",
+              "mac-bridge",
+              "browser",
+              "dashboard",
+              "iOS",
+              "pendant"
+            ],
+            "model_tier": "A cheap background router classifies each subtask from a capability registry and decomposes independent work. Use realtime only for clarification and progress narration; invoke the expensive Mac/browser planner only after routing. Use a small summarizer to merge receipts and detect conflicts.",
+            "latency_budget": "Route and acknowledge in under 300 ms; start independent subtasks within 1–2 s. Merge partial results as they arrive; wait only for dependencies explicitly marked blocking.",
+            "cost_estimate": "About $0.005–$0.03 per routing/merge operation with a small model and compact capability metadata; execution costs remain task-dependent. Cache registry and avoid passing full transcripts to every node.",
+            "security_concerns": "Capability declarations must state data scopes and side effects, not just names. Route secrets only to the node that already holds them; authenticated sessions and local files must not be copied into relay prompts. Record routing decisions and node receipts. Because Mac execution is intentionally ungated, provide a visible live activity stream and kill switch rather than silently weakening owner policy.",
+            "missing": [
+              "Versioned capability registry with node health, data locality, latency, and side-effect metadata",
+              "Dependency-aware DAG planner and parallel fan-out/fan-in executor",
+              "Common event/receipt protocol and conflict resolver",
+              "Per-node scoped credentials and artifact handles",
+              "Cancellation propagation and offline fallback policy",
+              "Dashboard view showing which node is doing what and why"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going — propose others, including ones that need capabilities that do not exist yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_capability",
+          "args": {
+            "user_asks": "“While I sleep, prepare tomorrow’s brief and leave me a short audio queue I can listen to from the pendant.”",
+            "why_useful": "Makes the wearable useful without a live conversation: overnight jobs combine calendar, mail, completed task receipts, and explicitly authorized browser watches, then deliver a prioritized, interrupt-free briefing when the owner is ready.",
+            "surfaces": [
+              "relay",
+              "dashboard",
+              "iOS",
+              "pendant",
+              "mac-bridge",
+              "browser"
+            ],
+            "model_tier": "Scheduled/background work uses a cheap model for extraction, deduplication, and ranking; a small synthesis model writes the script. Realtime is used only if the owner asks follow-up questions while listening.",
+            "latency_budget": "Run during a configurable overnight window; produce the brief before the owner’s chosen wake time. Pendant playback starts locally within 200 ms after a button press, with resumable chapters.",
+            "cost_estimate": "Typically $0.02–$0.08 per brief, dominated by summarizing new mail/browser evidence; cache unchanged source summaries and synthesize only deltas. Audio generation/storage adds a small per-minute cost and should expire automatically.",
+            "security_concerns": "Default to snippets and metadata; exclude sensitive mail, private browser pages, and message bodies unless explicitly enabled. Show source links and a “why included” label in iOS/dashboard. Encrypt audio, expire it after a short retention period, and ensure a lost pendant cannot replay another person’s brief without pairing.",
+            "missing": [
+              "Reliable scheduled job runner and source snapshot timestamps",
+              "Audio generation plus offline pendant download/resume/expiry protocol",
+              "Calendar/Mail/browser connectors with per-source privacy scopes",
+              "A quiet-hours and interruption policy",
+              "Cross-node receipt aggregation and deduplication"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going — propose others, including ones that need capabilities that do not exist yet."
+          }
+        },
+        {
+          "type": "finish",
+          "summary": "Proposed a durable cross-node job ledger with leases, heartbeats, append-only receipts, retries, cancellation, and pendant/dashboard delivery; a shared event-sourced memory broker replacing per-surface prompt hand-writing; capability-aware DAG routing across relay/Mac/browser; overnight audio briefings; and a production pendant revision with low-power IMU, haptics, physical mic mute, and local gesture handling. I also aligned relay and browser-extension agents on the common receipt/event contract. The granted Mac read-only inspection tool is still unimplemented, so I could not verify running apps, foreground app, or Accessibility state.",
+          "biggest_unknown": "The concrete durable queue/receipt API and worker lifecycle are still undefined, and the Mac inspection harness has no implementation. Until those exist, routing and background work remain proposals rather than an end-to-end reliable hive mind."
+        },
+        {
+          "type": "tool",
+          "name": "finish",
+          "args": {
+            "summary": "Proposed a durable cross-node job ledger with leases, heartbeats, append-only receipts, retries, cancellation, and pendant/dashboard delivery; a shared event-sourced memory broker replacing per-surface prompt hand-writing; capability-aware DAG routing across relay/Mac/browser; overnight audio briefings; and a production pendant revision with low-power IMU, haptics, physical mic mute, and local gesture handling. I also aligned relay and browser-extension agents on the common receipt/event contract. The granted Mac read-only inspection tool is still unimplemented, so I could not verify running apps, foreground app, or Accessibility state.",
+            "biggest_unknown": "The concrete durable queue/receipt API and worker lifecycle are still undefined, and the Mac inspection harness has no implementation. Until those exist, routing and background work remain proposals rather than an end-to-end reliable hive mind."
+          },
+          "result": {
+            "acknowledged": true
+          }
+        }
+      ]
+    },
+    {
+      "round": 23,
+      "transcript": [
+        {
+          "type": "tool",
+          "name": "message_peer",
+          "args": {
+            "to": "relay-realtime",
+            "subject": "Mac planner coordination",
+            "body": "What owner-facing capability are you building this round? I want complementary Mac-side proposal."
+          },
+          "result": {
+            "sent": true,
+            "note": "They will see this on their next round."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "message_peer",
+          "args": {
+            "to": "mac-vision",
+            "subject": "Mac planner coordination",
+            "body": "Any current gaps or useful computer-use capabilities you see? I want complementary proposal."
+          },
+          "result": {
+            "sent": true,
+            "note": "They will see this on their next round."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "list_capabilities",
+          "args": {},
+          "result": {
+            "note": "Call discover(category) for the contents of any of these, then describe(name) for detail on one item. Nothing here is in your system prompt — you are meant to pull only what you need.",
+            "categories": [
+              {
+                "name": "surfaces",
+                "what": "The machines and services in this system and how to reach each one.",
+                "count": 5
+              },
+              {
+                "name": "routes",
+                "what": "HTTP endpoints on the owner's Mac agent, read from its live route table.",
+                "count": 116
+              },
+              {
+                "name": "tools",
+                "what": "The tools the production voice agent actually ships with.",
+                "count": 6
+              },
+              {
+                "name": "devices",
+                "what": "Physical and virtual devices reachable right now, with live status.",
+                "count": null
+              },
+              {
+                "name": "hardware",
+                "what": "The pendant and bridge chips: memory, I/O, storage, radio, power.",
+                "count": 8
+              },
+              {
+                "name": "granted",
+                "what": "What the orchestrator has already given you this run.",
+                "count": 8
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "granted"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "mac_run_actions",
+                "summary": "tool"
+              },
+              {
+                "name": "mac_read_sources",
+                "summary": "tool"
+              },
+              {
+                "name": "mac_readonly_inspect",
+                "summary": "tool"
+              },
+              {
+                "name": "Mac local-agent job and action contract",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "Mac action authorization and confirmation policy",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "server-to-Mac plan handoff",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "probe:post:/plan",
+                "summary": "permission"
+              },
+              {
+                "name": "mac_bridge.execute_plans",
+                "summary": "permission"
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_capability",
+          "args": {
+            "user_asks": "“Get me ready for my next meeting.”",
+            "why_useful": "The owner gets a useful meeting workspace without manually searching calendar, mail, files, and browser tabs: identify the next event, summarize only relevant unread context, open the right documents or meeting link, and create a small scratchpad with agenda, decisions needed, and follow-ups.",
+            "surfaces": [
+              "mac_read_sources reads the next calendar event and bounded recent/unread mail",
+              "relay/background worker ranks mail and resolves event attendees/subject to known local artifacts",
+              "browser harness locates the authenticated meeting or project page without exporting raw page content",
+              "mac_run_actions opens the meeting link and relevant files, and writes a timestamped scratchpad in a configured local folder",
+              "relay-realtime delivers a short pendant briefing only after the workspace is staged"
+            ],
+            "model_tier": "Cheap background model for calendar/mail filtering and artifact matching; realtime tier only for the owner's conversational request and final concise briefing. Escalate to the expensive model only when the event or mail is genuinely ambiguous.",
+            "latency_budget": "15–30 seconds for the first pass; open the meeting link immediately, then enrich the scratchpad asynchronously. The owner should be able to say “just open it” to skip enrichment.",
+            "cost_estimate": "Roughly $0.005–$0.03 per invocation depending on mail volume and whether browser extraction is needed; most cost is model summarization, not Mac actions.",
+            "security_concerns": "Calendar/mail snippets and document names leave the Mac only as redacted, bounded extracts; meeting URLs and authenticated page contents should remain in their respective local/browser surfaces. Never send full mail bodies by default. Opening a link or modifying files should be visible in the action receipt; use a dedicated scratchpad directory and atomic writes.",
+            "missing": [
+              "A durable local artifact index mapping calendar subjects/projects to files and browser pages",
+              "A browser-harness API that returns bounded semantic extracts and stable evidence references",
+              "A Mac routine for atomic scratchpad creation plus idempotent reuse when the same meeting is requested twice",
+              "A shared redaction policy and event/job ledger across relay, browser, and Mac"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going — propose others, including ones that need capabilities that do not exist yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_change",
+          "args": {
+            "layer": "context",
+            "change": "Add a compact, durable Mac execution context cache and handoff protocol. Each server plan gets a jobId, parentId, monotonic sequence, intent hash, referenced local resources, and a short result receipt. The Mac stores only the minimum state needed to resume or deduplicate a plan (not the conversation transcript), and returns a delta receipt rather than requiring the full plan/context on every retry. Include TTLs, explicit invalidation when files/apps change, and a human-readable local activity log.",
+            "why_useful_to_owner": "Actions stop repeating when connectivity or voice streaming glitches, and the owner does not pay for the same context over and over. Long-running workflows can resume after sleep or a dropped relay without losing their place, while the owner can inspect what the Mac did.",
+            "effort": "Medium: shared schema in relay and Mac agent, local SQLite/JSON ledger, idempotency checks around action batches, and receipt rendering in the dashboard. Pilot on file creation/opening and meeting-prep routines before generalizing.",
+            "risk": "A stale cache could open the wrong document or skip a needed action. Mitigate with resource fingerprints, short TTLs, sequence checks, and treating uncertain state as a fresh read rather than silently acting. Corrupt ledger recovery should discard cache and rerun safely; do not delete user data as part of recovery.",
+            "cost_impact": "Small storage and implementation cost; lower API spend and fewer duplicate Mac executions. No meaningful per-invocation API increase; compact receipts may add a few hundred tokens when surfaced.",
+            "latency_impact": "Usually lower latency by avoiding repeated planning; a small local lookup on every job. Fresh-state verification adds latency only after a stale or ambiguous fingerprint.",
+            "security_impact": "Keep the ledger local, redact paths/content in server receipts, encrypt sensitive metadata at rest if available, and define retention/clear-history controls. This improves auditability without introducing an approval gate or reducing the owner's maximum-access policy.",
+            "depends_on": [
+              "A shared job/receipt schema accepted by relay, browser, and Mac",
+              "Stable file/app/browser resource fingerprints",
+              "An atomic local ledger implementation and recovery test suite"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going, including layers you have not touched yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "message_peer",
+          "args": {
+            "to": "browser-extension",
+            "subject": "Shared ledger alignment",
+            "body": "I proposed a compact Mac execution context cache using jobId/parentId/seq/intent hash/resource refs/receipts, local-only minimal state and delta retries. This should align with your portal-watch ledger; please reuse schema and evidence/TTL semantics."
+          },
+          "result": {
+            "sent": true,
+            "note": "They will see this on their next round."
+          }
+        },
+        {
+          "type": "finish",
+          "summary": "Proposed an owner-facing “Get me ready for my next meeting” capability that combines bounded Calendar/Mail reads, browser evidence, local file/link staging, and a concise pendant briefing. Also proposed a local Mac execution-context cache with job sequencing, idempotency, resource fingerprints, compact receipts, TTLs, and recovery so dropped links do not repeat actions or resend expensive context. Coordinated the ledger shape with browser-extension’s portal-watch work.",
+          "biggest_unknown": "The missing shared artifact/evidence index: how calendar subjects, local files, and authenticated browser pages are safely mapped without exporting sensitive content. I do not need another permission this round; the next useful infrastructure is the shared job/receipt schema and local atomic ledger."
+        },
+        {
+          "type": "tool",
+          "name": "finish",
+          "args": {
+            "summary": "Proposed an owner-facing “Get me ready for my next meeting” capability that combines bounded Calendar/Mail reads, browser evidence, local file/link staging, and a concise pendant briefing. Also proposed a local Mac execution-context cache with job sequencing, idempotency, resource fingerprints, compact receipts, TTLs, and recovery so dropped links do not repeat actions or resend expensive context. Coordinated the ledger shape with browser-extension’s portal-watch work.",
+            "biggest_unknown": "The missing shared artifact/evidence index: how calendar subjects, local files, and authenticated browser pages are safely mapped without exporting sensitive content. I do not need another permission this round; the next useful infrastructure is the shared job/receipt schema and local atomic ledger."
+          },
+          "result": {
+            "acknowledged": true
+          }
+        }
+      ]
+    },
+    {
+      "round": 24,
+      "transcript": [
+        {
+          "type": "tool",
+          "name": "list_capabilities",
+          "args": {},
+          "result": {
+            "note": "Call discover(category) for the contents of any of these, then describe(name) for detail on one item. Nothing here is in your system prompt — you are meant to pull only what you need.",
+            "categories": [
+              {
+                "name": "surfaces",
+                "what": "The machines and services in this system and how to reach each one.",
+                "count": 5
+              },
+              {
+                "name": "routes",
+                "what": "HTTP endpoints on the owner's Mac agent, read from its live route table.",
+                "count": 116
+              },
+              {
+                "name": "tools",
+                "what": "The tools the production voice agent actually ships with.",
+                "count": 6
+              },
+              {
+                "name": "devices",
+                "what": "Physical and virtual devices reachable right now, with live status.",
+                "count": null
+              },
+              {
+                "name": "hardware",
+                "what": "The pendant and bridge chips: memory, I/O, storage, radio, power.",
+                "count": 8
+              },
+              {
+                "name": "backlog",
+                "what": "What earlier rounds already proposed, and what became of each one. Restating one of these is a wasted round; building past it is not.",
+                "count": 53
+              },
+              {
+                "name": "granted",
+                "what": "What the orchestrator has already given you this run.",
+                "count": 8
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "granted"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "mac_run_actions",
+                "summary": "tool"
+              },
+              {
+                "name": "mac_read_sources",
+                "summary": "tool"
+              },
+              {
+                "name": "mac_readonly_inspect",
+                "summary": "tool"
+              },
+              {
+                "name": "Mac local-agent job and action contract",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "Mac action authorization and confirmation policy",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "server-to-Mac plan handoff",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "probe:post:/plan",
+                "summary": "permission"
+              },
+              {
+                "name": "mac_bridge.execute_plans",
+                "summary": "permission"
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "backlog"
+          },
+          "result": {
+            "note": "53 still open, 132 already settled. describe(id) gives the full entry, including why something was rejected. timesProposed counts how many rounds independently arrived at the same idea — a high number means the gap is real and still unfilled, not that it needs saying again.",
+            "items": [
+              {
+                "name": "chg-a813b918",
+                "summary": "Enable a bounded audio-retention sweeper and per-job deletion controls: default to short retention for generated briefings, delete expired R2 objects and D1 pointers idempotently, and expose a dashboa",
+                "layer": "relay",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-16bc5dee",
+                "summary": "Add a durable browser job runner with two backends: the authenticated Safari bridge for owner-private pages and Cloudflare Browser Run for public pages. Represent each step as navigate/read/extract/cl",
+                "layer": "browser-harness",
+                "timesProposed": 9
+              },
+              {
+                "name": "cap-bff5f829",
+                "summary": "Check my logged-in web accounts for anything urgent, summarize it, and draft (but do not send) any replies that need my attention.",
+                "layer": "capability",
+                "timesProposed": 9
+              },
+              {
+                "name": "cap-8c36c70a",
+                "summary": "Every weekday morning, check my logged-in calendar, task board, and travel reservations, then tell me the three things I need to know and prepare a suggested plan.",
+                "layer": "capability",
+                "timesProposed": 9
+              },
+              {
+                "name": "cap-5bd640c5",
+                "summary": "Watch my chosen logged-in web pages once a day and tell me only what changed; prepare drafts for any follow-up forms, but stop before submitting.",
+                "layer": "capability",
+                "timesProposed": 9
+              },
+              {
+                "name": "chg-a82e0b13",
+                "summary": "Replace per-surface hand-written fleetContext prompt sections with a compact, typed context service that returns only task-relevant facts, each with source, timestamp, confidence, and expiry; automati",
+                "layer": "memory",
+                "timesProposed": 9
+              },
+              {
+                "name": "cap-4f5af34d",
+                "summary": "Check my authenticated browser accounts for anything that needs my attention, then put findings in a review queue instead of changing anything.",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-18a9c60f",
+                "summary": "Replace hand-written per-surface fleetContext prompt sections with a single typed context service that stores compact facts, provenance, sensitivity, TTL, and last-used timestamps; retrieve only task-",
+                "layer": "memory",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-0096a2b3",
+                "summary": "Replace per-surface hand-written fleetContext prompt sections with a shared, typed context compiler: retrieve only task-relevant entities/relations, attach confidence and freshness, cap tokens per tie",
+                "layer": "memory",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-14accc01",
+                "summary": "Add a reliable browser command queue with request IDs, idempotency keys, tab/session affinity, typed results (page metadata, extracted text, screenshots), and explicit irreversible-action checkpoints.",
+                "layer": "browser-harness",
+                "timesProposed": 5
+              },
+              {
+                "name": "cap-a624ca3e",
+                "summary": "Every morning, check my private calendar, travel reservations, and important account notifications in Safari, then give me a concise spoken briefing with links and only flag things that need my attent",
+                "layer": "capability",
+                "timesProposed": 5
+              },
+              {
+                "name": "cap-b875c138",
+                "summary": "Draft a form, email, or support request from information on this private webpage, fill it in, and show me exactly what will be submitted before I approve it.",
+                "layer": "capability",
+                "timesProposed": 5
+              },
+              {
+                "name": "cap-a09b223f",
+                "summary": "Watch my authenticated order, appointment, and account pages for changes, and tell me only when a meaningful change happens—never pollute my daily briefing with unchanged pages.",
+                "layer": "capability",
+                "timesProposed": 5
+              },
+              {
+                "name": "chg-498a3489",
+                "summary": "Replace per-surface hand-written fleetContext prompt sections with a compact, typed context projection service: durable facts, current goals, and permissions are selected per job, with token budgets a",
+                "layer": "memory",
+                "timesProposed": 5
+              },
+              {
+                "name": "chg-e767dfc0",
+                "summary": "Build a first-class authenticated page-watch service: each watch stores URL/tab context, extraction selectors or semantic regions, a normalized baseline hash, volatile-field rules, cadence, and last s",
+                "layer": "browser-harness",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-5284a6ce",
+                "summary": "Build a durable authenticated page-watch service: named watch definitions store URL/tab/session binding, extraction selectors or an agentic extraction recipe, schedule, semantic fingerprint, last seen",
+                "layer": "browser-harness",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-e14fff33",
+                "summary": "Add a provenance-aware browser workbench: every extraction and field mutation gets a tabId, URL, timestamp, DOM locator, source snippet hash, action plan, and before/after value. Group tabs into a tas",
+                "layer": "browser-harness",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-fa84f9a7",
+                "summary": "Build a durable authenticated page-watch layer: named browser sessions with tab/window reattachment, per-watch cadence and quiet hours, DOM-region extraction plus normalized semantic fingerprints, enc",
+                "layer": "browser-harness",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-0c8c5dfe",
+                "summary": "Watch the authenticated pages I choose, detect meaningful changes, and leave me a concise, sourced briefing with suggested next steps—without sending or submitting anything.",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-391cae82",
+                "summary": "When I ask about something on a logged-in site, have several agents inspect it in parallel, reconcile their findings, and give me an evidence-backed answer or a prepared (not sent) action.",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-7217b17c",
+                "summary": "Prepare a browser transaction for me: gather the relevant logged-in data, fill the form or draft the message, show me exactly what will change with before/after evidence, and let me approve, edit, or ",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-0d11cf82",
+                "summary": "Every weekday morning, check my authenticated work portal for new high-priority items and tell me only what needs my attention.",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-df9ec55e",
+                "summary": "When I say 'handle this' about something I found in Safari, gather the needed details across my logged-in tabs, fill the reversible parts, and show me exactly what will be sent before stopping.",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-302a8868",
+                "summary": "“Every morning, check my logged-in work dashboards and tell me only what changed or needs my attention; keep watching the important pages and alert me when a genuinely urgent item appears.”",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-4b41e08a",
+                "summary": "While I sleep, investigate my open threads across Calendar, Mail, and authenticated browser tabs, then leave a ready-to-review workbench on my Mac when I wake: one folder with a prioritized brief, sou",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-26c609fc",
+                "summary": "“When I ask you to do something that takes time, keep working after I leave and tell me exactly what happened when it’s done.”",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-a267b7e8",
+                "summary": "“Just give it the goal; figure out whether the Mac, browser, pendant, or server should do each part, and use whichever can.”",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-ca6005c3",
+                "summary": "“While I sleep, prepare tomorrow’s brief and leave me a short audio queue I can listen to from the pendant.”",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-51c2dc88",
+                "summary": "“Get me ready for my next meeting.”",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-a4c0ec8d",
+                "summary": "Turn on mac-vision's accessibility-mode UI interaction loop to automate GUI tasks without taking over the screen or keyboard focus.",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-a1aa3bf5",
+                "summary": "Show me a history of recent actions taken by mac-vision in automation loops with human-readable explanations and option to undo.",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-e21eb7f4",
+                "summary": "“Every morning, give me a 30-second audio digest of what changed: calendar, reminders, and top emails.”",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-72fc9997",
+                "summary": "\"Queue this up and tell me when it’s done\" (for example: summarize a long document, compare options, draft an email, or research a topic).",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-e5132197",
+                "summary": "“When I press the pendant button, capture a short voice note, tag it with time and place if available, and later summarize it into tasks.”",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-9a6740ed",
+                "summary": "Add a compact, durable Mac execution context cache and handoff protocol. Each server plan gets a jobId, parentId, monotonic sequence, intent hash, referenced local resources, and a short result receip",
+                "layer": "context",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-f5d3b820",
+                "summary": "Replace the desk-bound nRF9160 DK prototype with a jewelry-sized cellular/BLE pendant built around an nRF9161-class modem/application module plus a low-power companion MCU, two digital MEMS microphone",
+                "layer": "hardware",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-258cbe5e",
+                "summary": "Build the wearable revision around the nRF9160 with an ultra-low-power 6-axis IMU on the unused I2C bus, a vibration/LRA haptic driver, and a real microphone/audio front end with physical mute. Keep t",
+                "layer": "hardware",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-d9ce5471",
+                "summary": "Add a dedicated low-power vision coprocessor or embedded GPU to the pendant hardware for on-device image analysis to recognize Mac screen contents and UI elements, enabling offline partial vision-base",
+                "layer": "hardware",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-a3af4c67",
+                "summary": "Define a cross-node Evidence Capsule protocol for browser results: immutable capsule ID, source URL/domain, capture time, tab/session identifier (pseudonymous), selected text/DOM region, content hash,",
+                "layer": "integration",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-91f3c214",
+                "summary": "Integrate mac-vision with the Cloudflare Worker relay to allow partial offloading of UI state classification and action suggestion to a cloud tier. This enables more powerful multimodal fusion with vo",
+                "layer": "integration",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-622e7336",
+                "summary": "Wire up a server-side browser path using Cloudflare Browser Run and a routing rule: web reads/extraction default to server_browser_actions; only fall back to Mac browser bridge when authentication req",
+                "layer": "integration",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-a7a155b1",
+                "summary": "Use the new server-side browser capability for public web tasks directly from the relay, reserving the Mac harness for authenticated sessions and local data. Add routing logic: public pages -> server ",
+                "layer": "integration",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-d2c2cc02",
+                "summary": "Add an idempotent Workbench transaction primitive to the Mac planner: accept a job_id and manifest, write all outputs into a temporary directory, fsync/rename atomically into ~/AI-Workbench/<date>/<jo",
+                "layer": "mac-harness",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-9596a2ad",
+                "summary": "Replace fleetContext.js's hand-written per-surface prompt section with a shared event log plus typed projections. Every node writes small signed events (preference, commitment, task state, source cita",
+                "layer": "memory",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-5cc0bd50",
+                "summary": "Replace per-surface hand-written fleetContext prompts with a shared, event-sourced personal memory broker. Every node writes typed facts, preferences, commitments, and task outcomes with provenance, c",
+                "layer": "memory",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-2903dddb",
+                "summary": "Unify memory across surfaces: replace hand-written prompt sections per surface with a shared, versioned memory API that returns small, purpose-built summaries (profile, preferences, current projects, ",
+                "layer": "memory",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-7613a731",
+                "summary": "Introduce a unified, cross-node memory write API with schema (entities, events, preferences, tasks) and TTLs, plus a pruning policy. Replace hand-written per-surface prompt sections with retrieval-bas",
+                "layer": "memory",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-67952158",
+                "summary": "Add a real scheduler: a Durable Object-backed job queue with delayed execution and recurring rules (cron-like). The relay can enqueue jobs, and a workers cron/alarm runner executes them, delegating to",
+                "layer": "routines",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-9b4366c7",
+                "summary": "Add a relay-owned durable work queue with retries and a receipt log, implemented as a Durable Object (or D1 + Durable Object alarms). The relay exposes enqueue/status endpoints, persists intent payloa",
+                "layer": "routines",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-ae7e4af5",
+                "summary": "Introduce a lightweight scheduler using Durable Object alarms or Cloudflare Cron to trigger queued jobs (summarize notes, send digests, retry failed uploads).",
+                "layer": "routines",
+                "timesProposed": 2
+              },
+              {
+                "name": "skill-20934f8c",
+                "summary": "offline_alert_inbox",
+                "layer": "firmware",
+                "timesProposed": 1
+              },
+              {
+                "name": "skill-25e4ff13",
+                "summary": "offline_moment_bookmark",
+                "layer": "firmware",
+                "timesProposed": 1
+              },
+              {
+                "name": "skill-feb6116a",
+                "summary": "offline_voice_memo_store_and_forward",
+                "layer": "firmware",
+                "timesProposed": 1
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "routes"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "GET /health",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /capabilities",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /plan",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /execute",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /sessions",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /sessions",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /sessions/:sessionId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "PATCH /sessions/:sessionId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /sessions/:sessionId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /sessions/:sessionId/clear",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /logs",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /jobs",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /jobs/:jobId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /jobs/:jobId/receipts",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /jobs",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /jobs/undo-last",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /jobs/:jobId/cancel",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /jobs/:jobId/undo",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /thinking",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /thinking/latest",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /thinking/stream",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /pipeline",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /pipeline/events",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /pipeline/audio",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /pipeline/:pipelineId/audio/:direction",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /pipeline",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /pipeline/stream",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /context-graph",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /projects",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /projects/active",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /projects/active",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "PATCH /projects/active",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /context-graph/reset",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /context-graph/demo",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /context-graph/entities",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "PATCH /context-graph/entities/:entityId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /context-graph/entities/:entityId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /context-graph/relations",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /context-graph/relations/:relationId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /machine-context",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /machine-context/refresh",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /ops/status",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /ops/snapshot",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /routing",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /journal",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /journal/:jobId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /observe",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /browser/status",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /browser/heartbeat",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /browser/poll",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /browser/result/:commandId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /browser/sessions",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /browser/sessions",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /browser/sessions/:id",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /briefing",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /briefing/kinds",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /briefing/latest",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /research",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /research/briefings",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /research/briefings/:id",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /research/briefings/:id/speech",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /routines",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /routines",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "PATCH /routines/:routineId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /routines/:routineId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /routines/:routineId/run",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /capture",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /capture",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /capture/:key",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /reminders",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /tidy/preview",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /tidy",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /tidy/:planId/apply",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /tidy/:planId/undo",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /sweep/survey",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /sweep/preview",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /sweep",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /sweep/:planId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /sweep/:planId/apply",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /sweep/:planId/undo",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /preview",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /browser/inspect",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /browser/inspections",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /browser/inspections/:inspectionId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /browser/inspections/:inspectionId/act",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /focus",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /focus",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /focus",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /day-plan",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /meeting-prep",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /mail/triage",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /mail/triage",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /mail/triage/:runId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /meeting-followup",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /notifications",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /watches",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /watches",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /watches/reports",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /watches/:watchId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "PATCH /watches/:watchId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /watches/:watchId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /watches/:watchId/check",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /watches/:watchId/ack",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /forms/fill",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /forms/fills",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /forms/fills/:fillId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /memory/facts",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /memory/facts",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /memory/facts/:idOrKey",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /memory/browser-findings",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /memory/prune",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /memory/sync-graph",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /memory/projection",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /dashboard",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /dashboard/",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /dashboard/{*splat}",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              }
+            ],
+            "note": "These are the Mac agent routes. Your own backend may differ — probe_http hits whichever backend you run against."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "surfaces"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "relay-realtime",
+                "summary": "You run on a Cloudflare Worker and hold the live voice conversation with the owner through a wearable pendant",
+                "model": "gpt-realtime-2.1",
+                "base": "https://ai-pendant-relay.evan20050827.workers.dev",
+                "facetOf": null
+              },
+              {
+                "name": "mac-planner",
+                "summary": "You run on the owner's MacBook",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": null
+              },
+              {
+                "name": "mac-vision",
+                "summary": "You are the computer-use loop on the owner's MacBook",
+                "model": "gpt-4.1-mini",
+                "base": "http://localhost:8000",
+                "facetOf": null
+              },
+              {
+                "name": "browser-extension",
+                "summary": "You drive the owner's browser through the AI Pendant browser extension",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": "mac-planner"
+              },
+              {
+                "name": "mac-terminal",
+                "summary": "You are the shell tier on the owner's MacBook",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": "mac-planner"
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "mac_readonly_inspect",
+          "args": {
+            "operation": "ui_snapshot",
+            "path": "",
+            "limit": 100,
+            "max_elements": 300
+          },
+          "result": {
+            "error": "This tool was granted a schema but has no implementation yet. Report what you would have done with it."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "GET /observe"
+          },
+          "result": {
+            "name": "GET /observe",
+            "liveStatus": 200,
+            "liveResponse": "{\"ok\":true,\"observedAt\":\"2026-08-07T07:10:28.960Z\",\"readOnly\":true,\"note\":\"Observation only. Nothing on this path can block, refuse, or delay an action.\",\"derivedFrom\":[\"lsappinfo front — foreground application\",\"ps -Ao pid=,comm= — running application bundles\",\"local-agent/macos/permissions.js — accessibility, input posting, screen recording\",\"local-agent/browserSessions.js — durable browser sessions\",\"local-agent/config.js — allowedFolders\"],\"foregroundApp\":{\"asn\":\"ASN:0x0-0x468468:\",\"name\":\"Claude\",\"bundleId\":\"com.anthropic.claudefordesktop\",\"pid\":55646},\"runningApps\":{\"count\":20,\"helperProcesses\":85,\"error\":null,\"apps\":[{\"name\":\"AdGuard Mini\",\"pid\":3182,\"bundlePath\":\"/Applications/AdGuard Mini.app\"},{\"name\":\"AI Pendant Agent\",\"pid\":85581,\"bundlePath\":\"/Users/evanliu/Applications/AI Pendant Agent.app\"},{\"name\":\"Amphetamine\",\"pid\":37455,\"bundlePath\":\"/Applications/Amphetamine.app\"},{\"n"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "GET /jobs/:jobId/receipts"
+          },
+          "result": {
+            "name": "GET /jobs/:jobId/receipts",
+            "liveStatus": 404,
+            "liveResponse": "{\"ok\":false,\"error\":\"Job not found.\"}"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "GET /ops/snapshot"
+          },
+          "result": {
+            "name": "GET /ops/snapshot",
+            "liveStatus": 200,
+            "liveResponse": "{\"ok\":true,\"status\":{\"ok\":true,\"agent\":{\"ok\":true,\"service\":\"AI Pendant Mac Local Agent\",\"version\":\"0.5.0\",\"tokenRequired\":true,\"tokenConfigured\":true,\"fullControlMode\":true,\"llmPlannerEnabled\":true,\"fullControlPlanner\":true,\"computerUse\":{\"loopEnabled\":false,\"visionModelConfigured\":true,\"visionUploadConsented\":false,\"maxSteps\":25},\"browserExtension\":{\"online\":false,\"devices\":[],\"pendingCommands\":1},\"permissions\":{\"hostApp\":\"AI Pendant Agent\",\"nodePath\":\"/Users/evanliu/Applications/AI Pendant Agent.app/Contents/Resources/node\",\"hostFingerprint\":\"com.aipendant.agent|~/Applications/AI Pendant Agent.app\",\"accessibility\":{\"trusted\":true,\"detail\":\"Accessibility is granted\"},\"screenRecording\":{\"granted\":true,\"detail\":\"Screen Recording is granted\"},\"automation\":{\"System Events\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Finder\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Reminders\":{\"grant"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "GET /machine-context"
+          },
+          "result": {
+            "name": "GET /machine-context",
+            "liveStatus": 200,
+            "liveResponse": "{\"machine\":{\"home\":\"/Users/evanliu\",\"hostname\":\"MacBook-Air-6.local\",\"platform\":\"darwin\",\"timezone\":\"America/New_York\",\"applications\":[\".Karabiner-VirtualHIDDevice-Manager\",\"71sports\",\"Ableton Live 12 Suite\",\"AdGuard Mini\",\"Adobe Digital Editions\",\"Adobe Digital Editions 4.5\",\"AI Pendant\",\"AI Pendant Agent\",\"AI Pendant Browser Bridge\",\"Amphetamine\",\"Anaconda-Navigator\",\"App Store\",\"Apps\",\"Automator\",\"BlockYT\",\"BlockYTShortsNew\",\"Books\",\"Bucky Match\",\"Bucky Match Helper\",\"Calculator\",\"Calendar\",\"Camera Recorder Lite\",\"Capital One Shopping\",\"ChatGPT\",\"Chess\",\"Claude\",\"Claude Code URL Handler\",\"Clock\",\"Contacts\",\"CP210xVCPDriver\",\"Cursor\",\"Dark PDF\",\"Dark Reader for Safari\",\"Developer\",\"Dictionary\",\"ExpressVPN\",\"FaceTime\",\"FindMy\",\"Focus for YouTube\",\"Font Book\",\"Freedom\",\"Freeform\",\"Games\",\"Gemini\",\"GlobalProtect\",\"Google Chrome\",\"Hermes\",\"Home\",\"Image Capture\",\"Image Playground\",\"iPhone M"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "message_peer",
+          "args": {
+            "to": "mac-vision",
+            "subject": "UI snapshot status",
+            "body": "I attempted mac_readonly_inspect(ui_snapshot), but granted tool has no implementation. Live GET /observe confirms foreground app Claude (com.anthropic.claudefordesktop, pid 55646), Accessibility and Screen Recording granted; cannot obtain hierarchy without new implementation."
+          },
+          "result": {
+            "sent": true,
+            "note": "They will see this on their next round."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "message_peer",
+          "args": {
+            "to": "mac-terminal",
+            "subject": "Live route findings",
+            "body": "GET /observe is live via route describe: foreground Claude, Accessibility + Screen Recording granted. GET /ops/snapshot reports fullControlMode/planner true, computer-use loop disabled, browser extension offline with 1 pending command. Typed readonly UI snapshot tool still no implementation. What terminal-side typed observability would unblock you most?"
+          },
+          "result": {
+            "sent": true,
+            "note": "They will see this on their next round."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_change",
+          "args": {
+            "layer": "mac-harness",
+            "change": "Add a focus-safe execution coordinator around the existing FULL_CONTROL Mac executor. Before each plan, capture the foreground app and a lightweight accessibility/state fingerprint; route UI actions by explicit target app where possible without activating it; execute in bounded batches; after each batch re-check foreground app and target state, abort only on unexpected state drift, and return a receipt that records whether focus changed, what was verified, and which step remains. For actions that inherently require focus (typing into an unaddressable field), mark that requirement in the plan and restore the original foreground app afterward when technically possible. This is observability and recovery, not an approval gate.",
+            "why_useful_to_owner": "The pendant can work on the Mac while the owner is writing, coding, or in a meeting without unexpectedly stealing their keyboard or leaving half-completed work in the wrong window. If a page or dialog changes mid-task, the system reports the exact stopping point instead of pretending success. Everyday automation becomes safe to run in the background while preserving the owner's current context.",
+            "effort": "Medium: add pre/post state capture to computerControl.js, target-app accessibility adapters, batch boundaries, and receipt schema; exercise against Claude, Safari, Calendar, and Finder. Restoration is best-effort and must be tested per app.",
+            "risk": "Some apps expose unstable accessibility trees or cannot restore focus reliably; a false state-drift detection could stop a task early, while a missed drift could still misdirect an action. Recover by returning the partial receipt and allowing an explicit resume from the last verified step; retain current executor as fallback.",
+            "cost_impact": "Negligible API cost (small local state snapshots); modest local CPU/latency overhead, roughly 100–300 ms per batch. No cloud data required unless existing receipts are synced.",
+            "latency_impact": "Adds about 0.1–0.3 seconds per action batch, but avoids expensive retries and accidental destructive work.",
+            "security_impact": "Improves privacy by avoiding screenshots and favoring local accessibility metadata. Receipts should redact typed text and sensitive UI values by default; foreground-app names and state hashes remain local unless explicitly exported.",
+            "depends_on": [
+              "A real implementation for typed read-only UI snapshots or equivalent local accessibility state inspection",
+              "Result receipts (chg-5fc73ce3) to persist verified-step and focus-change metadata"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going, including layers you have not touched yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "record_finding",
+          "args": {
+            "about": "Mac agent runtime and observability",
+            "finding": "The live Mac agent is full-control and planner-enabled with Accessibility, Screen Recording, and Automation grants. Computer-use loop is disabled and vision upload consent is false. Browser extension is currently offline with one pending command. GET /observe can provide foreground app/running-apps/permissions, but the granted typed mac_readonly_inspect UI snapshot has no implementation.",
+            "evidence": "describe(GET /ops/snapshot) returned status 200 with these flags; describe(GET /observe) returned foreground Claude and read-only observation metadata; mac_readonly_inspect(ui_snapshot) returned 'tool was granted a schema but has no implementation yet'."
+          },
+          "result": {
+            "recorded": true
+          }
+        },
+        {
+          "type": "tool",
+          "name": "request_tool",
+          "args": {
+            "name": "mac_ui_state_snapshot",
+            "why": "mac-vision and focus-safe execution need current accessibility hierarchy/state, while mac_readonly_inspect(ui_snapshot) is only a schema with no implementation. GET /observe exposes foreground apps and permissions but not controls, roles, labels, or enabled state.",
+            "input_schema": {
+              "operation": "ui_snapshot",
+              "app": "string (optional; defaults to foreground app)",
+              "max_depth": "integer 1-20",
+              "max_elements": "integer 1-500",
+              "include_values": "boolean (default false; redact text/password fields unless explicitly enabled)",
+              "timeout_ms": "integer 100-5000"
+            },
+            "example_call": {
+              "operation": "ui_snapshot",
+              "app": "Claude",
+              "max_depth": 6,
+              "max_elements": 250,
+              "include_values": false,
+              "timeout_ms": 1500
+            },
+            "expected_output": "{ok:true, observedAt:string, app:{name,bundleId,pid}, tree:{role,title,identifier,enabled,focused,children:[...]}, redactions:[...], truncated:boolean}. Read-only; must not activate apps, move focus, capture pixels, or type."
+          },
+          "result": {
+            "queued": true,
+            "id": "t11-h383",
+            "note": "The orchestrator will decide between rounds. Continue without it for now."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "probe_http",
+          "args": {
+            "method": "GET",
+            "path": "/health"
+          },
+          "result": {
+            "ok": true,
+            "status": 200,
+            "body": "{\"ok\":true,\"service\":\"AI Pendant Mac Local Agent\",\"version\":\"0.5.0\",\"capabilities\":\"/capabilities\"}"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "probe_http",
+          "args": {
+            "method": "GET",
+            "path": "/observe"
+          },
+          "result": {
+            "ok": true,
+            "status": 200,
+            "body": "{\"ok\":true,\"observedAt\":\"2026-08-07T07:10:54.888Z\",\"readOnly\":true,\"note\":\"Observation only. Nothing on this path can block, refuse, or delay an action.\",\"derivedFrom\":[\"lsappinfo front — foreground application\",\"ps -Ao pid=,comm= — running application bundles\",\"local-agent/macos/permissions.js — accessibility, input posting, screen recording\",\"local-agent/browserSessions.js — durable browser sessions\",\"local-agent/config.js — allowedFolders\"],\"foregroundApp\":{\"asn\":\"ASN:0x0-0x468468:\",\"name\":\"Claude\",\"bundleId\":\"com.anthropic.claudefordesktop\",\"pid\":55646},\"runningApps\":{\"count\":20,\"helperProcesses\":85,\"error\":null,\"apps\":[{\"name\":\"AdGuard Mini\",\"pid\":3182,\"bundlePath\":\"/Applications/AdGuard Mini.app\"},{\"name\":\"AI Pendant Agent\",\"pid\":85581,\"bundlePath\":\"/Users/evanliu/Applications/AI Pendant Agent.app\"},{\"name\":\"Amphetamine\",\"pid\":37455,\"bundlePath\":\"/Applications/Amphetamine.app\"},{\"name\":\"Calendar\",\"pid\":25006,\"bundlePath\":\"/System/Applications/Calendar.app\"},{\"name\":\"Claude\",\"pid\":55646,\"bundlePath\":\"/Applications/Claude.app\"},{\"name\":\"Freedom\",\"pid\":3241,\"bundlePath\":\"/Applications/Freedom.app\"},{\"name\":\"Google Chrome\",\"pid\":27367,\"bundlePath\":\"/Applications/Google Chrome.app\"},{\"name\":\"Mail\",\"pid\":98108,\"bundlePath\":\"/System/Applications/Mail.app\"},{\"name\":\"Microsoft Outlook\",\"pid\":41587,\"bundlePath\":\"/Applications/Microsoft Outlook.app\"},{\"name\":\"Notes\",\"pid\":47912,\"bundlePath\":\"/System/Applications/Notes.app\"},{\"name\":\"noTunes\",\"pid\":3240,\"bundlePath\":\"/Applications/noTunes.app\"},{\"name\":\"OneDrive\",\"pid\":3236,\"bundlePath\":\"/Applications/OneDrive.app\"},{\"name\":\"Preview\",\"pid\":42453,\"bundlePath\":\"/System/Applications/Preview.app\"},{\"name\":\"Reminders\",\"pid\":36579,\"bundlePath\":\"/System/Applications/Reminders.app\"},{\"name\":\"Spotify\",\"pid\":82807,\"bundlePath\":\"/Applications/Spotify.app\"},{\"name\":\"superwhisper\",\"pid\":711,\"bundlePath\":\"/Applications/superwhisper.app\"},{\"name\":\"System Settings\",\"pid\":21035,\"bundlePath\":\"/System/Applications/System Settings.app\"},{\"name\":\"TextEdit\",\"pid\":21521,\"bundlePath\":\"/System/Applications/TextEdit.app\"},{\"name\":\"Visual Studio Code\",\"pid\":76827,\"bundlePath\":\"/Applications/Visual Studio Code.app\"},{\"name\":\"zoom.us\",\"pid\":43403,\"bundlePath\":\"/Applications/zoom.us.app\"}]},\"accessibility\":{\"probed\":true,\"trusted\":true,\"detail\":\"Accessibility is granted\",\"hostApp\":\"AI Pendant Agent\",\"eventsPost\":null,\"eventsPostDetail\":\"Not probed. The quiet permission report does not post a test event; add ?probeInput=1 to post one (a zero-delta mouse move at the cursor, a genuine no-op).\",\"secureInputActive\":null,\"screenRecording\":true,\"automationMissing\":[],\"uiActionsWillReachTheScreen\":null,\"consequence\":\"Unverified: TCC says Accessibility is granted to AI Pendant Agent, but nothing here posted an event to confirm it. If it is granted to the wrong bundle, ui_click, ui_menu, type_text and press_keys report success while doing nothing — receipts for those steps cannot be trusted.\"},\"browser\":{\"sessions\":3,\"tabs\":[{\"id\":\"default\",\"url\":\"https://time.is/UTC\",\"title\":\"UTC: 06:26\",\"tabId\":320512,\"lastUsedAt\":\"2026-08-07T06:26:08.887Z\"},{\"id\":\"probe-form2\",\"url\":\"https://www.selenium.dev/selenium/web/web-form.html\",\"title\":null,\"tabId\":230928,\"lastUsedAt\":\"2026-08-07T05:40:26.651Z\"},{\"id\":\"probe-form\",\"url\":\"https://httpbin.org/forms/post\",\"title\":\"503 Service Temporarily Unavailable\",\"tabId\":229550,\"lastUsedAt\":\"2026-08-07T05:40:06.306Z\"}]},\"directories\":{\"enforced\":false,\"note\":\"FULL_CONTROL_MODE is on: security.assertAllowedPath resolves any path. These are the configured roots, not a limit.\",\"roots\":[{\"path\":\"/Users/evanliu/agentic-gadget/software/ai-pendant-simulator\",\"exists\":true,\"readable\":true,\"entries\":31,\"directories\":15},{\"path\":\"/Users/evanliu/AI-Pendant-Workspace\",\"exists\":true,\"readable\":true,\"entries\":37,\"directories\":8},{\"path\":\"/Users/evanliu/Downloads\",\"exists\":true,\"readable\":true,\"entries\":31,\"directories\":1}]}}"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "probe_http",
+          "args": {
+            "method": "GET",
+            "path": "/ops/snapshot"
+          },
+          "result": {
+            "ok": true,
+            "status": 200,
+            "body": "{\"ok\":true,\"status\":{\"ok\":true,\"agent\":{\"ok\":true,\"service\":\"AI Pendant Mac Local Agent\",\"version\":\"0.5.0\",\"tokenRequired\":true,\"tokenConfigured\":true,\"fullControlMode\":true,\"llmPlannerEnabled\":true,\"fullControlPlanner\":true,\"computerUse\":{\"loopEnabled\":false,\"visionModelConfigured\":true,\"visionUploadConsented\":false,\"maxSteps\":25},\"browserExtension\":{\"online\":false,\"devices\":[],\"pendingCommands\":1},\"permissions\":{\"hostApp\":\"AI Pendant Agent\",\"nodePath\":\"/Users/evanliu/Applications/AI Pendant Agent.app/Contents/Resources/node\",\"hostFingerprint\":\"com.aipendant.agent|~/Applications/AI Pendant Agent.app\",\"accessibility\":{\"trusted\":true,\"detail\":\"Accessibility is granted\"},\"screenRecording\":{\"granted\":true,\"detail\":\"Screen Recording is granted\"},\"automation\":{\"System Events\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Finder\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Reminders\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Calendar\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Mail\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Notes\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Messages\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Safari\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Google Chrome\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Microsoft Edge\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Music\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Preview\":{\"granted\":true,\"detail\":\"from grant cache\"},\"TextEdit\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Visual Studio Code\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Cursor\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Terminal\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Warp\":{\"granted\":true,\"detail\":\"from grant cache\"},\"iTerm\":{\"granted\":true,\"detail\":\"from grant cache\"},\"System Settings\":{\"granted\":true,\"detail\":\"from grant cache\"}},\"reminders\":{\"granted\":true,\"detail\":\"from grant cache\"},\"requiredMissing\":[],\"optionalMissing\":[],\"ready\":true},\"logPath\":\"/Users/evanliu/AI-Pendant-Workspace/mac-agent-activity-log.json\",\"contextGraphPath\":\"/Users/evanliu/agentic-gadget/software/ai-pendant-simulator/local-agent/memory/context_graph.json\",\"sessionsPath\":\"/Users/evanliu/AI-Pendant-Workspace/pendant-sessions.json\",\"jobsPath\":\"/Users/evanliu/AI-Pendant-Workspace/pendant-jobs.json\",\"pipelinePath\":\"/Users/evanliu/AI-Pendant-Workspace/pendant-pipeline.json\",\"dashboardAvailable\":true},\"relay\":{\"configured\":true,\"url\":\"https://ai-pendant-relay.evan20050827.workers.dev\",\"reachable\":true,\"payload\":{\"ok\":true,\"service\":\"AI Pendant Cloud Relay\",\"version\":\"1.1.0\",\"platform\":\"cloudflare-workers\",\"store\":\"d1\",\"relayApiKeyConfigured\":true,\"speechToTextConfigured\":true,\"pairingRequired\":true,\"macBridgeOnline\":true,\"macBridgeLastSeen\":\"2026-08-07T07:10:44.631Z\",\"capabilities\":{\"pendantPipelineTelemetry\":true,\"pendantSpeech\":true,\"persistentAgentState\":true,\"durableAudio\":true},\"models\":{\"voiceAgent\":\"gpt-realtime-2.1\",\"textToSpeech\":\"macOS say (24 kHz PCM)\",\"relayTextToSpeechFallback\":\"tts-1 · alloy\"}},\"error\":null},\"browser\":{\"online\":false,\"devices\":[],\"pendingCommands\":1},\"machine\":{\"hostname\":\"MacBook-Air-6.local\",\"home\":\"/Users/evanliu\",\"platform\":\"darwin\",\"appCount\":123,\"applications\":[\".Karabiner-VirtualHIDDevice-Manager\",\"71sports\",\"Ableton Live 12 Suite\",\"AdGuard Mini\",\"Adobe Digital Editions\",\"Adobe Digital Editions 4.5\",\"AI Pendant\",\"AI Pendant Agent\",\"AI Pendant Browser Bridge\",\"Amphetamine\",\"Anaconda-Navigator\",\"App Store\",\"Apps\",\"Automator\",\"BlockYT\",\"BlockYTShortsNew\",\"Books\",\"Bucky Match\",\"Bucky Match Helper\",\"Calculator\",\"Calendar\",\"Camera Recorder Lite\",\"Capital One Shopping\",\"ChatGPT\",\"Chess\",\"Claude\",\"Claude Code URL Handler\",\"Clock\",\"Contacts\",\"CP210xVCPDriver\",\"Cursor\",\"Dark PDF\",\"Dark Reader for Safari\",\"Developer\",\"Dictionary\",\"ExpressVPN\",\"FaceTime\",\"FindMy\",\"Focus for YouTube\",\"Font Book\",\"Freedom\",\"Freeform\",\"Games\",\"Gemini\",\"GlobalProtect\",\"Google Chrome\",\"Hermes\",\"Home\",\"Image Capture\",\"Image Playground\",\"iPhone Mirroring\",\"Journal\",\"Just Press Record\",\"Kindle\",\"KugouMusic\",\"LINE\",\"Logi Options\",\"LTspice\",\"Mail\",\"Maps\",\"Messages\",\"Messenger\",\"Metronome\",\"Microsoft Excel\",\"Microsoft Outlook\",\"Microsoft PowerPoint\",\"Microsoft To Do\",\"Microsoft Word\",\"Mission Control\",\"MLB\",\"Mos\",\"Music\",\"Musicnotes\",\"Nail the Pitch\",\"News\",\"Notes\",\"noTunes\",\"nRF Connect for Desktop\",\"OBS\",\"Obsidian\",\"OneDrive\",\"Pages Creator Studio\",\"Passwords\",\"PayPal Honey\",\"Perch\",\"Phone\",\"Photo Booth\",\"Photos\",\"Podcasts\",\"Preview\",\"PrivadoVPN\",\"ProtonVPN\",\"QuickTime Player\",\"Reminders\",\"Safari\",\"Shortcuts\",\"Siri\",\"Spotify\",\"Steam\",\"Stickies\",\"Stocks\",\"superwhisper\",\"System Settings\",\"Tabs to Links\",\"Telegram\",\"TestFlight\",\"TextEdit\",\"The Unarchiver\",\"Time Machine\",\"Tips\",\"Transporter\",\"TV\",\"Unclutter\",\"Unzip - RAR ZIP 7Z Unarchiver\",\"Urban VPN Desktop\",\"Visual Studio Code\",\"VLC\",\"VoiceMemos\",\"Weather\",\"Whisper Transcription\",\"Xcode\",\"zoom.us\",\"臺北市立圖書館\"],\"topApps\":[\".Karabiner-VirtualHIDDevice-Manager\",\"71sports\",\"Ableton Live 12 Suite\",\"AdGuard Mini\",\"Adobe Digital Editions\",\"Adobe Digital Editions 4.5\",\"AI Pendant\",\"AI Pendant Agent\",\"AI Pendant Browser Bridge\",\"Amphetamine\",\"Anaconda-Navigator\",\"App Store\"],\"automation\":{\"macosVersion\":\"26.5.2\",\"arch\":\"arm64\",\"shortcuts\":[\"Play My Emails\",\"Start Scheduling\",\"Free trial reminder\",\"My Airbnb trip\",\"New Shortcut\",\"Start Working\",\"Turn Text Into Audio\",\"Search List on Google\",\"Batch Add Reminders\",\"Reading Mode\",\"Split Screen 2 Apps\",\"Check Spelling\",\"Stop Distractions\",\"Time Asleep\",\"Complete Task Devotional\",\"Complete Task Night medicine\",\"Complete Task Morning medicine\",\"Complete Task Read a Book\",\"Complete Task Drum practice\",\"Complete Task Write Blogs\",\"Complete Task Brush teeth\",\"Complete Task Weekly Agenda\",\"Force Close Apps\",\"New Shortcut 1\",\"What's my bedtime?\",\"Video to Audio\",\"Play the album – believe\",\"Track order\",\"play breaks heart\",\"take a photo\",\"Text Last Image\",\"Shazam shortcut\",\"Music Quiz\",\"Make QR Code\"],\"cliTools\":[\"aarch64-apple-darwin24-c++-14\",\"aarch64-apple-darw\n…[truncated]"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_change",
+          "args": {
+            "layer": "mac-harness",
+            "change": "Add a startup and periodic no-op input reachability probe to the Mac agent health path. When Accessibility is reported trusted, post the documented zero-delta cursor event (or an equivalent harmless System Events no-op), record the exact host bundle tested, timestamp, and result, and expose `inputReachability: verified|unverified|failed` in /observe and job receipts. Do not block FULL_CONTROL actions; instead annotate receipts and surface a warning when an interaction may have been a no-op.",
+            "why_useful_to_owner": "The owner will know whether an automation actually reached the Mac instead of receiving a misleading success from a stale or wrongly-authorized Accessibility grant. This is especially valuable when asking the pendant to work while away, because failures become diagnosable rather than silently leaving work undone.",
+            "effort": "Small: reuse the existing permissions probe, add a harmless event test, cache a short-lived result, and include it in observation and receipts. Test after agent upgrades and macOS permission changes.",
+            "risk": "Even a no-op event can be misclassified by macOS or trigger an unusual accessibility prompt. Keep it cursor-zero-delta only, never type or click, and fall back to unverified if the probe errors. It must remain advisory, not a hidden gate.",
+            "cost_impact": "No API cost; negligible local CPU. One local accessibility call at startup and optionally every few minutes.",
+            "latency_impact": "No meaningful task latency if cached; at most tens of milliseconds on health refresh.",
+            "security_impact": "No screen pixels or user content are collected. Store only bundle identity, timestamp, and boolean result; do not log event payloads.",
+            "depends_on": [
+              "A local implementation of the existing permissions probe or equivalent System Events no-op event endpoint"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going, including layers you have not touched yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "message_peer",
+          "args": {
+            "to": "relay-realtime",
+            "subject": "Mac bridge status",
+            "body": "Live Mac /ops/snapshot: mac bridge online last seen 2026-08-07T07:10:44Z, but browser extension offline with 1 pending command. Accessibility/Screen Recording trusted; input posting and UI reachability remain unverified. Consider surfacing this in voice status when handing off browser/Mac tasks."
+          },
+          "result": {
+            "sent": true,
+            "note": "They will see this on their next round."
+          }
+        },
+        {
+          "type": "finish",
+          "summary": "Discovered and verified live Mac state: /health, /observe, and /ops/snapshot are reachable. Claude is foreground; 20 apps running; Accessibility, Screen Recording, and Automation grants are present, but input posting/UI reachability is explicitly unverified. Computer-use loop is disabled, browser extension is offline with one pending command, and the granted typed UI snapshot tool has no implementation. Recorded findings, notified mac-vision/mac-terminal/relay, queued a precise mac_ui_state_snapshot tool request, and proposed two new changes: focus-safe state-aware execution and advisory no-op input reachability verification.",
+          "biggest_unknown": "The actual accessibility hierarchy and whether ui_* actions reach the screen; the current read-only UI snapshot schema is unavailable at runtime."
+        },
+        {
+          "type": "tool",
+          "name": "finish",
+          "args": {
+            "summary": "Discovered and verified live Mac state: /health, /observe, and /ops/snapshot are reachable. Claude is foreground; 20 apps running; Accessibility, Screen Recording, and Automation grants are present, but input posting/UI reachability is explicitly unverified. Computer-use loop is disabled, browser extension is offline with one pending command, and the granted typed UI snapshot tool has no implementation. Recorded findings, notified mac-vision/mac-terminal/relay, queued a precise mac_ui_state_snapshot tool request, and proposed two new changes: focus-safe state-aware execution and advisory no-op input reachability verification.",
+            "biggest_unknown": "The actual accessibility hierarchy and whether ui_* actions reach the screen; the current read-only UI snapshot schema is unavailable at runtime."
           },
           "result": {
             "acknowledged": true
