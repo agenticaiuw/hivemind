@@ -56,8 +56,8 @@
       ],
       "timesProposed": 6,
       "round": 6,
-      "status": "implementing",
-      "note": "assigned to subagent: research-audio"
+      "status": "implemented",
+      "note": "mode=page with --match reads the relevant open tabs (one page per host, only tabs whose title/URL match), compares them, and writes a short brief whose Sources section carries every URL, plus the audio version. Unread tabs are listed as 'seen but not read' rather than silently dropped. Not covered: extracting deadlines as a distinct field — they appear only if the page states them."
     },
     {
       "id": "cap-fc6643a7",
@@ -84,8 +84,8 @@
       ],
       "timesProposed": 6,
       "round": 6,
-      "status": "implementing",
-      "note": "assigned to subagent: research-audio"
+      "status": "implemented",
+      "note": "local-agent/research.js: searches the public web via the production runWebSearch, fetches and reads each candidate page (a URL nothing opened is never cited), and composes a cited brief on the cheap text tier. Written note + 24 kHz audio land in ~/AI-Pendant-Workspace/Briefings; POST /research, the research-brief.mjs CLI, and routines all reach it. Verified live: 3 of 4 sources read, 80s of audio."
     },
     {
       "id": "cap-1e04349c",
@@ -112,8 +112,8 @@
       ],
       "timesProposed": 6,
       "round": 8,
-      "status": "implementing",
-      "note": "assigned to subagent: research-audio"
+      "status": "duplicate",
+      "note": "Covered by cap-d65785c8: both are 'read my real logged-in browser session, compare, leave me an audio brief later', served by mode=page over the extension's own profile. Gap noted there: this reads tabs that are open, it does not autonomously search inside a logged-in site."
     },
     {
       "id": "cap-c18a0fce",
@@ -224,8 +224,8 @@
       ],
       "timesProposed": 6,
       "round": 10,
-      "status": "implementing",
-      "note": "assigned to subagent: research-audio"
+      "status": "implemented",
+      "note": "local-agent/audioBrief.js deliverBriefing(): every run leaves BOTH a source-linked markdown note and a .wav/.opus pair with the same basename under ~/AI-Pendant-Workspace/Briefings. Audio is rendered at the pendant's exact wire format (24 kHz mono s16le + Ogg Opus) so it plays on the Mac or from the pendant later; ceiling is 120 s, not the 10 s reply cap. Verified: 71-85 s briefs produced."
     },
     {
       "id": "cap-c071fa0a",
@@ -420,8 +420,8 @@
       ],
       "timesProposed": 6,
       "round": 13,
-      "status": "implementing",
-      "note": "assigned to subagent: research-audio"
+      "status": "implemented",
+      "note": "mode=page: readOpenTabs() drives browser_list_tabs + browser_read_page over POST /execute, so pages are read in the owner's real logged-in profile, then summarized into key points and rendered to audio they play later. Falls back to the public web when no tab matches rather than failing. Verified live against open Safari tabs (2 tabs read, 78.6 s of audio)."
     },
     {
       "id": "cap-7e779dac",
@@ -434,8 +434,8 @@
       ],
       "timesProposed": 6,
       "round": 14,
-      "status": "implementing",
-      "note": "assigned to subagent: research-audio"
+      "status": "duplicate",
+      "note": "Same capability and same code path as cap-d9af189b (mode=page): read the page the owner already has open and summarize it. Immediate delivery is the --now flag on the same command; price-on-this-product is that summary of the open product page. No separate implementation."
     },
     {
       "id": "cap-37804d89",
@@ -840,8 +840,8 @@
       ],
       "timesProposed": 5,
       "round": 13,
-      "status": "implementing",
-      "note": "assigned to subagent: research-audio"
+      "status": "implemented",
+      "note": "mode=compare: compares real options and ends with one recommendation plus what would change it. 'Don't buy anything' is built in, not a gate — no code path here can transact, the compose prompt forbids claiming otherwise, and assertNoTransactionClaim() rejects a brief that says it ordered/booked/paid (tested). The note states 'Nothing was bought, booked or ordered'. Verified live on portable power stations under $500."
     },
     {
       "id": "cap-52dcc328",

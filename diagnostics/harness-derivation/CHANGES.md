@@ -4,7 +4,7 @@ Written by `scripts/harness-ledger.mjs`. Status is owned by this file and
 survives re-runs — refreshing adds new proposals, it never resets what you
 have already marked done.
 
-**38 open · 15 implemented · 51 other**
+**38 open · 20 implemented · 46 other**
 
 The `×` column counts how many times a proposal was made. Anything above 1
 was arrived at independently more than once, which is the strongest signal
@@ -57,6 +57,10 @@ in here.
 
 | id | layer | proposed by | × | change |
 | --- | --- | --- | --- | --- |
+| `cap-d65785c8` | capability | browser-extension | 6 | “Read the relevant pages in my open browser tabs, compare the options, and give me a short brief with links and any deadlines.” |
+| `cap-9764ec65` | capability | browser-extension | 6 | “Research this topic across the public web, check the sources, and send me a cited answer later.” |
+| `cap-2a60c5ba` | capability | mac-planner | 6 | “Research this topic and leave me a concise source-linked briefing on my Mac, with an audio version I can play later.” |
+| `cap-d9af189b` | capability | relay-realtime | 6 | “Summarize the key points from this page and read them to me later.” |
 | `chg-43804606` | dashboard-ux | browser-extension | 6 | Add a Browser Jobs view shared by web, menubar, and iOS: active/queued/completed jobs, per-site permission scope, source evidence, extracted result, p |
 | `chg-56aa1998` | dashboard-ux | mac-planner | 6 | Add a unified Jobs and Approvals view shared by web, menubar, and iOS: each job shows purpose, sources accessed, files/apps touched, risk level, estim |
 | `chg-12222176` | firmware | relay-realtime | 6 | Implement adaptive duplex behavior: when downlink audio is playing, reduce or pause uplink capture/encoding to avoid LTE contention; resume capture af |
@@ -70,6 +74,7 @@ in here.
 | `chg-cd89301b` | model-routing | mac-planner | 6 | Introduce a policy router that classifies requests into realtime dialogue, deterministic Mac/browser execution, cheap background summarization, or hig |
 | `chg-ea640c81` | model-routing | relay-realtime | 6 | Introduce a clear tiering rule: realtime relay model only handles conversational intent capture, clarification, and short confirmations. Any task that |
 | `chg-324de76f` | stack | relay-realtime | 6 | Align the stack spec and orchestrator tool registry for the realtime agent, and publish a single authoritative capability manifest (tools, endpoints,  |
+| `cap-e49fb28e` | capability | mac-planner | 5 | “Research this topic, compare the best options, and leave me a short audio recommendation—don’t buy anything.” |
 | `chg-0aa257d0` | dashboard-ux | browser-extension | 5 | Add a unified Jobs inbox across web, menubar, and iOS showing running/blocked/completed browser and Mac jobs, compact evidence, sensitive-field redact |
 | `chg-6360d815` | memory | mac-planner | 5 | Replace per-surface hand-written fleetContext sections with a compact, typed context projection: stable preferences and permissions, current tasks, an |
 
@@ -80,9 +85,7 @@ in here.
 | `chg-bc35ae04` | browser-harness | browser-extension | 6 | Add a first-class browser session API: list tabs with stable tab IDs, select a tab explicitly, bootstrap navigation only after confirmation, capture a |
 | `chg-2fffc681` | browser-harness | browser-extension | 6 | Add a durable browser-task runner: bootstrap a tab via navigate, maintain task-scoped tab IDs, execute read/click/type/wait sequences with timeouts, c |
 | `chg-086a6904` | browser-harness | browser-extension | 6 | Replace generic browser action results with a typed, policy-enforcing runner: classify commands as read-only or mutating; enforce origin/path allowlis |
-| `cap-d65785c8` | capability | browser-extension | 6 | “Read the relevant pages in my open browser tabs, compare the options, and give me a short brief with links and any deadlines.” |
 | `cap-fc6643a7` | capability | browser-extension | 6 | “Every weekday morning, check my authenticated work portal for new high-priority items and tell me only what needs my attention.” |
-| `cap-9764ec65` | capability | browser-extension | 6 | “Research this topic across the public web, check the sources, and send me a cited answer later.” |
 | `cap-1e04349c` | capability | browser-extension | 6 | “Fill out this web form from the information I give you, stop before submission, and show me exactly what will be sent.” |
 | `cap-daaf6d3e` | capability | browser-extension | 6 | Research this topic across my logged-in websites, compare the results, and send me a concise audio brief later. |
 | `cap-c18a0fce` | capability | browser-extension | 6 | Watch this logged-in page or price/availability page and tell me only when the specified condition changes. |
@@ -92,7 +95,6 @@ in here.
 | `cap-ea762950` | capability | browser-extension | 6 | “Watch this authenticated page and tell me when the status, price, or availability changes.” |
 | `cap-fb442a50` | capability | mac-planner | 6 | “Every morning, check my calendar, unread email, and today’s files, then give me a short spoken brief with the meetings that need preparation and a pr |
 | `cap-b4dfb9ea` | capability | mac-planner | 6 | “Clean up my Downloads every Friday: group files by project, rename obvious duplicates, and show me a review list before anything is deleted.” |
-| `cap-2a60c5ba` | capability | mac-planner | 6 | “Research this topic and leave me a concise source-linked briefing on my Mac, with an audio version I can play later.” |
 | `cap-c071fa0a` | capability | mac-planner | 6 | “Every morning, give me a concise briefing of today’s calendar, unread priority messages, weather, and the files I need for my first meeting; let me a |
 | `cap-0fee609c` | capability | mac-planner | 6 | “Prepare me for my next meeting: find the agenda and related local documents, summarize the open decisions and prior action items, and put the three m |
 | `cap-70db8ef3` | capability | mac-planner | 6 | “When I say ‘prepare my workday’, check my calendar and inbox, make a concise brief, and put it in a note on my Mac; don't send anything.” |
@@ -106,7 +108,6 @@ in here.
 | `cap-f66f7f6e` | capability | relay-realtime | 6 | “Read my notifications and tell me only what’s important.” |
 | `cap-b5796f52` | capability | relay-realtime | 6 | “Start a focus session for 25 minutes. Block distractions and let me know when time’s up.” |
 | `cap-fb73a1d0` | capability | relay-realtime | 6 | “Remember this: my bike lock code is 4829.” |
-| `cap-d9af189b` | capability | relay-realtime | 6 | “Summarize the key points from this page and read them to me later.” |
 | `cap-7e779dac` | capability | relay-realtime | 6 | "Summarize this webpage" or "Check the price on this product" |
 | `cap-37804d89` | capability | relay-realtime | 6 | "Remind me to do X at 6 pm" or "Every weekday at 9, remind me to stand up" |
 | `chg-71ae0f60` | mac-harness | mac-planner | 6 | Replace FULL_CONTROL_MODE's undifferentiated execution path with a typed action broker: structured read/open/search actions by default, and separate m |
@@ -123,7 +124,6 @@ in here.
 | `cap-cb69fbe6` | capability | browser-extension | 5 | Watch this logged-in page and tell me when the status changes, but don't click anything or send anything. |
 | `cap-2fc364ed` | capability | mac-planner | 5 | “Give me a workday brief at 8:30, and let me play it from the pendant when I’m ready.” |
 | `cap-d91c8266` | capability | mac-planner | 5 | “Before my next meeting, prepare me: open the agenda, summarize relevant email, and put a private briefing on the pendant.” |
-| `cap-e49fb28e` | capability | mac-planner | 5 | “Research this topic, compare the best options, and leave me a short audio recommendation—don’t buy anything.” |
 | `cap-52dcc328` | capability | mac-planner | 5 | “Every Friday, tidy my Downloads into dated folders, show me a preview, and only then apply it.” |
 | `chg-6a6fa4b6` | mac-harness | mac-planner | 5 | Add a typed action policy in front of FULL_CONTROL_MODE: classify every action as read-only, reversible local mutation, or high-impact mutation; requi |
 | `chg-9206eec2` | memory | browser-extension | 5 | Store browser task definitions as versioned, user-owned recipes (origin, allowed paths, selectors, extracted fields, cadence, privacy/retention, and c |
