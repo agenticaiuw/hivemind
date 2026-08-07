@@ -19,7 +19,7 @@
     "m133-relay-realtime",
     "m138-mac-planner"
   ],
-  "round": 18,
+  "round": 20,
   "granted": {
     "context": [
       {
@@ -831,6 +831,60 @@
       "finding": "Routing telemetry is live but currently only has two deterministic requests, no planner/background samples, and no priced token data; it cannot yet characterize planner cost or latency.",
       "evidence": "GET /routing returned totalRequests=2, deterministic requests=2, planner/background requests=0, priced=false.",
       "round": 18
+    },
+    {
+      "about": "Mac local agent live status",
+      "finding": "Agent v0.5.0 is healthy on localhost:8000, token configured, FULL_CONTROL_MODE and full-control planner enabled; relay reachable and Mac bridge online.",
+      "evidence": "GET /ops/status returned 200 with fullControlMode:true, fullControlPlanner:true, tokenConfigured:true, relay.reachable:true, macBridgeOnline:true.",
+      "round": 19
+    },
+    {
+      "about": "Mac permissions and UI reliability",
+      "finding": "Accessibility and Screen Recording are granted and requiredMissing is empty, but synthesized input reachability is explicitly unverified; /observe says UI action receipts may be untrustworthy until a no-op input probe is run.",
+      "evidence": "GET /observe returned accessibility.trusted:true, screenRecording:true, eventsPost:null, consequence:'Unverified...'.",
+      "round": 19
+    },
+    {
+      "about": "Browser bridge",
+      "finding": "Browser extension is currently offline with no devices and one pending command; three durable browser sessions/tabs exist.",
+      "evidence": "GET /ops/status returned browserExtension.online:false, devices:[], pendingCommands:1; GET /observe returned browser.sessions:3.",
+      "round": 19
+    },
+    {
+      "about": "Mac execution observability",
+      "finding": "The agent exposes 116 authenticated routes including jobs, receipts, journal, observe, ops snapshot/status, logs, routing, and pipeline traces. Execution journal is derived read-only and records order, touched resources, planner tier, and undoability.",
+      "evidence": "GET /capabilities returned routeCount:116 and route groups; GET /ops/status and /observe returned live state.",
+      "round": 19
+    },
+    {
+      "about": "Granted diagnostics tool availability",
+      "finding": "The granted mac_read_diagnostics interface is present but has no implementation, so it cannot provide host facts. Existing authenticated HTTP observability endpoints do work.",
+      "evidence": "Calling mac_read_diagnostics with eight read-only checks returned error: 'tool ... has no implementation yet'; probe_http /ops/status and /observe returned 200.",
+      "round": 19
+    },
+    {
+      "about": "Mac local-agent health and relay",
+      "finding": "Local agent v0.5.0 is healthy and ready with FULL_CONTROL_MODE and required macOS permissions; relay is configured/reachable and bridge online as of 2026-08-07T07:21:57Z.",
+      "evidence": "GET /health returned 200; GET /ops/status via probe_http returned ok:true, fullControlMode:true, permissions.requiredMissing:[], ready:true, relay.reachable:true.",
+      "round": 20
+    },
+    {
+      "about": "Mac observability",
+      "finding": "Read-only /observe exposes foreground/running apps, browser sessions, permission confidence, and configured directory roots. It explicitly says accessibility is trusted but input delivery is unverified; browser extension is offline and has 2 pending commands.",
+      "evidence": "GET /observe returned readOnly:true, accessibility consequence 'Unverified', browser sessions:3; GET /ops/status returned browser online:false and pendingCommands:2.",
+      "round": 20
+    },
+    {
+      "about": "Job receipts and reversibility",
+      "finding": "Job receipts now capture action type, effect, timing, touched shell reference, reversibility, and irreversible reason. run_shell jobs are marked effect:write and irreversible because they leave no reversible trace; at least one job remains processing.",
+      "evidence": "GET /jobs returned completed run_shell receipts with durationMs and irreversibleReason 'run_shell leaves no reversible trace', plus local_2751... status processing.",
+      "round": 20
+    },
+    {
+      "about": "Diagnostic tool implementation",
+      "finding": "The newly granted mac_read_diagnostics tool is present but unimplemented, so structured host diagnostics cannot be obtained through it; HTTP observation endpoints are currently the working read-only path.",
+      "evidence": "Calling mac_read_diagnostics with OS/hardware/user/uptime/battery/network/audio/local-agent checks returned 'has no implementation yet'.",
+      "round": 20
     }
   ],
   "rounds": [
@@ -55073,6 +55127,2591 @@
           "result": {
             "acknowledged": true
           }
+        }
+      ]
+    },
+    {
+      "round": 19,
+      "transcript": [
+        {
+          "type": "tool",
+          "name": "list_capabilities",
+          "args": {},
+          "result": {
+            "note": "Call discover(category) for the contents of any of these, then describe(name) for detail on one item. Nothing here is in your system prompt — you are meant to pull only what you need.",
+            "categories": [
+              {
+                "name": "surfaces",
+                "what": "The machines and services in this system and how to reach each one.",
+                "count": 5
+              },
+              {
+                "name": "routes",
+                "what": "HTTP endpoints on the owner's Mac agent, read from its live route table.",
+                "count": 116
+              },
+              {
+                "name": "tools",
+                "what": "The tools the production voice agent actually ships with.",
+                "count": 6
+              },
+              {
+                "name": "devices",
+                "what": "Physical and virtual devices reachable right now, with live status.",
+                "count": null
+              },
+              {
+                "name": "hardware",
+                "what": "The pendant and bridge chips: memory, I/O, storage, radio, power.",
+                "count": 8
+              },
+              {
+                "name": "backlog",
+                "what": "What earlier rounds already proposed, and what became of each one. Restating one of these is a wasted round; building past it is not.",
+                "count": 59
+              },
+              {
+                "name": "granted",
+                "what": "What the orchestrator has already given you this run.",
+                "count": 13
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "surfaces"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "relay-realtime",
+                "summary": "You run on a Cloudflare Worker and hold the live voice conversation with the owner through a wearable pendant",
+                "model": "gpt-realtime-2.1",
+                "base": "https://ai-pendant-relay.evan20050827.workers.dev",
+                "facetOf": null
+              },
+              {
+                "name": "mac-planner",
+                "summary": "You run on the owner's MacBook",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": null
+              },
+              {
+                "name": "mac-vision",
+                "summary": "You are the computer-use loop on the owner's MacBook",
+                "model": "gpt-4.1-mini",
+                "base": "http://localhost:8000",
+                "facetOf": null
+              },
+              {
+                "name": "browser-extension",
+                "summary": "You drive the owner's browser through the AI Pendant browser extension",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": "mac-planner"
+              },
+              {
+                "name": "mac-terminal",
+                "summary": "You are the shell tier on the owner's MacBook",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": "mac-planner"
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "tools"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "get_mac_status",
+                "summary": "PROACTIVE"
+              },
+              {
+                "name": "mac_run_actions",
+                "summary": "PROACTIVE for reversible control"
+              },
+              {
+                "name": "browser_run_actions",
+                "summary": "PROACTIVE when browser work is needed"
+              },
+              {
+                "name": "web_search",
+                "summary": "PROACTIVE for live public facts"
+              },
+              {
+                "name": "mac_delegate",
+                "summary": "ONLY for multi-step or ambiguous computer tasks that cannot fit a short action list"
+              },
+              {
+                "name": "read_web_page",
+                "summary": "PROACTIVE for reading a specific public web page without the Mac"
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "granted"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "safe_mac_command",
+                "summary": "tool"
+              },
+              {
+                "name": "mac_readonly_diagnostics",
+                "summary": "tool"
+              },
+              {
+                "name": "mac_readonly_diagnostics",
+                "summary": "tool"
+              },
+              {
+                "name": "mac_read_diagnostics",
+                "summary": "tool"
+              },
+              {
+                "name": "mac_execute_typed_actions",
+                "summary": "tool"
+              },
+              {
+                "name": "mac_readonly_diagnostics_impl",
+                "summary": "tool"
+              },
+              {
+                "name": "Mac shell intended workload and current read-only allowlist",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "approved Mac shell use cases and trust boundary",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "Mac shell safety policy and migration scope",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "Mac shell authorization policy",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "execution grant and replacement shell policy",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "Mac shell compatibility workflow inventory",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "mac_bridge.read_diagnostics",
+                "summary": "permission"
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "devices"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "home-macbook-bridge",
+                "summary": "mac_bridge · online · last seen 2026-08-07T07:18:14.747Z"
+              },
+              {
+                "name": "cloudflare-contract-test",
+                "summary": "mobile · offline · last seen 2026-07-31T23:42:56.525Z"
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "routes"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "GET /health",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /capabilities",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /plan",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /execute",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /sessions",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /sessions",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /sessions/:sessionId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "PATCH /sessions/:sessionId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /sessions/:sessionId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /sessions/:sessionId/clear",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /logs",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /jobs",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /jobs/:jobId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /jobs/:jobId/receipts",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /jobs",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /jobs/undo-last",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /jobs/:jobId/cancel",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /jobs/:jobId/undo",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /thinking",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /thinking/latest",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /thinking/stream",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /pipeline",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /pipeline/events",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /pipeline/audio",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /pipeline/:pipelineId/audio/:direction",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /pipeline",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /pipeline/stream",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /context-graph",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /projects",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /projects/active",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /projects/active",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "PATCH /projects/active",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /context-graph/reset",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /context-graph/demo",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /context-graph/entities",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "PATCH /context-graph/entities/:entityId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /context-graph/entities/:entityId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /context-graph/relations",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /context-graph/relations/:relationId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /machine-context",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /machine-context/refresh",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /ops/status",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /ops/snapshot",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /routing",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /journal",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /journal/:jobId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /observe",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /browser/status",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /browser/heartbeat",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /browser/poll",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /browser/result/:commandId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /browser/sessions",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /browser/sessions",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /browser/sessions/:id",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /briefing",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /briefing/kinds",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /briefing/latest",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /research",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /research/briefings",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /research/briefings/:id",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /research/briefings/:id/speech",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /routines",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /routines",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "PATCH /routines/:routineId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /routines/:routineId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /routines/:routineId/run",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /capture",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /capture",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /capture/:key",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /reminders",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /tidy/preview",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /tidy",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /tidy/:planId/apply",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /tidy/:planId/undo",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /sweep/survey",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /sweep/preview",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /sweep",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /sweep/:planId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /sweep/:planId/apply",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /sweep/:planId/undo",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /preview",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /browser/inspect",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /browser/inspections",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /browser/inspections/:inspectionId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /browser/inspections/:inspectionId/act",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /focus",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /focus",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /focus",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /day-plan",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /meeting-prep",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /mail/triage",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /mail/triage",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /mail/triage/:runId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /meeting-followup",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /notifications",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /watches",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /watches",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /watches/reports",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /watches/:watchId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "PATCH /watches/:watchId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /watches/:watchId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /watches/:watchId/check",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /watches/:watchId/ack",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /forms/fill",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /forms/fills",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /forms/fills/:fillId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /memory/facts",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /memory/facts",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /memory/facts/:idOrKey",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /memory/browser-findings",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /memory/prune",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /memory/sync-graph",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /memory/projection",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /dashboard",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /dashboard/",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /dashboard/{*splat}",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              }
+            ],
+            "note": "These are the Mac agent routes. Your own backend may differ — probe_http hits whichever backend you run against."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "GET /health"
+          },
+          "result": {
+            "name": "GET /health",
+            "liveStatus": 200,
+            "liveResponse": "{\"ok\":true,\"service\":\"AI Pendant Mac Local Agent\",\"version\":\"0.5.0\",\"capabilities\":\"/capabilities\"}"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "GET /capabilities"
+          },
+          "result": {
+            "name": "GET /capabilities",
+            "liveStatus": 200,
+            "liveResponse": "{\"ok\":true,\"service\":\"AI Pendant Mac Local Agent\",\"version\":\"0.5.0\",\"generatedAt\":\"2026-08-07T07:18:25.270Z\",\"generatedFrom\":[\"express router stack\",\"computerControl dispatch table\",\"llmPlanner action registry\",\"actionRisk hands-free allowlist\",\"macos/permissions report\"],\"http\":{\"port\":8000,\"baseUrl\":\"http://127.0.0.1:8000\",\"auth\":{\"scheme\":\"Bearer\",\"header\":\"Authorization: Bearer <AGENT_TOKEN>\",\"tokenConfigured\":true,\"alsoAccepts\":\"loopback dashboard session cookie\",\"statusContract\":{\"401\":\"route exists, token missing or wrong\",\"404\":\"no such route on this process\",\"503\":\"AGENT_TOKEN not configured on the Mac\"}},\"routeCount\":116,\"publicPaths\":[\"/dashboard\",\"/dashboard/\",\"/dashboard/{*splat}\",\"/health\"],\"groups\":[{\"group\":\"briefing\",\"routeCount\":3,\"what\":\"Spoken briefings assembled for the pendant.\",\"module\":\"local-agent/briefing.js + audioBrief.js\"},{\"group\":\"browser\",\"routeCount\":11,\""
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "GET /ops/status"
+          },
+          "result": {
+            "name": "GET /ops/status",
+            "liveStatus": 200,
+            "liveResponse": "{\"ok\":true,\"agent\":{\"ok\":true,\"service\":\"AI Pendant Mac Local Agent\",\"version\":\"0.5.0\",\"tokenRequired\":true,\"tokenConfigured\":true,\"fullControlMode\":true,\"llmPlannerEnabled\":true,\"fullControlPlanner\":true,\"computerUse\":{\"loopEnabled\":false,\"visionModelConfigured\":true,\"visionUploadConsented\":false,\"maxSteps\":25},\"browserExtension\":{\"online\":false,\"devices\":[],\"pendingCommands\":1},\"permissions\":{\"hostApp\":\"AI Pendant Agent\",\"nodePath\":\"/Users/evanliu/Applications/AI Pendant Agent.app/Contents/Resources/node\",\"hostFingerprint\":\"com.aipendant.agent|~/Applications/AI Pendant Agent.app\",\"accessibility\":{\"trusted\":true,\"detail\":\"Accessibility is granted\"},\"screenRecording\":{\"granted\":true,\"detail\":\"Screen Recording is granted\"},\"automation\":{\"System Events\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Finder\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Reminders\":{\"granted\":true,\"detail\":\"f"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "GET /ops/snapshot"
+          },
+          "result": {
+            "name": "GET /ops/snapshot",
+            "liveStatus": 200,
+            "liveResponse": "{\"ok\":true,\"status\":{\"ok\":true,\"agent\":{\"ok\":true,\"service\":\"AI Pendant Mac Local Agent\",\"version\":\"0.5.0\",\"tokenRequired\":true,\"tokenConfigured\":true,\"fullControlMode\":true,\"llmPlannerEnabled\":true,\"fullControlPlanner\":true,\"computerUse\":{\"loopEnabled\":false,\"visionModelConfigured\":true,\"visionUploadConsented\":false,\"maxSteps\":25},\"browserExtension\":{\"online\":false,\"devices\":[],\"pendingCommands\":1},\"permissions\":{\"hostApp\":\"AI Pendant Agent\",\"nodePath\":\"/Users/evanliu/Applications/AI Pendant Agent.app/Contents/Resources/node\",\"hostFingerprint\":\"com.aipendant.agent|~/Applications/AI Pendant Agent.app\",\"accessibility\":{\"trusted\":true,\"detail\":\"Accessibility is granted\"},\"screenRecording\":{\"granted\":true,\"detail\":\"Screen Recording is granted\"},\"automation\":{\"System Events\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Finder\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Reminders\":{\"grant"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "GET /observe"
+          },
+          "result": {
+            "name": "GET /observe",
+            "liveStatus": 200,
+            "liveResponse": "{\"ok\":true,\"observedAt\":\"2026-08-07T07:18:25.810Z\",\"readOnly\":true,\"note\":\"Observation only. Nothing on this path can block, refuse, or delay an action.\",\"derivedFrom\":[\"lsappinfo front — foreground application\",\"ps -Ao pid=,comm= — running application bundles\",\"local-agent/macos/permissions.js — accessibility, input posting, screen recording\",\"local-agent/browserSessions.js — durable browser sessions\",\"local-agent/config.js — allowedFolders\"],\"foregroundApp\":{\"asn\":\"ASN:0x0-0x468468:\",\"name\":\"Claude\",\"bundleId\":\"com.anthropic.claudefordesktop\",\"pid\":55646},\"runningApps\":{\"count\":20,\"helperProcesses\":85,\"error\":null,\"apps\":[{\"name\":\"AdGuard Mini\",\"pid\":3182,\"bundlePath\":\"/Applications/AdGuard Mini.app\"},{\"name\":\"AI Pendant Agent\",\"pid\":85581,\"bundlePath\":\"/Users/evanliu/Applications/AI Pendant Agent.app\"},{\"name\":\"Amphetamine\",\"pid\":37455,\"bundlePath\":\"/Applications/Amphetamine.app\"},{\"n"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "GET /jobs"
+          },
+          "result": {
+            "name": "GET /jobs",
+            "liveStatus": 200,
+            "liveResponse": "{\"jobs\":[{\"jobId\":\"local_fb02526e-9386-432b-a061-ef742dd84def\",\"type\":\"execute\",\"status\":\"completed\",\"command\":\"\",\"sessionId\":null,\"source\":\"local\",\"result\":{\"results\":[{\"action\":{\"type\":\"run_shell\",\"label\":\"parts\",\"params\":{\"command\":\"node /private/tmp/claude-501/-Users-evanliu-agentic-gadget/3b6e7e6f-ec52-4fbf-a57a-ec93b307acd0/scratchpad/run-parts.mjs > /private/tmp/claude-501/-Users-evanliu-agentic-gadget/3b6e7e6f-ec52-4fbf-a57a-ec93b307acd0/scratchpad/rp2.result.json 2>/private/tmp/claude-501/-Users-evanliu-agentic-gadget/3b6e7e6f-ec52-4fbf-a57a-ec93b307acd0/scratchpad/rp2.err.txt; echo exit=$?\",\"timeout\":280000}},\"ok\":true,\"status\":\"success\",\"message\":\"exit=0\",\"stdout\":\"exit=0\",\"stderr\":\"\",\"receipt\":{\"receiptId\":\"rcpt_85f57c5f-2cda-4275-813b-5abde535f834\",\"actionId\":\"act_e32f8cec1f6b\",\"type\":\"run_shell\",\"label\":\"parts\",\"effect\":\"write\",\"ok\":true,\"status\":\"success\",\"startedAt\":\"2026"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "GET /logs"
+          },
+          "result": {
+            "name": "GET /logs",
+            "liveStatus": 200,
+            "liveResponse": "{\"logs\":[{\"id\":\"d247e88b-2dad-43c7-8792-5891de9ea36b\",\"createdAt\":\"2026-08-07T07:16:52.697Z\",\"command\":\"page watch: Order 42\",\"actions\":[{\"type\":\"page_watch_change\",\"params\":{\"url\":\"https://example.com/orders/42\"}}],\"status\":\"completed\",\"result\":{\"id\":\"rpt_e60140d7-3dcb-48b2-ac14-1a84ba0a8f35\",\"at\":\"2026-08-07T07:16:52.644Z\",\"url\":\"https://example.com/orders/42\",\"title\":\"Order 42\",\"changes\":[{\"field\":\"status\",\"before\":\"Processing\",\"after\":\"Shipped\",\"excerpt\":\"Status: Shipped Price: $129.99\"}],\"summary\":\"Order 42: status Processing → Shipped\",\"acknowledged\":false}},{\"id\":\"4ee56871-ea6e-41ce-9577-86dadd06b9d7\",\"createdAt\":\"2026-08-07T07:16:11.359Z\",\"command\":\"page watch: Order 42\",\"actions\":[{\"type\":\"page_watch_change\",\"params\":{\"url\":\"https://example.com/orders/42\"}}],\"status\":\"completed\",\"result\":{\"id\":\"rpt_70b75dfc-0c86-4288-b6c2-d5c00c3925f7\",\"at\":\"2026-08-07T07:16:11.316Z\",\"url\":\"http"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "GET /routing"
+          },
+          "result": {
+            "name": "GET /routing",
+            "liveStatus": 200,
+            "liveResponse": "{\"ok\":true,\"routing\":{\"unit\":\"estimated tokens (chars/4); the streaming API returns no usage block\",\"priced\":false,\"totalRequests\":2,\"tiers\":{\"deterministic\":{\"requests\":2,\"llmCalls\":0,\"avgLatencyMs\":221,\"promptTokens\":0,\"completionTokens\":0,\"totalTokens\":0,\"avgTokensPerRequest\":0,\"costUsd\":null,\"escalations\":0},\"background\":{\"requests\":0,\"llmCalls\":0,\"avgLatencyMs\":null,\"promptTokens\":0,\"completionTokens\":0,\"totalTokens\":0,\"avgTokensPerRequest\":null,\"costUsd\":null,\"escalations\":0},\"planner\":{\"requests\":0,\"llmCalls\":0,\"avgLatencyMs\":null,\"promptTokens\":0,\"completionTokens\":0,\"totalTokens\":0,\"avgTokensPerRequest\":null,\"costUsd\":null,\"escalations\":0}},\"baseline\":{\"source\":\"observed non-escalated planner-tier average in this process\",\"tokensPerRequest\":null,\"latencyMs\":null,\"samples\":0},\"saved\":{\"tokens\":null,\"latencyMs\":null,\"requests\":2},\"recent\":[{\"at\":\"2026-08-07T07:03:04.248Z\",\"command"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "probe_http",
+          "args": {
+            "method": "GET",
+            "path": "/health"
+          },
+          "result": {
+            "ok": true,
+            "status": 200,
+            "body": "{\"ok\":true,\"service\":\"AI Pendant Mac Local Agent\",\"version\":\"0.5.0\",\"capabilities\":\"/capabilities\"}"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "probe_http",
+          "args": {
+            "method": "GET",
+            "path": "/ops/status"
+          },
+          "result": {
+            "ok": true,
+            "status": 200,
+            "body": "{\"ok\":true,\"agent\":{\"ok\":true,\"service\":\"AI Pendant Mac Local Agent\",\"version\":\"0.5.0\",\"tokenRequired\":true,\"tokenConfigured\":true,\"fullControlMode\":true,\"llmPlannerEnabled\":true,\"fullControlPlanner\":true,\"computerUse\":{\"loopEnabled\":false,\"visionModelConfigured\":true,\"visionUploadConsented\":false,\"maxSteps\":25},\"browserExtension\":{\"online\":false,\"devices\":[],\"pendingCommands\":1},\"permissions\":{\"hostApp\":\"AI Pendant Agent\",\"nodePath\":\"/Users/evanliu/Applications/AI Pendant Agent.app/Contents/Resources/node\",\"hostFingerprint\":\"com.aipendant.agent|~/Applications/AI Pendant Agent.app\",\"accessibility\":{\"trusted\":true,\"detail\":\"Accessibility is granted\"},\"screenRecording\":{\"granted\":true,\"detail\":\"Screen Recording is granted\"},\"automation\":{\"System Events\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Finder\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Reminders\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Calendar\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Mail\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Notes\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Messages\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Safari\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Google Chrome\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Microsoft Edge\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Music\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Preview\":{\"granted\":true,\"detail\":\"from grant cache\"},\"TextEdit\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Visual Studio Code\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Cursor\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Terminal\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Warp\":{\"granted\":true,\"detail\":\"from grant cache\"},\"iTerm\":{\"granted\":true,\"detail\":\"from grant cache\"},\"System Settings\":{\"granted\":true,\"detail\":\"from grant cache\"}},\"reminders\":{\"granted\":true,\"detail\":\"from grant cache\"},\"requiredMissing\":[],\"optionalMissing\":[],\"ready\":true},\"logPath\":\"/Users/evanliu/AI-Pendant-Workspace/mac-agent-activity-log.json\",\"contextGraphPath\":\"/Users/evanliu/agentic-gadget/software/ai-pendant-simulator/local-agent/memory/context_graph.json\",\"sessionsPath\":\"/Users/evanliu/AI-Pendant-Workspace/pendant-sessions.json\",\"jobsPath\":\"/Users/evanliu/AI-Pendant-Workspace/pendant-jobs.json\",\"pipelinePath\":\"/Users/evanliu/AI-Pendant-Workspace/pendant-pipeline.json\",\"dashboardAvailable\":true},\"relay\":{\"configured\":true,\"url\":\"https://ai-pendant-relay.evan20050827.workers.dev\",\"reachable\":true,\"payload\":{\"ok\":true,\"service\":\"AI Pendant Cloud Relay\",\"version\":\"1.1.0\",\"platform\":\"cloudflare-workers\",\"store\":\"d1\",\"relayApiKeyConfigured\":true,\"speechToTextConfigured\":true,\"pairingRequired\":true,\"macBridgeOnline\":true,\"macBridgeLastSeen\":\"2026-08-07T07:18:27.049Z\",\"capabilities\":{\"pendantPipelineTelemetry\":true,\"pendantSpeech\":true,\"persistentAgentState\":true,\"durableAudio\":true},\"models\":{\"voiceAgent\":\"gpt-realtime-2.1\",\"textToSpeech\":\"macOS say (24 kHz PCM)\",\"relayTextToSpeechFallback\":\"tts-1 · alloy\"}},\"error\":null},\"browser\":{\"online\":false,\"devices\":[],\"pendingCommands\":1},\"machine\":{\"hostname\":\"MacBook-Air-6.local\",\"home\":\"/Users/evanliu\",\"platform\":\"darwin\",\"appCount\":123,\"applications\":[\".Karabiner-VirtualHIDDevice-Manager\",\"71sports\",\"Ableton Live 12 Suite\",\"AdGuard Mini\",\"Adobe Digital Editions\",\"Adobe Digital Editions 4.5\",\"AI Pendant\",\"AI Pendant Agent\",\"AI Pendant Browser Bridge\",\"Amphetamine\",\"Anaconda-Navigator\",\"App Store\",\"Apps\",\"Automator\",\"BlockYT\",\"BlockYTShortsNew\",\"Books\",\"Bucky Match\",\"Bucky Match Helper\",\"Calculator\",\"Calendar\",\"Camera Recorder Lite\",\"Capital One Shopping\",\"ChatGPT\",\"Chess\",\"Claude\",\"Claude Code URL Handler\",\"Clock\",\"Contacts\",\"CP210xVCPDriver\",\"Cursor\",\"Dark PDF\",\"Dark Reader for Safari\",\"Developer\",\"Dictionary\",\"ExpressVPN\",\"FaceTime\",\"FindMy\",\"Focus for YouTube\",\"Font Book\",\"Freedom\",\"Freeform\",\"Games\",\"Gemini\",\"GlobalProtect\",\"Google Chrome\",\"Hermes\",\"Home\",\"Image Capture\",\"Image Playground\",\"iPhone Mirroring\",\"Journal\",\"Just Press Record\",\"Kindle\",\"KugouMusic\",\"LINE\",\"Logi Options\",\"LTspice\",\"Mail\",\"Maps\",\"Messages\",\"Messenger\",\"Metronome\",\"Microsoft Excel\",\"Microsoft Outlook\",\"Microsoft PowerPoint\",\"Microsoft To Do\",\"Microsoft Word\",\"Mission Control\",\"MLB\",\"Mos\",\"Music\",\"Musicnotes\",\"Nail the Pitch\",\"News\",\"Notes\",\"noTunes\",\"nRF Connect for Desktop\",\"OBS\",\"Obsidian\",\"OneDrive\",\"Pages Creator Studio\",\"Passwords\",\"PayPal Honey\",\"Perch\",\"Phone\",\"Photo Booth\",\"Photos\",\"Podcasts\",\"Preview\",\"PrivadoVPN\",\"ProtonVPN\",\"QuickTime Player\",\"Reminders\",\"Safari\",\"Shortcuts\",\"Siri\",\"Spotify\",\"Steam\",\"Stickies\",\"Stocks\",\"superwhisper\",\"System Settings\",\"Tabs to Links\",\"Telegram\",\"TestFlight\",\"TextEdit\",\"The Unarchiver\",\"Time Machine\",\"Tips\",\"Transporter\",\"TV\",\"Unclutter\",\"Unzip - RAR ZIP 7Z Unarchiver\",\"Urban VPN Desktop\",\"Visual Studio Code\",\"VLC\",\"VoiceMemos\",\"Weather\",\"Whisper Transcription\",\"Xcode\",\"zoom.us\",\"臺北市立圖書館\"],\"topApps\":[\".Karabiner-VirtualHIDDevice-Manager\",\"71sports\",\"Ableton Live 12 Suite\",\"AdGuard Mini\",\"Adobe Digital Editions\",\"Adobe Digital Editions 4.5\",\"AI Pendant\",\"AI Pendant Agent\",\"AI Pendant Browser Bridge\",\"Amphetamine\",\"Anaconda-Navigator\",\"App Store\"],\"automation\":{\"macosVersion\":\"26.5.2\",\"arch\":\"arm64\",\"shortcuts\":[\"Play My Emails\",\"Start Scheduling\",\"Free trial reminder\",\"My Airbnb trip\",\"New Shortcut\",\"Start Working\",\"Turn Text Into Audio\",\"Search List on Google\",\"Batch Add Reminders\",\"Reading Mode\",\"Split Screen 2 Apps\",\"Check Spelling\",\"Stop Distractions\",\"Time Asleep\",\"Complete Task Devotional\",\"Complete Task Night medicine\",\"Complete Task Morning medicine\",\"Complete Task Read a Book\",\"Complete Task Drum practice\",\"Complete Task Write Blogs\",\"Complete Task Brush teeth\",\"Complete Task Weekly Agenda\",\"Force Close Apps\",\"New Shortcut 1\",\"What's my bedtime?\",\"Video to Audio\",\"Play the album – believe\",\"Track order\",\"play breaks heart\",\"take a photo\",\"Text Last Image\",\"Shazam shortcut\",\"Music Quiz\",\"Make QR Code\"],\"cliTools\":[\"aarch64-apple-darwin24-c++-14\",\"aarch64-apple-darwin24-g++-14\",\"aarch6\n…[truncated]"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "probe_http",
+          "args": {
+            "method": "GET",
+            "path": "/observe"
+          },
+          "result": {
+            "ok": true,
+            "status": 200,
+            "body": "{\"ok\":true,\"observedAt\":\"2026-08-07T07:18:28.487Z\",\"readOnly\":true,\"note\":\"Observation only. Nothing on this path can block, refuse, or delay an action.\",\"derivedFrom\":[\"lsappinfo front — foreground application\",\"ps -Ao pid=,comm= — running application bundles\",\"local-agent/macos/permissions.js — accessibility, input posting, screen recording\",\"local-agent/browserSessions.js — durable browser sessions\",\"local-agent/config.js — allowedFolders\"],\"foregroundApp\":{\"asn\":\"ASN:0x0-0x468468:\",\"name\":\"Claude\",\"bundleId\":\"com.anthropic.claudefordesktop\",\"pid\":55646},\"runningApps\":{\"count\":20,\"helperProcesses\":85,\"error\":null,\"apps\":[{\"name\":\"AdGuard Mini\",\"pid\":3182,\"bundlePath\":\"/Applications/AdGuard Mini.app\"},{\"name\":\"AI Pendant Agent\",\"pid\":85581,\"bundlePath\":\"/Users/evanliu/Applications/AI Pendant Agent.app\"},{\"name\":\"Amphetamine\",\"pid\":37455,\"bundlePath\":\"/Applications/Amphetamine.app\"},{\"name\":\"Calendar\",\"pid\":25006,\"bundlePath\":\"/System/Applications/Calendar.app\"},{\"name\":\"Claude\",\"pid\":55646,\"bundlePath\":\"/Applications/Claude.app\"},{\"name\":\"Freedom\",\"pid\":3241,\"bundlePath\":\"/Applications/Freedom.app\"},{\"name\":\"Google Chrome\",\"pid\":27367,\"bundlePath\":\"/Applications/Google Chrome.app\"},{\"name\":\"Mail\",\"pid\":98108,\"bundlePath\":\"/System/Applications/Mail.app\"},{\"name\":\"Microsoft Outlook\",\"pid\":41587,\"bundlePath\":\"/Applications/Microsoft Outlook.app\"},{\"name\":\"Notes\",\"pid\":47912,\"bundlePath\":\"/System/Applications/Notes.app\"},{\"name\":\"noTunes\",\"pid\":3240,\"bundlePath\":\"/Applications/noTunes.app\"},{\"name\":\"OneDrive\",\"pid\":3236,\"bundlePath\":\"/Applications/OneDrive.app\"},{\"name\":\"Preview\",\"pid\":42453,\"bundlePath\":\"/System/Applications/Preview.app\"},{\"name\":\"Reminders\",\"pid\":36579,\"bundlePath\":\"/System/Applications/Reminders.app\"},{\"name\":\"Spotify\",\"pid\":82807,\"bundlePath\":\"/Applications/Spotify.app\"},{\"name\":\"superwhisper\",\"pid\":711,\"bundlePath\":\"/Applications/superwhisper.app\"},{\"name\":\"System Settings\",\"pid\":21035,\"bundlePath\":\"/System/Applications/System Settings.app\"},{\"name\":\"TextEdit\",\"pid\":21521,\"bundlePath\":\"/System/Applications/TextEdit.app\"},{\"name\":\"Visual Studio Code\",\"pid\":76827,\"bundlePath\":\"/Applications/Visual Studio Code.app\"},{\"name\":\"zoom.us\",\"pid\":43403,\"bundlePath\":\"/Applications/zoom.us.app\"}]},\"accessibility\":{\"probed\":true,\"trusted\":true,\"detail\":\"Accessibility is granted\",\"hostApp\":\"AI Pendant Agent\",\"eventsPost\":null,\"eventsPostDetail\":\"Not probed. The quiet permission report does not post a test event; add ?probeInput=1 to post one (a zero-delta mouse move at the cursor, a genuine no-op).\",\"secureInputActive\":null,\"screenRecording\":true,\"automationMissing\":[],\"uiActionsWillReachTheScreen\":null,\"consequence\":\"Unverified: TCC says Accessibility is granted to AI Pendant Agent, but nothing here posted an event to confirm it. If it is granted to the wrong bundle, ui_click, ui_menu, type_text and press_keys report success while doing nothing — receipts for those steps cannot be trusted.\"},\"browser\":{\"sessions\":3,\"tabs\":[{\"id\":\"default\",\"url\":\"https://time.is/UTC\",\"title\":\"UTC: 06:26\",\"tabId\":320512,\"lastUsedAt\":\"2026-08-07T06:26:08.887Z\"},{\"id\":\"probe-form2\",\"url\":\"https://www.selenium.dev/selenium/web/web-form.html\",\"title\":null,\"tabId\":230928,\"lastUsedAt\":\"2026-08-07T05:40:26.651Z\"},{\"id\":\"probe-form\",\"url\":\"https://httpbin.org/forms/post\",\"title\":\"503 Service Temporarily Unavailable\",\"tabId\":229550,\"lastUsedAt\":\"2026-08-07T05:40:06.306Z\"}]},\"directories\":{\"enforced\":false,\"note\":\"FULL_CONTROL_MODE is on: security.assertAllowedPath resolves any path. These are the configured roots, not a limit.\",\"roots\":[{\"path\":\"/Users/evanliu/agentic-gadget/software/ai-pendant-simulator\",\"exists\":true,\"readable\":true,\"entries\":31,\"directories\":15},{\"path\":\"/Users/evanliu/AI-Pendant-Workspace\",\"exists\":true,\"readable\":true,\"entries\":37,\"directories\":8},{\"path\":\"/Users/evanliu/Downloads\",\"exists\":true,\"readable\":true,\"entries\":31,\"directories\":1}]}}"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "probe_http",
+          "args": {
+            "method": "GET",
+            "path": "/capabilities"
+          },
+          "result": {
+            "ok": true,
+            "status": 200,
+            "body": "{\"ok\":true,\"service\":\"AI Pendant Mac Local Agent\",\"version\":\"0.5.0\",\"generatedAt\":\"2026-08-07T07:18:28.603Z\",\"generatedFrom\":[\"express router stack\",\"computerControl dispatch table\",\"llmPlanner action registry\",\"actionRisk hands-free allowlist\",\"macos/permissions report\"],\"http\":{\"port\":8000,\"baseUrl\":\"http://127.0.0.1:8000\",\"auth\":{\"scheme\":\"Bearer\",\"header\":\"Authorization: Bearer <AGENT_TOKEN>\",\"tokenConfigured\":true,\"alsoAccepts\":\"loopback dashboard session cookie\",\"statusContract\":{\"401\":\"route exists, token missing or wrong\",\"404\":\"no such route on this process\",\"503\":\"AGENT_TOKEN not configured on the Mac\"}},\"routeCount\":116,\"publicPaths\":[\"/dashboard\",\"/dashboard/\",\"/dashboard/{*splat}\",\"/health\"],\"groups\":[{\"group\":\"briefing\",\"routeCount\":3,\"what\":\"Spoken briefings assembled for the pendant.\",\"module\":\"local-agent/briefing.js + audioBrief.js\"},{\"group\":\"browser\",\"routeCount\":11,\"what\":\"Chrome extension bridge: heartbeat, command queue, tab sessions.\",\"module\":\"local-agent/browserBridge.js + browserSessions.js\"},{\"group\":\"capabilities\",\"routeCount\":1,\"what\":\"This manifest.\",\"module\":\"local-agent/capabilityManifest.js\"},{\"group\":\"capture\",\"routeCount\":3,\"what\":null,\"module\":null},{\"group\":\"context-graph\",\"routeCount\":8,\"what\":\"Entities and relations the agent remembers.\",\"module\":\"local-agent/contextGraph.js\"},{\"group\":\"dashboard\",\"routeCount\":3,\"what\":\"Ops dashboard HTML. Issues a loopback session cookie.\",\"module\":\"local-agent/dashboardSession.js\"},{\"group\":\"day-plan\",\"routeCount\":1,\"what\":null,\"module\":null},{\"group\":\"execute\",\"routeCount\":1,\"what\":\"Run an approved action list. Returns a receipt per action.\",\"module\":\"local-agent/orchestrator.js + executor.js\"},{\"group\":\"focus\",\"routeCount\":3,\"what\":null,\"module\":null},{\"group\":\"forms\",\"routeCount\":3,\"what\":\"Web form fills, staged and reviewable before submission.\",\"module\":\"local-agent/formFill.js\"},{\"group\":\"health\",\"routeCount\":1,\"what\":\"Unauthenticated liveness. Deliberately says almost nothing.\",\"module\":\"local-agent/httpPolicy.js\"},{\"group\":\"jobs\",\"routeCount\":7,\"what\":\"Every plan/execute run, its receipts, cancel and undo.\",\"module\":\"local-agent/jobTracker.js + undo.js\"},{\"group\":\"journal\",\"routeCount\":2,\"what\":\"Execution journal, derived on read: what ran, in what order, what it touched, which tier planned it, whether it can be undone. Observes only.\",\"module\":\"local-agent/executionJournal.js\"},{\"group\":\"logs\",\"routeCount\":1,\"what\":\"Flat activity log of executed commands.\",\"module\":\"local-agent/logger.js\"},{\"group\":\"machine-context\",\"routeCount\":2,\"what\":\"Discovered host inventory: apps, CLIs, macOS version, timezone.\",\"module\":\"local-agent/machineContext.js\"},{\"group\":\"mail\",\"routeCount\":3,\"what\":\"Inbox triage: four buckets, drafted replies, reviewable on disk. Composes and stores only — never sends.\",\"module\":\"local-agent/mailTriage.js\"},{\"group\":\"meeting-followup\",\"routeCount\":1,\"what\":\"Post-meeting workspace: notes opened, draft summary, related unread mail.\",\"module\":\"local-agent/meetingFollowup.js\"},{\"group\":\"meeting-prep\",\"routeCount\":1,\"what\":null,\"module\":null},{\"group\":\"memory\",\"routeCount\":7,\"what\":\"Durable facts, separate from the per-session transcript.\",\"module\":\"local-agent/memoryService.js\"},{\"group\":\"notifications\",\"routeCount\":1,\"what\":null,\"module\":null},{\"group\":\"observe\",\"routeCount\":1,\"what\":\"Host state a journal entry happened in: foreground app, running apps, whether synthesized input reaches the screen, browser sessions, path roots.\",\"module\":\"local-agent/executionJournal.js\"},{\"group\":\"ops\",\"routeCount\":2,\"what\":\"Aggregate status and one-shot snapshot for dashboards and relay.\",\"module\":\"local-agent/server.js\"},{\"group\":\"pipeline\",\"routeCount\":6,\"what\":\"Pendant audio pipeline runs and their recordings.\",\"module\":\"local-agent/pipelineTrace.js + pipelineAudio.js\"},{\"group\":\"plan\",\"routeCount\":1,\"what\":\"Turn a command into a plan of executor actions. Does not run them.\",\"module\":\"local-agent/orchestrator.js + llmPlanner.js\"},{\"group\":\"preview\",\"routeCount\":1,\"what\":null,\"module\":null},{\"group\":\"projects\",\"routeCount\":4,\"what\":\"Working project the agent is currently oriented around.\",\"module\":\"local-agent/projectMemory.js\"},{\"group\":\"reminders\",\"routeCount\":1,\"what\":null,\"module\":null},{\"group\":\"research\",\"routeCount\":4,\"what\":\"Multi-source research runs and their rendered answers.\",\"module\":\"local-agent/research.js\"},{\"group\":\"routines\",\"routeCount\":5,\"what\":\"Scheduled work the owner is not waiting on.\",\"module\":\"local-agent/routines.js\"},{\"group\":\"routing\",\"routeCount\":1,\"what\":\"Which planner tier handled which request, and what it cost.\",\"module\":\"local-agent/routingStats.js\"},{\"group\":\"sessions\",\"routeCount\":6,\"what\":\"Conversation transcripts kept per session.\",\"module\":\"local-agent/sessionStore.js\"},{\"group\":\"sweep\",\"routeCount\":6,\"what\":null,\"module\":null},{\"group\":\"thinking\",\"routeCount\":3,\"what\":\"Live planner reasoning traces (SSE on /thinking/stream).\",\"module\":\"local-agent/thinkingTrace.js\"},{\"group\":\"tidy\",\"routeCount\":4,\"what\":null,\"module\":null},{\"group\":\"watches\",\"routeCount\":8,\"what\":\"Standing page watches and the reports they have raised.\",\"module\":\"local-agent/pageWatch.js\"}],\"undocumentedGroups\":[\"capture\",\"day-plan\",\"focus\",\"meeting-prep\",\"notifications\",\"preview\",\"reminders\",\"sweep\",\"tidy\"],\"routes\":[{\"method\":\"POST\",\"path\":\"/briefing\",\"group\":\"briefing\",\"params\":[],\"auth\":\"bearer\"},{\"method\":\"GET\",\"path\":\"/briefing/kinds\",\"group\":\"briefing\",\"params\":[],\"auth\":\"bearer\"},{\"method\":\"GET\",\"path\":\"/briefing/latest\",\"group\":\"briefing\",\"params\":[],\"auth\":\"bearer\"},{\"method\":\"POST\",\"path\":\"/browser/heartbeat\",\"group\":\"browser\",\"params\":[],\"auth\":\"bearer\"},{\"method\":\"POST\",\"path\":\"/browser/inspect\",\"group\":\"browser\",\"params\":[],\"auth\":\"bearer\"},{\"method\":\"GET\",\"path\":\"/browser/inspections\",\"group\":\"browser\",\"params\":[],\"auth\":\"bearer\"},{\"method\":\"GET\",\"path\":\"/browser/inspections/:inspectionId\",\"group\":\"browser\",\"params\":[\"inspectionId\"],\"auth\":\"bearer\"},{\"method\":\"POST\",\"path\":\"/browser\n…[truncated]"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "record_finding",
+          "args": {
+            "about": "Mac local agent live status",
+            "finding": "Agent v0.5.0 is healthy on localhost:8000, token configured, FULL_CONTROL_MODE and full-control planner enabled; relay reachable and Mac bridge online.",
+            "evidence": "GET /ops/status returned 200 with fullControlMode:true, fullControlPlanner:true, tokenConfigured:true, relay.reachable:true, macBridgeOnline:true."
+          },
+          "result": {
+            "recorded": true
+          }
+        },
+        {
+          "type": "tool",
+          "name": "record_finding",
+          "args": {
+            "about": "Mac permissions and UI reliability",
+            "finding": "Accessibility and Screen Recording are granted and requiredMissing is empty, but synthesized input reachability is explicitly unverified; /observe says UI action receipts may be untrustworthy until a no-op input probe is run.",
+            "evidence": "GET /observe returned accessibility.trusted:true, screenRecording:true, eventsPost:null, consequence:'Unverified...'."
+          },
+          "result": {
+            "recorded": true
+          }
+        },
+        {
+          "type": "tool",
+          "name": "record_finding",
+          "args": {
+            "about": "Browser bridge",
+            "finding": "Browser extension is currently offline with no devices and one pending command; three durable browser sessions/tabs exist.",
+            "evidence": "GET /ops/status returned browserExtension.online:false, devices:[], pendingCommands:1; GET /observe returned browser.sessions:3."
+          },
+          "result": {
+            "recorded": true
+          }
+        },
+        {
+          "type": "tool",
+          "name": "record_finding",
+          "args": {
+            "about": "Mac execution observability",
+            "finding": "The agent exposes 116 authenticated routes including jobs, receipts, journal, observe, ops snapshot/status, logs, routing, and pipeline traces. Execution journal is derived read-only and records order, touched resources, planner tier, and undoability.",
+            "evidence": "GET /capabilities returned routeCount:116 and route groups; GET /ops/status and /observe returned live state."
+          },
+          "result": {
+            "recorded": true
+          }
+        },
+        {
+          "type": "tool",
+          "name": "message_peer",
+          "args": {
+            "to": "mac-planner",
+            "subject": "Live Mac agent findings",
+            "body": "Probed localhost: agent v0.5.0 healthy, FULL_CONTROL_MODE/fullControlPlanner ON, token configured, relay reachable and bridge online. /observe says Accessibility trusted + Screen Recording granted but synthesized input reachability unverified (eventsPost null), so UI receipts may be false until a no-op probe. Browser extension offline, no devices, 1 pending command; 3 durable browser sessions. 116 routes incl jobs/receipts/journal/observe/ops."
+          },
+          "result": {
+            "sent": true,
+            "note": "They will see this on their next round."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "message_peer",
+          "args": {
+            "to": "relay-realtime",
+            "subject": "Mac bridge status",
+            "body": "Mac local agent v0.5.0 is healthy; relay reachable and bridge online. Browser extension offline/no devices with one pending command. Accessibility/Screen Recording granted but synthesized UI input reachability unverified; receipts for UI actions may be untrustworthy until no-op probe."
+          },
+          "result": {
+            "sent": true,
+            "note": "They will see this on their next round."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "mac_read_diagnostics",
+          "args": {
+            "checks": [
+              "os_version",
+              "hardware_model",
+              "current_user",
+              "uptime",
+              "battery",
+              "network_interfaces",
+              "audio_devices",
+              "disk_space"
+            ]
+          },
+          "result": {
+            "error": "This tool was granted a schema but has no implementation yet. Report what you would have done with it."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "record_finding",
+          "args": {
+            "about": "Granted diagnostics tool availability",
+            "finding": "The granted mac_read_diagnostics interface is present but has no implementation, so it cannot provide host facts. Existing authenticated HTTP observability endpoints do work.",
+            "evidence": "Calling mac_read_diagnostics with eight read-only checks returned error: 'tool ... has no implementation yet'; probe_http /ops/status and /observe returned 200."
+          },
+          "result": {
+            "recorded": true
+          }
+        },
+        {
+          "type": "tool",
+          "name": "mac_readonly_diagnostics_impl",
+          "args": {
+            "command": "sw_vers",
+            "timeout": 10
+          },
+          "result": {
+            "error": "This tool was granted a schema but has no implementation yet. Report what you would have done with it."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "mac_readonly_diagnostics_impl",
+          "args": {
+            "command": "whoami",
+            "timeout": 10
+          },
+          "result": {
+            "error": "This tool was granted a schema but has no implementation yet. Report what you would have done with it."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "mac_readonly_diagnostics_impl",
+          "args": {
+            "command": "pmset -g batt",
+            "timeout": 10
+          },
+          "result": {
+            "error": "This tool was granted a schema but has no implementation yet. Report what you would have done with it."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "mac_readonly_diagnostics_impl",
+          "args": {
+            "command": "df -h",
+            "timeout": 10
+          },
+          "result": {
+            "error": "This tool was granted a schema but has no implementation yet. Report what you would have done with it."
+          }
+        },
+        {
+          "type": "finish",
+          "summary": "Continued reconnaissance completed. Live probes confirm Mac local agent v0.5.0 is healthy and authenticated, FULL_CONTROL_MODE/full-control planner are intentionally enabled, relay and Mac bridge are reachable, and 116 routes provide jobs/receipts/journal/observe/ops/pipeline telemetry. Required macOS permissions are present, but synthesized-input reachability is unverified, so UI-action receipts may be false. Browser extension is offline with no devices and one pending command; three durable browser sessions remain. The granted mac_read_diagnostics and mac_readonly_diagnostics_impl tools both exist only as unimplemented schemas, while authenticated HTTP probes work. I informed mac-planner and relay-realtime. For useful future work, the pending local-agent auth/observability access and a functioning read-only diagnostics tool remain the concrete needs; no additional permission or shell policy change is needed.",
+          "biggest_unknown": "Whether Accessibility events actually reach the screen, and the current battery/network/disk/process details, because the granted diagnostic tools have no implementation and /observe intentionally does not perform the no-op input test."
+        },
+        {
+          "type": "tool",
+          "name": "finish",
+          "args": {
+            "summary": "Continued reconnaissance completed. Live probes confirm Mac local agent v0.5.0 is healthy and authenticated, FULL_CONTROL_MODE/full-control planner are intentionally enabled, relay and Mac bridge are reachable, and 116 routes provide jobs/receipts/journal/observe/ops/pipeline telemetry. Required macOS permissions are present, but synthesized-input reachability is unverified, so UI-action receipts may be false. Browser extension is offline with no devices and one pending command; three durable browser sessions remain. The granted mac_read_diagnostics and mac_readonly_diagnostics_impl tools both exist only as unimplemented schemas, while authenticated HTTP probes work. I informed mac-planner and relay-realtime. For useful future work, the pending local-agent auth/observability access and a functioning read-only diagnostics tool remain the concrete needs; no additional permission or shell policy change is needed.",
+            "biggest_unknown": "Whether Accessibility events actually reach the screen, and the current battery/network/disk/process details, because the granted diagnostic tools have no implementation and /observe intentionally does not perform the no-op input test."
+          },
+          "result": {
+            "acknowledged": true
+          }
+        }
+      ]
+    },
+    {
+      "round": 20,
+      "transcript": [
+        {
+          "type": "tool",
+          "name": "list_capabilities",
+          "args": {},
+          "result": {
+            "note": "Call discover(category) for the contents of any of these, then describe(name) for detail on one item. Nothing here is in your system prompt — you are meant to pull only what you need.",
+            "categories": [
+              {
+                "name": "surfaces",
+                "what": "The machines and services in this system and how to reach each one.",
+                "count": 5
+              },
+              {
+                "name": "routes",
+                "what": "HTTP endpoints on the owner's Mac agent, read from its live route table.",
+                "count": 116
+              },
+              {
+                "name": "tools",
+                "what": "The tools the production voice agent actually ships with.",
+                "count": 6
+              },
+              {
+                "name": "devices",
+                "what": "Physical and virtual devices reachable right now, with live status.",
+                "count": null
+              },
+              {
+                "name": "hardware",
+                "what": "The pendant and bridge chips: memory, I/O, storage, radio, power.",
+                "count": 8
+              },
+              {
+                "name": "owner",
+                "what": "The person this is for: what they actually said, what they scheduled, what is remembered about them, and what they asked for and did not get. Every other category describes machines.",
+                "count": null
+              },
+              {
+                "name": "backlog",
+                "what": "What earlier rounds already proposed, and what became of each one. Restating one of these is a wasted round; building past it is not.",
+                "count": 57
+              },
+              {
+                "name": "granted",
+                "what": "What the orchestrator has already given you this run.",
+                "count": 13
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "mac_read_diagnostics",
+          "args": {
+            "checks": [
+              "os_version",
+              "hardware_model",
+              "current_user",
+              "uptime",
+              "battery",
+              "network_interfaces",
+              "audio_devices",
+              "local_agent_health"
+            ]
+          },
+          "result": {
+            "error": "This tool was granted a schema but has no implementation yet. Report what you would have done with it."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "get_hardware_spec",
+          "args": {
+            "component": "stack"
+          },
+          "result": {
+            "relay": "Cloudflare Worker (Express-style). D1 for jobs/history/memory, R2 for audio. Audio retention 30 days, sweep disabled, ~100 recordings stored.",
+            "agent_tools_today": "The realtime agent currently has exactly 5 tools: get_mac_status, mac_run_actions, browser_run_actions, web_search, mac_delegate.",
+            "mac_harness": "A Node \"local agent\" on the owner's Mac: planner (gpt-5.6-luna), computer-use loop, browser bridge, action risk scoring, atomic JSON store, context graph. It polls /v1/bridge/work for jobs and posts results back.",
+            "browser_harness": "Driven through the Mac agent's browser bridge today. Cloudflare Browser Run now exists and could give the relay its own server-side browser, removing the Mac from web tasks entirely.",
+            "clients": "ONE SvelteKit dashboard renders on all three surfaces: web, a Swift menubar app via WKWebView, and iOS via Capacitor pointed at the same Worker URL. A change to the web app ships to all three.",
+            "memory": "Knowledge-graph style store behind /v1/ops/memory: entities, relations, sessions. Separately, fleetContext.js hand-writes a prompt section per surface, which means adding a surface means editing a prompt.",
+            "source": "cloud-relay/, local-agent/, dashboard-sveltekit/, mac-menubar/",
+            "status": "PROTOTYPE. This is a Nordic development kit, not the product. Every choice here — the SoC, the RAM, the single button, the single LED, the enclosure — is provisional and can change. Design the device the owner should wear, then say what it would take to build it.",
+            "you_are_here": "You run on the owner's MacBook (mac-terminal). Every device described here is REMOTE to you — you are not running on the pendant or the ESP32."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "surfaces"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "relay-realtime",
+                "summary": "You run on a Cloudflare Worker and hold the live voice conversation with the owner through a wearable pendant",
+                "model": "gpt-realtime-2.1",
+                "base": "https://ai-pendant-relay.evan20050827.workers.dev",
+                "facetOf": null
+              },
+              {
+                "name": "mac-planner",
+                "summary": "You run on the owner's MacBook",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": null
+              },
+              {
+                "name": "mac-vision",
+                "summary": "You are the computer-use loop on the owner's MacBook",
+                "model": "gpt-4.1-mini",
+                "base": "http://localhost:8000",
+                "facetOf": null
+              },
+              {
+                "name": "browser-extension",
+                "summary": "You drive the owner's browser through the AI Pendant browser extension",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": "mac-planner"
+              },
+              {
+                "name": "mac-terminal",
+                "summary": "You are the shell tier on the owner's MacBook",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": "mac-planner"
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "tools"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "get_mac_status",
+                "summary": "PROACTIVE"
+              },
+              {
+                "name": "mac_run_actions",
+                "summary": "PROACTIVE for reversible control"
+              },
+              {
+                "name": "browser_run_actions",
+                "summary": "PROACTIVE when browser work is needed"
+              },
+              {
+                "name": "web_search",
+                "summary": "PROACTIVE for live public facts"
+              },
+              {
+                "name": "mac_delegate",
+                "summary": "ONLY for multi-step or ambiguous computer tasks that cannot fit a short action list"
+              },
+              {
+                "name": "read_web_page",
+                "summary": "PROACTIVE for reading a specific public web page without the Mac"
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "devices"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "home-macbook-bridge",
+                "summary": "mac_bridge · online · last seen 2026-08-07T07:21:27.124Z"
+              },
+              {
+                "name": "cloudflare-contract-test",
+                "summary": "mobile · offline · last seen 2026-07-31T23:42:56.525Z"
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "granted"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "safe_mac_command",
+                "summary": "tool"
+              },
+              {
+                "name": "mac_readonly_diagnostics",
+                "summary": "tool"
+              },
+              {
+                "name": "mac_readonly_diagnostics",
+                "summary": "tool"
+              },
+              {
+                "name": "mac_read_diagnostics",
+                "summary": "tool"
+              },
+              {
+                "name": "mac_execute_typed_actions",
+                "summary": "tool"
+              },
+              {
+                "name": "mac_readonly_diagnostics_impl",
+                "summary": "tool"
+              },
+              {
+                "name": "Mac shell intended workload and current read-only allowlist",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "approved Mac shell use cases and trust boundary",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "Mac shell safety policy and migration scope",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "Mac shell authorization policy",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "execution grant and replacement shell policy",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "Mac shell compatibility workflow inventory",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "mac_bridge.read_diagnostics",
+                "summary": "permission"
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "backlog"
+          },
+          "result": {
+            "note": "57 still open, 134 already settled. describe(id) gives the full entry, including why something was rejected. timesProposed counts how many rounds independently arrived at the same idea — a high number means the gap is real and still unfilled, not that it needs saying again.",
+            "items": [
+              {
+                "name": "chg-a813b918",
+                "summary": "Enable a bounded audio-retention sweeper and per-job deletion controls: default to short retention for generated briefings, delete expired R2 objects and D1 pointers idempotently, and expose a dashboa",
+                "layer": "relay",
+                "timesProposed": 16
+              },
+              {
+                "name": "chg-16bc5dee",
+                "summary": "Add a durable browser job runner with two backends: the authenticated Safari bridge for owner-private pages and Cloudflare Browser Run for public pages. Represent each step as navigate/read/extract/cl",
+                "layer": "browser-harness",
+                "timesProposed": 15
+              },
+              {
+                "name": "cap-bff5f829",
+                "summary": "Check my logged-in web accounts for anything urgent, summarize it, and draft (but do not send) any replies that need my attention.",
+                "layer": "capability",
+                "timesProposed": 15
+              },
+              {
+                "name": "cap-8c36c70a",
+                "summary": "Every weekday morning, check my logged-in calendar, task board, and travel reservations, then tell me the three things I need to know and prepare a suggested plan.",
+                "layer": "capability",
+                "timesProposed": 15
+              },
+              {
+                "name": "cap-5bd640c5",
+                "summary": "Watch my chosen logged-in web pages once a day and tell me only what changed; prepare drafts for any follow-up forms, but stop before submitting.",
+                "layer": "capability",
+                "timesProposed": 15
+              },
+              {
+                "name": "chg-a82e0b13",
+                "summary": "Replace per-surface hand-written fleetContext prompt sections with a compact, typed context service that returns only task-relevant facts, each with source, timestamp, confidence, and expiry; automati",
+                "layer": "memory",
+                "timesProposed": 15
+              },
+              {
+                "name": "cap-4f5af34d",
+                "summary": "Check my authenticated browser accounts for anything that needs my attention, then put findings in a review queue instead of changing anything.",
+                "layer": "capability",
+                "timesProposed": 14
+              },
+              {
+                "name": "chg-18a9c60f",
+                "summary": "Replace hand-written per-surface fleetContext prompt sections with a single typed context service that stores compact facts, provenance, sensitivity, TTL, and last-used timestamps; retrieve only task-",
+                "layer": "memory",
+                "timesProposed": 14
+              },
+              {
+                "name": "chg-0096a2b3",
+                "summary": "Replace per-surface hand-written fleetContext prompt sections with a shared, typed context compiler: retrieve only task-relevant entities/relations, attach confidence and freshness, cap tokens per tie",
+                "layer": "memory",
+                "timesProposed": 14
+              },
+              {
+                "name": "chg-14accc01",
+                "summary": "Add a reliable browser command queue with request IDs, idempotency keys, tab/session affinity, typed results (page metadata, extracted text, screenshots), and explicit irreversible-action checkpoints.",
+                "layer": "browser-harness",
+                "timesProposed": 11
+              },
+              {
+                "name": "cap-a624ca3e",
+                "summary": "Every morning, check my private calendar, travel reservations, and important account notifications in Safari, then give me a concise spoken briefing with links and only flag things that need my attent",
+                "layer": "capability",
+                "timesProposed": 11
+              },
+              {
+                "name": "cap-b875c138",
+                "summary": "Draft a form, email, or support request from information on this private webpage, fill it in, and show me exactly what will be submitted before I approve it.",
+                "layer": "capability",
+                "timesProposed": 11
+              },
+              {
+                "name": "cap-a09b223f",
+                "summary": "Watch my authenticated order, appointment, and account pages for changes, and tell me only when a meaningful change happens—never pollute my daily briefing with unchanged pages.",
+                "layer": "capability",
+                "timesProposed": 11
+              },
+              {
+                "name": "chg-498a3489",
+                "summary": "Replace per-surface hand-written fleetContext prompt sections with a compact, typed context projection service: durable facts, current goals, and permissions are selected per job, with token budgets a",
+                "layer": "memory",
+                "timesProposed": 11
+              },
+              {
+                "name": "chg-e767dfc0",
+                "summary": "Build a first-class authenticated page-watch service: each watch stores URL/tab context, extraction selectors or semantic regions, a normalized baseline hash, volatile-field rules, cadence, and last s",
+                "layer": "browser-harness",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-5284a6ce",
+                "summary": "Build a durable authenticated page-watch service: named watch definitions store URL/tab/session binding, extraction selectors or an agentic extraction recipe, schedule, semantic fingerprint, last seen",
+                "layer": "browser-harness",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-e14fff33",
+                "summary": "Add a provenance-aware browser workbench: every extraction and field mutation gets a tabId, URL, timestamp, DOM locator, source snippet hash, action plan, and before/after value. Group tabs into a tas",
+                "layer": "browser-harness",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-fa84f9a7",
+                "summary": "Build a durable authenticated page-watch layer: named browser sessions with tab/window reattachment, per-watch cadence and quiet hours, DOM-region extraction plus normalized semantic fingerprints, enc",
+                "layer": "browser-harness",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-0c8c5dfe",
+                "summary": "Watch the authenticated pages I choose, detect meaningful changes, and leave me a concise, sourced briefing with suggested next steps—without sending or submitting anything.",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-391cae82",
+                "summary": "When I ask about something on a logged-in site, have several agents inspect it in parallel, reconcile their findings, and give me an evidence-backed answer or a prepared (not sent) action.",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-7217b17c",
+                "summary": "Prepare a browser transaction for me: gather the relevant logged-in data, fill the form or draft the message, show me exactly what will change with before/after evidence, and let me approve, edit, or ",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-0d11cf82",
+                "summary": "Every weekday morning, check my authenticated work portal for new high-priority items and tell me only what needs my attention.",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-df9ec55e",
+                "summary": "When I say 'handle this' about something I found in Safari, gather the needed details across my logged-in tabs, fill the reversible parts, and show me exactly what will be sent before stopping.",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-302a8868",
+                "summary": "“Every morning, check my logged-in work dashboards and tell me only what changed or needs my attention; keep watching the important pages and alert me when a genuinely urgent item appears.”",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-4b41e08a",
+                "summary": "While I sleep, investigate my open threads across Calendar, Mail, and authenticated browser tabs, then leave a ready-to-review workbench on my Mac when I wake: one folder with a prioritized brief, sou",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-26c609fc",
+                "summary": "“When I ask you to do something that takes time, keep working after I leave and tell me exactly what happened when it’s done.”",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-a267b7e8",
+                "summary": "“Just give it the goal; figure out whether the Mac, browser, pendant, or server should do each part, and use whichever can.”",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-ca6005c3",
+                "summary": "“While I sleep, prepare tomorrow’s brief and leave me a short audio queue I can listen to from the pendant.”",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-51c2dc88",
+                "summary": "“Get me ready for my next meeting.”",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-a4c0ec8d",
+                "summary": "Turn on mac-vision's accessibility-mode UI interaction loop to automate GUI tasks without taking over the screen or keyboard focus.",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-a1aa3bf5",
+                "summary": "Show me a history of recent actions taken by mac-vision in automation loops with human-readable explanations and option to undo.",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-e21eb7f4",
+                "summary": "“Every morning, give me a 30-second audio digest of what changed: calendar, reminders, and top emails.”",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-72fc9997",
+                "summary": "\"Queue this up and tell me when it’s done\" (for example: summarize a long document, compare options, draft an email, or research a topic).",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-e5132197",
+                "summary": "“When I press the pendant button, capture a short voice note, tag it with time and place if available, and later summarize it into tasks.”",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-9a6740ed",
+                "summary": "Add a compact, durable Mac execution context cache and handoff protocol. Each server plan gets a jobId, parentId, monotonic sequence, intent hash, referenced local resources, and a short result receip",
+                "layer": "context",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-f5d3b820",
+                "summary": "Replace the desk-bound nRF9160 DK prototype with a jewelry-sized cellular/BLE pendant built around an nRF9161-class modem/application module plus a low-power companion MCU, two digital MEMS microphone",
+                "layer": "hardware",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-258cbe5e",
+                "summary": "Build the wearable revision around the nRF9160 with an ultra-low-power 6-axis IMU on the unused I2C bus, a vibration/LRA haptic driver, and a real microphone/audio front end with physical mute. Keep t",
+                "layer": "hardware",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-d9ce5471",
+                "summary": "Add a dedicated low-power vision coprocessor or embedded GPU to the pendant hardware for on-device image analysis to recognize Mac screen contents and UI elements, enabling offline partial vision-base",
+                "layer": "hardware",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-a3af4c67",
+                "summary": "Define a cross-node Evidence Capsule protocol for browser results: immutable capsule ID, source URL/domain, capture time, tab/session identifier (pseudonymous), selected text/DOM region, content hash,",
+                "layer": "integration",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-91f3c214",
+                "summary": "Integrate mac-vision with the Cloudflare Worker relay to allow partial offloading of UI state classification and action suggestion to a cloud tier. This enables more powerful multimodal fusion with vo",
+                "layer": "integration",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-622e7336",
+                "summary": "Wire up a server-side browser path using Cloudflare Browser Run and a routing rule: web reads/extraction default to server_browser_actions; only fall back to Mac browser bridge when authentication req",
+                "layer": "integration",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-a7a155b1",
+                "summary": "Use the new server-side browser capability for public web tasks directly from the relay, reserving the Mac harness for authenticated sessions and local data. Add routing logic: public pages -> server ",
+                "layer": "integration",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-d2c2cc02",
+                "summary": "Add an idempotent Workbench transaction primitive to the Mac planner: accept a job_id and manifest, write all outputs into a temporary directory, fsync/rename atomically into ~/AI-Workbench/<date>/<jo",
+                "layer": "mac-harness",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-9596a2ad",
+                "summary": "Replace fleetContext.js's hand-written per-surface prompt section with a shared event log plus typed projections. Every node writes small signed events (preference, commitment, task state, source cita",
+                "layer": "memory",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-5cc0bd50",
+                "summary": "Replace per-surface hand-written fleetContext prompts with a shared, event-sourced personal memory broker. Every node writes typed facts, preferences, commitments, and task outcomes with provenance, c",
+                "layer": "memory",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-2903dddb",
+                "summary": "Unify memory across surfaces: replace hand-written prompt sections per surface with a shared, versioned memory API that returns small, purpose-built summaries (profile, preferences, current projects, ",
+                "layer": "memory",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-7613a731",
+                "summary": "Introduce a unified, cross-node memory write API with schema (entities, events, preferences, tasks) and TTLs, plus a pruning policy. Replace hand-written per-surface prompt sections with retrieval-bas",
+                "layer": "memory",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-67952158",
+                "summary": "Add a real scheduler: a Durable Object-backed job queue with delayed execution and recurring rules (cron-like). The relay can enqueue jobs, and a workers cron/alarm runner executes them, delegating to",
+                "layer": "routines",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-9b4366c7",
+                "summary": "Add a relay-owned durable work queue with retries and a receipt log, implemented as a Durable Object (or D1 + Durable Object alarms). The relay exposes enqueue/status endpoints, persists intent payloa",
+                "layer": "routines",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-ae7e4af5",
+                "summary": "Introduce a lightweight scheduler using Durable Object alarms or Cloudflare Cron to trigger queued jobs (summarize notes, send digests, retry failed uploads).",
+                "layer": "routines",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-9ffe4cd1",
+                "summary": "Add a browser-bridge self-healing lease protocol: each Safari heartbeat carries a device nonce, extension version, tab inventory, and last-applied command sequence; the Mac agent expires orphaned pend",
+                "layer": "browser-harness",
+                "timesProposed": 6
+              },
+              {
+                "name": "cap-951c7f45",
+                "summary": "“Check my logged-in accounts for inconsistent personal details, upcoming expirations, or duplicate subscriptions, and prepare a concise fix list without changing anything.”",
+                "layer": "capability",
+                "timesProposed": 6
+              },
+              {
+                "name": "cap-c67d4f1e",
+                "summary": "“I asked you to handle that on my Mac—what’s the status?”",
+                "layer": "capability",
+                "timesProposed": 6
+              },
+              {
+                "name": "chg-99e3117a",
+                "summary": "Introduce a typed, minimal context service for the relay: given an utterance and a desired outcome (status query, dictation, mac task), return only relevant facts (device online state, last job ids, l",
+                "layer": "context",
+                "timesProposed": 6
+              },
+              {
+                "name": "chg-44e46c8d",
+                "summary": "Add a focus-safe execution coordinator around the existing FULL_CONTROL Mac executor. Before each plan, capture the foreground app and a lightweight accessibility/state fingerprint; route UI actions b",
+                "layer": "mac-harness",
+                "timesProposed": 6
+              },
+              {
+                "name": "chg-31bcbfca",
+                "summary": "Add a startup and periodic no-op input reachability probe to the Mac agent health path. When Accessibility is reported trusted, post the documented zero-delta cursor event (or an equivalent harmless S",
+                "layer": "mac-harness",
+                "timesProposed": 6
+              },
+              {
+                "name": "skill-20934f8c",
+                "summary": "offline_alert_inbox",
+                "layer": "firmware",
+                "timesProposed": 1
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "routes"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "GET /health",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /capabilities",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /plan",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /execute",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /sessions",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /sessions",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /sessions/:sessionId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "PATCH /sessions/:sessionId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /sessions/:sessionId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /sessions/:sessionId/clear",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /logs",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /jobs",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /jobs/:jobId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /jobs/:jobId/receipts",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /jobs",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /jobs/undo-last",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /jobs/:jobId/cancel",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /jobs/:jobId/undo",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /thinking",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /thinking/latest",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /thinking/stream",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /pipeline",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /pipeline/events",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /pipeline/audio",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /pipeline/:pipelineId/audio/:direction",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /pipeline",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /pipeline/stream",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /context-graph",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /projects",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /projects/active",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /projects/active",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "PATCH /projects/active",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /context-graph/reset",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /context-graph/demo",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /context-graph/entities",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "PATCH /context-graph/entities/:entityId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /context-graph/entities/:entityId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /context-graph/relations",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /context-graph/relations/:relationId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /machine-context",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /machine-context/refresh",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /ops/status",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /ops/snapshot",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /routing",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /journal",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /journal/:jobId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /observe",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /browser/status",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /browser/heartbeat",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /browser/poll",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /browser/result/:commandId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /browser/sessions",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /browser/sessions",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /browser/sessions/:id",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /briefing",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /briefing/kinds",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /briefing/latest",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /research",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /research/briefings",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /research/briefings/:id",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /research/briefings/:id/speech",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /routines",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /routines",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "PATCH /routines/:routineId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /routines/:routineId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /routines/:routineId/run",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /capture",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /capture",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /capture/:key",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /reminders",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /tidy/preview",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /tidy",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /tidy/:planId/apply",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /tidy/:planId/undo",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /sweep/survey",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /sweep/preview",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /sweep",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /sweep/:planId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /sweep/:planId/apply",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /sweep/:planId/undo",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /preview",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /browser/inspect",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /browser/inspections",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /browser/inspections/:inspectionId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /browser/inspections/:inspectionId/act",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /focus",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /focus",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /focus",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /day-plan",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /meeting-prep",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /mail/triage",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /mail/triage",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /mail/triage/:runId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /meeting-followup",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /notifications",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /watches",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /watches",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /watches/reports",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /watches/:watchId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "PATCH /watches/:watchId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /watches/:watchId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /watches/:watchId/check",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /watches/:watchId/ack",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /forms/fill",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /forms/fills",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /forms/fills/:fillId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /memory/facts",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /memory/facts",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /memory/facts/:idOrKey",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /memory/browser-findings",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /memory/prune",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /memory/sync-graph",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /memory/projection",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /dashboard",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /dashboard/",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /dashboard/{*splat}",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              }
+            ],
+            "note": "These are the Mac agent routes. Your own backend may differ — probe_http hits whichever backend you run against."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "GET /health"
+          },
+          "result": {
+            "name": "GET /health",
+            "liveStatus": 200,
+            "liveResponse": "{\"ok\":true,\"service\":\"AI Pendant Mac Local Agent\",\"version\":\"0.5.0\",\"capabilities\":\"/capabilities\"}"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "GET /capabilities"
+          },
+          "result": {
+            "name": "GET /capabilities",
+            "liveStatus": 200,
+            "liveResponse": "{\"ok\":true,\"service\":\"AI Pendant Mac Local Agent\",\"version\":\"0.5.0\",\"generatedAt\":\"2026-08-07T07:21:50.708Z\",\"generatedFrom\":[\"express router stack\",\"computerControl dispatch table\",\"llmPlanner action registry\",\"actionRisk hands-free allowlist\",\"macos/permissions report\"],\"http\":{\"port\":8000,\"baseUrl\":\"http://127.0.0.1:8000\",\"auth\":{\"scheme\":\"Bearer\",\"header\":\"Authorization: Bearer <AGENT_TOKEN>\",\"tokenConfigured\":true,\"alsoAccepts\":\"loopback dashboard session cookie\",\"statusContract\":{\"401\":\"route exists, token missing or wrong\",\"404\":\"no such route on this process\",\"503\":\"AGENT_TOKEN not configured on the Mac\"}},\"routeCount\":116,\"publicPaths\":[\"/dashboard\",\"/dashboard/\",\"/dashboard/{*splat}\",\"/health\"],\"groups\":[{\"group\":\"briefing\",\"routeCount\":3,\"what\":\"Spoken briefings assembled for the pendant.\",\"module\":\"local-agent/briefing.js + audioBrief.js\"},{\"group\":\"browser\",\"routeCount\":11,\""
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "GET /jobs"
+          },
+          "result": {
+            "name": "GET /jobs",
+            "liveStatus": 200,
+            "liveResponse": "{\"jobs\":[{\"jobId\":\"local_2751a4db-1f52-4ea1-a556-5fbf681cd39d\",\"type\":\"execute\",\"status\":\"processing\",\"command\":\"\",\"sessionId\":null,\"source\":\"local\",\"result\":null,\"error\":null,\"createdAt\":\"2026-08-07T07:21:42.509Z\",\"updatedAt\":\"2026-08-07T07:21:42.509Z\",\"undo\":{\"canUndo\":false,\"reason\":\"Only completed work can be undone\"},\"receipts\":[],\"cancellable\":true},{\"jobId\":\"local_fb02526e-9386-432b-a061-ef742dd84def\",\"type\":\"execute\",\"status\":\"completed\",\"command\":\"\",\"sessionId\":null,\"source\":\"local\",\"result\":{\"results\":[{\"action\":{\"type\":\"run_shell\",\"label\":\"parts\",\"params\":{\"command\":\"node /private/tmp/claude-501/-Users-evanliu-agentic-gadget/3b6e7e6f-ec52-4fbf-a57a-ec93b307acd0/scratchpad/run-parts.mjs > /private/tmp/claude-501/-Users-evanliu-agentic-gadget/3b6e7e6f-ec52-4fbf-a57a-ec93b307acd0/scratchpad/rp2.result.json 2>/private/tmp/claude-501/-Users-evanliu-agentic-gadget/3b6e7e6f-ec52-4fbf"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "GET /jobs/:jobId/receipts"
+          },
+          "result": {
+            "name": "GET /jobs/:jobId/receipts",
+            "liveStatus": 404,
+            "liveResponse": "{\"ok\":false,\"error\":\"Job not found.\"}"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "GET /observe"
+          },
+          "result": {
+            "name": "GET /observe",
+            "liveStatus": 200,
+            "liveResponse": "{\"ok\":true,\"observedAt\":\"2026-08-07T07:22:04.157Z\",\"readOnly\":true,\"note\":\"Observation only. Nothing on this path can block, refuse, or delay an action.\",\"derivedFrom\":[\"lsappinfo front — foreground application\",\"ps -Ao pid=,comm= — running application bundles\",\"local-agent/macos/permissions.js — accessibility, input posting, screen recording\",\"local-agent/browserSessions.js — durable browser sessions\",\"local-agent/config.js — allowedFolders\"],\"foregroundApp\":{\"asn\":\"ASN:0x0-0x468468:\",\"name\":\"Claude\",\"bundleId\":\"com.anthropic.claudefordesktop\",\"pid\":55646},\"runningApps\":{\"count\":20,\"helperProcesses\":85,\"error\":null,\"apps\":[{\"name\":\"AdGuard Mini\",\"pid\":3182,\"bundlePath\":\"/Applications/AdGuard Mini.app\"},{\"name\":\"AI Pendant Agent\",\"pid\":85581,\"bundlePath\":\"/Users/evanliu/Applications/AI Pendant Agent.app\"},{\"name\":\"Amphetamine\",\"pid\":37455,\"bundlePath\":\"/Applications/Amphetamine.app\"},{\"n"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "GET /ops/status"
+          },
+          "result": {
+            "name": "GET /ops/status",
+            "liveStatus": 200,
+            "liveResponse": "{\"ok\":true,\"agent\":{\"ok\":true,\"service\":\"AI Pendant Mac Local Agent\",\"version\":\"0.5.0\",\"tokenRequired\":true,\"tokenConfigured\":true,\"fullControlMode\":true,\"llmPlannerEnabled\":true,\"fullControlPlanner\":true,\"computerUse\":{\"loopEnabled\":false,\"visionModelConfigured\":true,\"visionUploadConsented\":false,\"maxSteps\":25},\"browserExtension\":{\"online\":false,\"devices\":[],\"pendingCommands\":2},\"permissions\":{\"hostApp\":\"AI Pendant Agent\",\"nodePath\":\"/Users/evanliu/Applications/AI Pendant Agent.app/Contents/Resources/node\",\"hostFingerprint\":\"com.aipendant.agent|~/Applications/AI Pendant Agent.app\",\"accessibility\":{\"trusted\":true,\"detail\":\"Accessibility is granted\"},\"screenRecording\":{\"granted\":true,\"detail\":\"Screen Recording is granted\"},\"automation\":{\"System Events\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Finder\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Reminders\":{\"granted\":true,\"detail\":\"f"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "GET /routing"
+          },
+          "result": {
+            "name": "GET /routing",
+            "liveStatus": 200,
+            "liveResponse": "{\"ok\":true,\"routing\":{\"unit\":\"estimated tokens (chars/4); the streaming API returns no usage block\",\"priced\":false,\"totalRequests\":2,\"tiers\":{\"deterministic\":{\"requests\":2,\"llmCalls\":0,\"avgLatencyMs\":221,\"promptTokens\":0,\"completionTokens\":0,\"totalTokens\":0,\"avgTokensPerRequest\":0,\"costUsd\":null,\"escalations\":0},\"background\":{\"requests\":0,\"llmCalls\":0,\"avgLatencyMs\":null,\"promptTokens\":0,\"completionTokens\":0,\"totalTokens\":0,\"avgTokensPerRequest\":null,\"costUsd\":null,\"escalations\":0},\"planner\":{\"requests\":0,\"llmCalls\":0,\"avgLatencyMs\":null,\"promptTokens\":0,\"completionTokens\":0,\"totalTokens\":0,\"avgTokensPerRequest\":null,\"costUsd\":null,\"escalations\":0}},\"baseline\":{\"source\":\"observed non-escalated planner-tier average in this process\",\"tokensPerRequest\":null,\"latencyMs\":null,\"samples\":0},\"saved\":{\"tokens\":null,\"latencyMs\":null,\"requests\":2},\"recent\":[{\"at\":\"2026-08-07T07:03:04.248Z\",\"command"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "probe_http",
+          "args": {
+            "method": "GET",
+            "path": "/health"
+          },
+          "result": {
+            "ok": true,
+            "status": 200,
+            "body": "{\"ok\":true,\"service\":\"AI Pendant Mac Local Agent\",\"version\":\"0.5.0\",\"capabilities\":\"/capabilities\"}"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "probe_http",
+          "args": {
+            "method": "GET",
+            "path": "/ops/status"
+          },
+          "result": {
+            "ok": true,
+            "status": 200,
+            "body": "{\"ok\":true,\"agent\":{\"ok\":true,\"service\":\"AI Pendant Mac Local Agent\",\"version\":\"0.5.0\",\"tokenRequired\":true,\"tokenConfigured\":true,\"fullControlMode\":true,\"llmPlannerEnabled\":true,\"fullControlPlanner\":true,\"computerUse\":{\"loopEnabled\":false,\"visionModelConfigured\":true,\"visionUploadConsented\":false,\"maxSteps\":25},\"browserExtension\":{\"online\":false,\"devices\":[],\"pendingCommands\":2},\"permissions\":{\"hostApp\":\"AI Pendant Agent\",\"nodePath\":\"/Users/evanliu/Applications/AI Pendant Agent.app/Contents/Resources/node\",\"hostFingerprint\":\"com.aipendant.agent|~/Applications/AI Pendant Agent.app\",\"accessibility\":{\"trusted\":true,\"detail\":\"Accessibility is granted\"},\"screenRecording\":{\"granted\":true,\"detail\":\"Screen Recording is granted\"},\"automation\":{\"System Events\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Finder\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Reminders\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Calendar\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Mail\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Notes\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Messages\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Safari\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Google Chrome\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Microsoft Edge\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Music\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Preview\":{\"granted\":true,\"detail\":\"from grant cache\"},\"TextEdit\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Visual Studio Code\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Cursor\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Terminal\":{\"granted\":true,\"detail\":\"from grant cache\"},\"Warp\":{\"granted\":true,\"detail\":\"from grant cache\"},\"iTerm\":{\"granted\":true,\"detail\":\"from grant cache\"},\"System Settings\":{\"granted\":true,\"detail\":\"from grant cache\"}},\"reminders\":{\"granted\":true,\"detail\":\"from grant cache\"},\"requiredMissing\":[],\"optionalMissing\":[],\"ready\":true},\"logPath\":\"/Users/evanliu/AI-Pendant-Workspace/mac-agent-activity-log.json\",\"contextGraphPath\":\"/Users/evanliu/agentic-gadget/software/ai-pendant-simulator/local-agent/memory/context_graph.json\",\"sessionsPath\":\"/Users/evanliu/AI-Pendant-Workspace/pendant-sessions.json\",\"jobsPath\":\"/Users/evanliu/AI-Pendant-Workspace/pendant-jobs.json\",\"pipelinePath\":\"/Users/evanliu/AI-Pendant-Workspace/pendant-pipeline.json\",\"dashboardAvailable\":true},\"relay\":{\"configured\":true,\"url\":\"https://ai-pendant-relay.evan20050827.workers.dev\",\"reachable\":true,\"payload\":{\"ok\":true,\"service\":\"AI Pendant Cloud Relay\",\"version\":\"1.1.0\",\"platform\":\"cloudflare-workers\",\"store\":\"d1\",\"relayApiKeyConfigured\":true,\"speechToTextConfigured\":true,\"pairingRequired\":true,\"macBridgeOnline\":true,\"macBridgeLastSeen\":\"2026-08-07T07:21:57.073Z\",\"capabilities\":{\"pendantPipelineTelemetry\":true,\"pendantSpeech\":true,\"persistentAgentState\":true,\"durableAudio\":true},\"models\":{\"voiceAgent\":\"gpt-realtime-2.1\",\"textToSpeech\":\"macOS say (24 kHz PCM)\",\"relayTextToSpeechFallback\":\"tts-1 · alloy\"}},\"error\":null},\"browser\":{\"online\":false,\"devices\":[],\"pendingCommands\":2},\"machine\":{\"hostname\":\"MacBook-Air-6.local\",\"home\":\"/Users/evanliu\",\"platform\":\"darwin\",\"appCount\":123,\"applications\":[\".Karabiner-VirtualHIDDevice-Manager\",\"71sports\",\"Ableton Live 12 Suite\",\"AdGuard Mini\",\"Adobe Digital Editions\",\"Adobe Digital Editions 4.5\",\"AI Pendant\",\"AI Pendant Agent\",\"AI Pendant Browser Bridge\",\"Amphetamine\",\"Anaconda-Navigator\",\"App Store\",\"Apps\",\"Automator\",\"BlockYT\",\"BlockYTShortsNew\",\"Books\",\"Bucky Match\",\"Bucky Match Helper\",\"Calculator\",\"Calendar\",\"Camera Recorder Lite\",\"Capital One Shopping\",\"ChatGPT\",\"Chess\",\"Claude\",\"Claude Code URL Handler\",\"Clock\",\"Contacts\",\"CP210xVCPDriver\",\"Cursor\",\"Dark PDF\",\"Dark Reader for Safari\",\"Developer\",\"Dictionary\",\"ExpressVPN\",\"FaceTime\",\"FindMy\",\"Focus for YouTube\",\"Font Book\",\"Freedom\",\"Freeform\",\"Games\",\"Gemini\",\"GlobalProtect\",\"Google Chrome\",\"Hermes\",\"Home\",\"Image Capture\",\"Image Playground\",\"iPhone Mirroring\",\"Journal\",\"Just Press Record\",\"Kindle\",\"KugouMusic\",\"LINE\",\"Logi Options\",\"LTspice\",\"Mail\",\"Maps\",\"Messages\",\"Messenger\",\"Metronome\",\"Microsoft Excel\",\"Microsoft Outlook\",\"Microsoft PowerPoint\",\"Microsoft To Do\",\"Microsoft Word\",\"Mission Control\",\"MLB\",\"Mos\",\"Music\",\"Musicnotes\",\"Nail the Pitch\",\"News\",\"Notes\",\"noTunes\",\"nRF Connect for Desktop\",\"OBS\",\"Obsidian\",\"OneDrive\",\"Pages Creator Studio\",\"Passwords\",\"PayPal Honey\",\"Perch\",\"Phone\",\"Photo Booth\",\"Photos\",\"Podcasts\",\"Preview\",\"PrivadoVPN\",\"ProtonVPN\",\"QuickTime Player\",\"Reminders\",\"Safari\",\"Shortcuts\",\"Siri\",\"Spotify\",\"Steam\",\"Stickies\",\"Stocks\",\"superwhisper\",\"System Settings\",\"Tabs to Links\",\"Telegram\",\"TestFlight\",\"TextEdit\",\"The Unarchiver\",\"Time Machine\",\"Tips\",\"Transporter\",\"TV\",\"Unclutter\",\"Unzip - RAR ZIP 7Z Unarchiver\",\"Urban VPN Desktop\",\"Visual Studio Code\",\"VLC\",\"VoiceMemos\",\"Weather\",\"Whisper Transcription\",\"Xcode\",\"zoom.us\",\"臺北市立圖書館\"],\"topApps\":[\".Karabiner-VirtualHIDDevice-Manager\",\"71sports\",\"Ableton Live 12 Suite\",\"AdGuard Mini\",\"Adobe Digital Editions\",\"Adobe Digital Editions 4.5\",\"AI Pendant\",\"AI Pendant Agent\",\"AI Pendant Browser Bridge\",\"Amphetamine\",\"Anaconda-Navigator\",\"App Store\"],\"automation\":{\"macosVersion\":null,\"arch\":\"arm64\",\"shortcuts\":[],\"cliTools\":[\"aarch64-apple-darwin24-c++-14\",\"aarch64-apple-darwin24-g++-14\",\"aarch64-apple-darwin24-gcc-14\",\"aarch64-apple-darwin24-gcc-ar-14\",\"aarch64-apple-darwin24-gcc-nm-14\",\"aarch64-apple-darwin24-gcc-ranlib-14\",\"aarch64-apple-darwin24-gfortran-14\",\"aarch64-apple-darwin24-gm2-14\",\"adaparse\",\"addbuiltin\",\"adig\",\"ahost\",\"Application.Mac.NDI.Recording\",\"asn1Coding\",\"asn1Decoding\",\"asn1Parser\",\"atob\",\"autoconf\",\"autoheader\",\"autom4te\",\"autopoint\",\"autoreconf\",\"autoscan\",\"autoupdate\",\"aviocat\",\"aws\",\"aws_completer\",\"baddbdir\",\"bisect-create\",\"bltest\",\"bomtool\",\"bootstrap.py\",\"bq\",\"brew\",\"brotli\",\"bsondump\",\"btoa\",\"c_rehash\",\"c++-14\",\"cairo-trace\",\"certutil\",\"check_arm_indent.sh\",\"chktest\",\"cjpeg\",\"claude\",\"claude-code-proxy\",\"clean-diff\",\"clusterdb\",\"cmsutil\",\"code\",\"compare-cvelists.sh\"\n…[truncated]"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "probe_http",
+          "args": {
+            "method": "GET",
+            "path": "/observe"
+          },
+          "result": {
+            "ok": true,
+            "status": 200,
+            "body": "{\"ok\":true,\"observedAt\":\"2026-08-07T07:22:17.371Z\",\"readOnly\":true,\"note\":\"Observation only. Nothing on this path can block, refuse, or delay an action.\",\"derivedFrom\":[\"lsappinfo front — foreground application\",\"ps -Ao pid=,comm= — running application bundles\",\"local-agent/macos/permissions.js — accessibility, input posting, screen recording\",\"local-agent/browserSessions.js — durable browser sessions\",\"local-agent/config.js — allowedFolders\"],\"foregroundApp\":{\"asn\":\"ASN:0x0-0x468468:\",\"name\":\"Claude\",\"bundleId\":\"com.anthropic.claudefordesktop\",\"pid\":55646},\"runningApps\":{\"count\":20,\"helperProcesses\":85,\"error\":null,\"apps\":[{\"name\":\"AdGuard Mini\",\"pid\":3182,\"bundlePath\":\"/Applications/AdGuard Mini.app\"},{\"name\":\"AI Pendant Agent\",\"pid\":85581,\"bundlePath\":\"/Users/evanliu/Applications/AI Pendant Agent.app\"},{\"name\":\"Amphetamine\",\"pid\":37455,\"bundlePath\":\"/Applications/Amphetamine.app\"},{\"name\":\"Calendar\",\"pid\":25006,\"bundlePath\":\"/System/Applications/Calendar.app\"},{\"name\":\"Claude\",\"pid\":55646,\"bundlePath\":\"/Applications/Claude.app\"},{\"name\":\"Freedom\",\"pid\":3241,\"bundlePath\":\"/Applications/Freedom.app\"},{\"name\":\"Google Chrome\",\"pid\":27367,\"bundlePath\":\"/Applications/Google Chrome.app\"},{\"name\":\"Mail\",\"pid\":98108,\"bundlePath\":\"/System/Applications/Mail.app\"},{\"name\":\"Microsoft Outlook\",\"pid\":41587,\"bundlePath\":\"/Applications/Microsoft Outlook.app\"},{\"name\":\"Notes\",\"pid\":47912,\"bundlePath\":\"/System/Applications/Notes.app\"},{\"name\":\"noTunes\",\"pid\":3240,\"bundlePath\":\"/Applications/noTunes.app\"},{\"name\":\"OneDrive\",\"pid\":3236,\"bundlePath\":\"/Applications/OneDrive.app\"},{\"name\":\"Preview\",\"pid\":42453,\"bundlePath\":\"/System/Applications/Preview.app\"},{\"name\":\"Reminders\",\"pid\":36579,\"bundlePath\":\"/System/Applications/Reminders.app\"},{\"name\":\"Spotify\",\"pid\":82807,\"bundlePath\":\"/Applications/Spotify.app\"},{\"name\":\"superwhisper\",\"pid\":711,\"bundlePath\":\"/Applications/superwhisper.app\"},{\"name\":\"System Settings\",\"pid\":21035,\"bundlePath\":\"/System/Applications/System Settings.app\"},{\"name\":\"TextEdit\",\"pid\":21521,\"bundlePath\":\"/System/Applications/TextEdit.app\"},{\"name\":\"Visual Studio Code\",\"pid\":76827,\"bundlePath\":\"/Applications/Visual Studio Code.app\"},{\"name\":\"zoom.us\",\"pid\":43403,\"bundlePath\":\"/Applications/zoom.us.app\"}]},\"accessibility\":{\"probed\":true,\"trusted\":true,\"detail\":\"Accessibility is granted\",\"hostApp\":\"AI Pendant Agent\",\"eventsPost\":null,\"eventsPostDetail\":\"Not probed. The quiet permission report does not post a test event; add ?probeInput=1 to post one (a zero-delta mouse move at the cursor, a genuine no-op).\",\"secureInputActive\":null,\"screenRecording\":true,\"automationMissing\":[],\"uiActionsWillReachTheScreen\":null,\"consequence\":\"Unverified: TCC says Accessibility is granted to AI Pendant Agent, but nothing here posted an event to confirm it. If it is granted to the wrong bundle, ui_click, ui_menu, type_text and press_keys report success while doing nothing — receipts for those steps cannot be trusted.\"},\"browser\":{\"sessions\":3,\"tabs\":[{\"id\":\"default\",\"url\":\"https://time.is/UTC\",\"title\":\"UTC: 06:26\",\"tabId\":320512,\"lastUsedAt\":\"2026-08-07T06:26:08.887Z\"},{\"id\":\"probe-form2\",\"url\":\"https://www.selenium.dev/selenium/web/web-form.html\",\"title\":null,\"tabId\":230928,\"lastUsedAt\":\"2026-08-07T05:40:26.651Z\"},{\"id\":\"probe-form\",\"url\":\"https://httpbin.org/forms/post\",\"title\":\"503 Service Temporarily Unavailable\",\"tabId\":229550,\"lastUsedAt\":\"2026-08-07T05:40:06.306Z\"}]},\"directories\":{\"enforced\":false,\"note\":\"FULL_CONTROL_MODE is on: security.assertAllowedPath resolves any path. These are the configured roots, not a limit.\",\"roots\":[{\"path\":\"/Users/evanliu/agentic-gadget/software/ai-pendant-simulator\",\"exists\":true,\"readable\":true,\"entries\":31,\"directories\":15},{\"path\":\"/Users/evanliu/AI-Pendant-Workspace\",\"exists\":true,\"readable\":true,\"entries\":37,\"directories\":8},{\"path\":\"/Users/evanliu/Downloads\",\"exists\":true,\"readable\":true,\"entries\":31,\"directories\":1}]}}"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "probe_http",
+          "args": {
+            "method": "GET",
+            "path": "/jobs"
+          },
+          "result": {
+            "ok": true,
+            "status": 200,
+            "body": "{\"jobs\":[{\"jobId\":\"local_2751a4db-1f52-4ea1-a556-5fbf681cd39d\",\"type\":\"execute\",\"status\":\"processing\",\"command\":\"\",\"sessionId\":null,\"source\":\"local\",\"result\":null,\"error\":null,\"createdAt\":\"2026-08-07T07:21:42.509Z\",\"updatedAt\":\"2026-08-07T07:21:42.509Z\",\"undo\":{\"canUndo\":false,\"reason\":\"Only completed work can be undone\"},\"receipts\":[],\"cancellable\":true},{\"jobId\":\"local_fb02526e-9386-432b-a061-ef742dd84def\",\"type\":\"execute\",\"status\":\"completed\",\"command\":\"\",\"sessionId\":null,\"source\":\"local\",\"result\":{\"results\":[{\"action\":{\"type\":\"run_shell\",\"label\":\"parts\",\"params\":{\"command\":\"node /private/tmp/claude-501/-Users-evanliu-agentic-gadget/3b6e7e6f-ec52-4fbf-a57a-ec93b307acd0/scratchpad/run-parts.mjs > /private/tmp/claude-501/-Users-evanliu-agentic-gadget/3b6e7e6f-ec52-4fbf-a57a-ec93b307acd0/scratchpad/rp2.result.json 2>/private/tmp/claude-501/-Users-evanliu-agentic-gadget/3b6e7e6f-ec52-4fbf-a57a-ec93b307acd0/scratchpad/rp2.err.txt; echo exit=$?\",\"timeout\":280000}},\"ok\":true,\"status\":\"success\",\"message\":\"exit=0\",\"stdout\":\"exit=0\",\"stderr\":\"\",\"receipt\":{\"receiptId\":\"rcpt_85f57c5f-2cda-4275-813b-5abde535f834\",\"actionId\":\"act_e32f8cec1f6b\",\"type\":\"run_shell\",\"label\":\"parts\",\"effect\":\"write\",\"ok\":true,\"status\":\"success\",\"startedAt\":\"2026-08-07T07:12:29.670Z\",\"finishedAt\":\"2026-08-07T07:14:10.135Z\",\"durationMs\":100465,\"touched\":[{\"kind\":\"shell\",\"ref\":\"node /private/tmp/claude-501/-Users-evanliu-agentic-gadget/3b6e7e6f-ec52-4fbf-a57a-ec93b307acd0/scratchpad/run-parts.mjs > /private/tmp/claude-501/-Users-evanliu-agentic-gadget/3b6e7e6f-ec52-4fbf-a57a-ec93b307acd0/scratchpad/rp2.result.json 2>/private/tmp/claude-501/-Users-evanliu-agentic-gadget/3b6e7e6f-ec52-4fbf-a57a-ec93b307acd0/scratchpad/rp2.err.txt; echo exit=$?\"}],\"snapshot\":null,\"preexisting\":null,\"reversible\":false,\"reversedBy\":null,\"irreversibleReason\":\"run_shell leaves no reversible trace\"}}],\"response\":\"exit=0\",\"thinking\":{\"traceId\":\"think_d6ebe915-bd5d-467a-8a98-7d6806ff7d89\"}},\"error\":null,\"createdAt\":\"2026-08-07T07:12:29.544Z\",\"updatedAt\":\"2026-08-07T07:14:10.290Z\",\"thinking\":{\"traceId\":\"think_d6ebe915-bd5d-467a-8a98-7d6806ff7d89\",\"kind\":\"execute\",\"command\":\"\",\"sessionId\":null,\"source\":\"local\",\"status\":\"done\",\"steps\":[{\"id\":\"start\",\"label\":\"Starting your approved plan\",\"detail\":\"1 step to run\",\"status\":\"done\",\"streamText\":\"\",\"chunks\":[],\"meta\":null,\"createdAt\":\"2026-08-07T07:12:29.620Z\",\"updatedAt\":\"2026-08-07T07:12:29.620Z\"},{\"id\":\"action-0\",\"label\":\"Done: parts\",\"detail\":\"exit=0\",\"status\":\"done\",\"streamText\":\"\",\"chunks\":[],\"meta\":null,\"createdAt\":\"2026-08-07T07:12:29.645Z\",\"updatedAt\":\"2026-08-07T07:14:10.137Z\"},{\"id\":\"memory\",\"label\":\"Memory updated\",\"detail\":\"400 remembered items\",\"status\":\"done\",\"streamText\":\"\",\"chunks\":[],\"meta\":null,\"createdAt\":\"2026-08-07T07:14:10.181Z\",\"updatedAt\":\"2026-08-07T07:14:10.238Z\"}],\"createdAt\":\"2026-08-07T07:12:29.599Z\",\"updatedAt\":\"2026-08-07T07:14:10.259Z\",\"summary\":\"exit=0\"},\"undo\":{\"canUndo\":false,\"reason\":\"No reversible steps in this job\",\"irreversible\":[{\"type\":\"run_shell\",\"actionId\":\"act_e32f8cec1f6b\",\"reason\":\"run_shell leaves no reversible trace\"}]},\"receipts\":[{\"receiptId\":\"rcpt_85f57c5f-2cda-4275-813b-5abde535f834\",\"actionId\":\"act_e32f8cec1f6b\",\"type\":\"run_shell\",\"label\":\"parts\",\"effect\":\"write\",\"ok\":true,\"status\":\"success\",\"startedAt\":\"2026-08-07T07:12:29.670Z\",\"finishedAt\":\"2026-08-07T07:14:10.135Z\",\"durationMs\":100465,\"touched\":[{\"kind\":\"shell\",\"ref\":\"node /private/tmp/claude-501/-Users-evanliu-agentic-gadget/3b6e7e6f-ec52-4fbf-a57a-ec93b307acd0/scratchpad/run-parts.mjs > /private/tmp/claude-501/-Users-evanliu-agentic-gadget/3b6e7e6f-ec52-4fbf-a57a-ec93b307acd0/scratchpad/rp2.result.json 2>/private/tmp/claude-501/-Users-evanliu-agentic-gadget/3b6e7e6f-ec52-4fbf-a57a-ec93b307acd0/scratchpad/rp2.err.txt; echo exit=$?\"}],\"snapshot\":null,\"preexisting\":null,\"reversible\":false,\"reversedBy\":null,\"irreversibleReason\":\"run_shell leaves no reversible trace\"}],\"cancellable\":false},{\"jobId\":\"local_c88256b7-6efb-4123-b5eb-c57c26b3e9ae\",\"type\":\"execute\",\"status\":\"completed\",\"command\":\"\",\"sessionId\":null,\"source\":\"local\",\"result\":{\"results\":[{\"action\":{\"type\":\"run_shell\",\"label\":\"parts\",\"params\":{\"command\":\"node /private/tmp/claude-501/-Users-evanliu-agentic-gadget/3b6e7e6f-ec52-4fbf-a57a-ec93b307acd0/scratchpad/run-parts.mjs > /private/tmp/claude-501/-Users-evanliu-agentic-gadget/3b6e7e6f-ec52-4fbf-a57a-ec93b307acd0/scratchpad/rp.result.json 2>/private/tmp/claude-501/-Users-evanliu-agentic-gadget/3b6e7e6f-ec52-4fbf-a57a-ec93b307acd0/scratchpad/rp.err.txt; echo exit=$?\",\"timeout\":280000}},\"ok\":true,\"status\":\"success\",\"message\":\"exit=0\",\"stdout\":\"exit=0\",\"stderr\":\"\",\"receipt\":{\"receiptId\":\"rcpt_6c81434f-dfc0-434a-8689-f7d9650961ea\",\"actionId\":\"act_46336770923e\",\"type\":\"run_shell\",\"label\":\"parts\",\"effect\":\"write\",\"ok\":true,\"status\":\"success\",\"startedAt\":\"2026-08-07T07:09:44.137Z\",\"finishedAt\":\"2026-08-07T07:11:09.533Z\",\"durationMs\":85396,\"touched\":[{\"kind\":\"shell\",\"ref\":\"node /private/tmp/claude-501/-Users-evanliu-agentic-gadget/3b6e7e6f-ec52-4fbf-a57a-ec93b307acd0/scratchpad/run-parts.mjs > /private/tmp/claude-501/-Users-evanliu-agentic-gadget/3b6e7e6f-ec52-4fbf-a57a-ec93b307acd0/scratchpad/rp.result.json 2>/private/tmp/claude-501/-Users-evanliu-agentic-gadget/3b6e7e6f-ec52-4fbf-a57a-ec93b307acd0/scratchpad/rp.err.txt; echo exit=$?\"}],\"snapshot\":null,\"preexisting\":null,\"reversible\":false,\"reversedBy\":null,\"irreversibleReason\":\"run_shell leaves no reversible trace\"}}],\"response\":\"exit=0\",\"thinking\":{\"traceId\":\"think_26b56eb9-fd50-4f11-ba60-5e15ac7c908d\"}},\"error\":null,\"createdAt\":\"2026-08-07T07:09:44.007Z\",\"updatedAt\":\"2026-08-07T07:11:09.684Z\",\"thinking\":{\"traceId\":\"think_26b56eb9-fd50-4f11-ba60-5e15ac7c908d\",\"kind\":\"execute\",\"command\":\"\",\"sessionId\":null,\"source\":\"local\",\"status\":\"done\",\"steps\":[{\"id\":\"start\",\"label\":\"Starting your approved plan\",\"detail\":\"1 step to run\",\"status\":\"done\",\"streamText\":\"\",\"chunks\":[],\"meta\":null,\"createdAt\":\"2026-08-07T07:09:44.098Z\",\"updatedAt\":\"2026-08-07T07:09:44.09\n…[truncated]"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "get_mac_status"
+          },
+          "result": {
+            "name": "get_mac_status",
+            "description": "PROACTIVE. Read live Mac device state: battery, wifi, volume, focused app, or all. Use when the owner asks about battery/charge, wifi/network, volume/mute, or what app is frontmost. Call immediately — no confirmation. Do NOT use when: controlling the Mac (open app, set volume, type, reminders — use mac_run_actions), browser work (browser_run_actions), public web facts (web_search), or multi-step ambiguous tasks (mac_delegate). Never invent readings; always call this tool instead of guessing numbers.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "fields": {
+                  "type": "array",
+                  "description": "Optional status fields to fetch. Omit or use [\"all\"] for a full snapshot.",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "battery",
+                      "wifi",
+                      "volume",
+                      "focused_app",
+                      "all"
+                    ]
+                  }
+                },
+                "spoken_reply": {
+                  "type": "string",
+                  "description": "Short pendant confirmation (e.g. \"Checking battery.\"). One sentence."
+                },
+                "transcript": {
+                  "type": "string",
+                  "description": "Optional history label only. Omit if unsure — never block on this."
+                }
+              },
+              "required": []
+            }
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "mac_run_actions"
+          },
+          "result": {
+            "name": "mac_run_actions",
+            "description": "PROACTIVE for reversible control. Execute 1–3 concrete Mac actions when the Mac surface is online: open_app, open_url, open_path, create_reminder, type_text, get_volume, set_volume, run_shell (allowlisted system intents), run_applescript, and similar. Prefer high-level types over raw shell when a typed action exists. Use when: owner wants to change or run something on the Mac that is not a pure status read. Do NOT use when: only reading battery/wifi/volume/focused app (get_mac_status), browser page work (browser_run_actions), public facts (web_search), or long multi-step ambiguous workflows (mac_delegate). Confirmation first only for destructive actions. Never claim success without this tool (or get_mac_status) actually queuing work.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "actions": {
+                  "type": "array",
+                  "description": "1–3 concrete actions for the Mac executor (primary product of this tool).",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "description": "Executor action type. Examples: run_shell, run_applescript, create_reminder, open_app, open_url, open_path, type_text, get_volume, set_volume, browser_snapshot, browser_list_tabs, browser_navigate, browser_click, browser_type, browser_wait_for, browser_read_page, browser_select."
+                      },
+                      "label": {
+                        "type": "string",
+                        "description": "Short human-readable label for logs / UI."
+                      },
+                      "params": {
+                        "type": "object",
+                        "description": "Parameters for the action type. Use only fields that type needs (e.g. command for run_shell, title/due for create_reminder, url for open_url or browser_navigate, selector/text for browser_click/type, appName for open_app matching the Mac software inventory exactly).",
+                        "properties": {
+                          "appName": {
+                            "type": "string"
+                          },
+                          "url": {
+                            "type": "string"
+                          },
+                          "path": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "due": {
+                            "type": "string"
+                          },
+                          "selector": {
+                            "type": "string"
+                          },
+                          "text": {
+                            "type": "string"
+                          },
+                          "query": {
+                            "type": "string"
+                          },
+                          "command": {
+                            "type": "string"
+                          },
+                          "script": {
+                            "type": "string"
+                          },
+                          "cwd": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "params"
+                    ]
+                  }
+                },
+                "spoken_reply": {
+                  "type": "string",
+                  "description": "Short confirmation for the pendant speaker (preferred user-facing reply)."
+                },
+                "transcript": {
+                  "type": "string",
+                  "description": "Optional short transcript for history/debug only. Omit if unsure — never block on this; plan from audio via actions."
+                }
+              },
+              "required": [
+                "actions"
+              ]
+            }
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "mac_delegate"
+          },
+          "result": {
+            "name": "mac_delegate",
+            "description": "ONLY for multi-step or ambiguous computer tasks that cannot fit a short action list. Hands the goal to the local Mac agent (sets requireLocalPlanner). Use when: complex multi-app workflows, unclear steps, long-running computer use. Do NOT use when: a single get_mac_status or 1–3 mac_run_actions / browser_run_actions would suffice. Prefer concrete tools first.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "goal": {
+                  "type": "string",
+                  "description": "Clear goal for the Mac agent to accomplish."
+                },
+                "spoken_reply": {
+                  "type": "string",
+                  "description": "Optional short confirmation for the pendant speaker while the Mac works."
+                },
+                "transcript": {
+                  "type": "string",
+                  "description": "Optional short transcript for history/debug only. Omit if unsure."
+                }
+              },
+              "required": [
+                "goal"
+              ]
+            }
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "read_web_page"
+          },
+          "result": {
+            "name": "read_web_page",
+            "description": "PROACTIVE for reading a specific public web page without the Mac. Fetches one public URL with a cloud browser on the relay and returns its readable text — works when the Mac is asleep, closed, or offline. Use when: the owner names a page/site/article to read, or web_search returned a link whose contents you now need. Do NOT use when: the page needs the owner's login, is on their home network, or must be clicked/typed into — that browser has no sessions and no LAN access, so use browser_run_actions (Mac extension) instead. Do NOT use for open-ended lookups with no page in mind (web_search) or Mac state (get_mac_status). Read-only: it cannot click, type, or submit.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string",
+                  "description": "Full public URL to read (a bare hostname like \"example.com\" is fine)."
+                },
+                "spoken_reply": {
+                  "type": "string",
+                  "description": "Short pendant confirmation (e.g. \"Reading that page.\"). One sentence."
+                }
+              },
+              "required": [
+                "url"
+              ]
+            }
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "browser_run_actions"
+          },
+          "result": {
+            "name": "browser_run_actions",
+            "description": "PROACTIVE when browser work is needed. Execute 1–3 actions through the browser extension when online: browser_list_tabs, browser_snapshot, browser_navigate, browser_click/type by ref, browser_wait_for, browser_read_page, browser_select, scroll. Use when: web/logged-in site work, reading or interacting with a page. Do NOT use when: Mac desktop/system control (mac_run_actions / get_mac_status), public web facts without a page (web_search), or multi-step Mac workflows (mac_delegate). Prefer over Mac desktop control for in-browser tasks.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "actions": {
+                  "type": "array",
+                  "description": "1–3 browser-extension actions (primary product of this tool).",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "description": "Executor action type. Examples: run_shell, run_applescript, create_reminder, open_app, open_url, open_path, type_text, get_volume, set_volume, browser_snapshot, browser_list_tabs, browser_navigate, browser_click, browser_type, browser_wait_for, browser_read_page, browser_select."
+                      },
+                      "label": {
+                        "type": "string",
+                        "description": "Short human-readable label for logs / UI."
+                      },
+                      "params": {
+                        "type": "object",
+                        "description": "Parameters for the action type. Use only fields that type needs (e.g. command for run_shell, title/due for create_reminder, url for open_url or browser_navigate, selector/text for browser_click/type, appName for open_app matching the Mac software inventory exactly).",
+                        "properties": {
+                          "appName": {
+                            "type": "string"
+                          },
+                          "url": {
+                            "type": "string"
+                          },
+                          "path": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "due": {
+                            "type": "string"
+                          },
+                          "selector": {
+                            "type": "string"
+                          },
+                          "text": {
+                            "type": "string"
+                          },
+                          "query": {
+                            "type": "string"
+                          },
+                          "command": {
+                            "type": "string"
+                          },
+                          "script": {
+                            "type": "string"
+                          },
+                          "cwd": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "params"
+                    ]
+                  }
+                },
+                "spoken_reply": {
+                  "type": "string",
+                  "description": "Short confirmation for the pendant speaker (preferred user-facing reply)."
+                },
+                "transcript": {
+                  "type": "string",
+                  "description": "Optional short transcript for history/debug only. Omit if unsure — never block on this."
+                }
+              },
+              "required": [
+                "actions"
+              ]
+            }
+          }
+        },
+        {
+          "type": "tool",
+          "name": "record_finding",
+          "args": {
+            "about": "Mac local-agent health and relay",
+            "finding": "Local agent v0.5.0 is healthy and ready with FULL_CONTROL_MODE and required macOS permissions; relay is configured/reachable and bridge online as of 2026-08-07T07:21:57Z.",
+            "evidence": "GET /health returned 200; GET /ops/status via probe_http returned ok:true, fullControlMode:true, permissions.requiredMissing:[], ready:true, relay.reachable:true."
+          },
+          "result": {
+            "recorded": true
+          }
+        },
+        {
+          "type": "tool",
+          "name": "record_finding",
+          "args": {
+            "about": "Mac observability",
+            "finding": "Read-only /observe exposes foreground/running apps, browser sessions, permission confidence, and configured directory roots. It explicitly says accessibility is trusted but input delivery is unverified; browser extension is offline and has 2 pending commands.",
+            "evidence": "GET /observe returned readOnly:true, accessibility consequence 'Unverified', browser sessions:3; GET /ops/status returned browser online:false and pendingCommands:2."
+          },
+          "result": {
+            "recorded": true
+          }
+        },
+        {
+          "type": "tool",
+          "name": "record_finding",
+          "args": {
+            "about": "Job receipts and reversibility",
+            "finding": "Job receipts now capture action type, effect, timing, touched shell reference, reversibility, and irreversible reason. run_shell jobs are marked effect:write and irreversible because they leave no reversible trace; at least one job remains processing.",
+            "evidence": "GET /jobs returned completed run_shell receipts with durationMs and irreversibleReason 'run_shell leaves no reversible trace', plus local_2751... status processing."
+          },
+          "result": {
+            "recorded": true
+          }
+        },
+        {
+          "type": "tool",
+          "name": "record_finding",
+          "args": {
+            "about": "Diagnostic tool implementation",
+            "finding": "The newly granted mac_read_diagnostics tool is present but unimplemented, so structured host diagnostics cannot be obtained through it; HTTP observation endpoints are currently the working read-only path.",
+            "evidence": "Calling mac_read_diagnostics with OS/hardware/user/uptime/battery/network/audio/local-agent checks returned 'has no implementation yet'."
+          },
+          "result": {
+            "recorded": true
+          }
+        },
+        {
+          "type": "tool",
+          "name": "message_peer",
+          "args": {
+            "to": "relay-realtime",
+            "subject": "Mac findings and cross-surface gaps",
+            "body": "Mac /ops/status says relay reachable, bridge online, but browser extension offline with 2 pending commands. Do you see relay-side queue/telemetry or any needed Mac observability contract from your surface?"
+          },
+          "result": {
+            "sent": true,
+            "note": "They will see this on their next round."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "message_peer",
+          "args": {
+            "to": "mac-planner",
+            "subject": "Mac diagnostics and receipts",
+            "body": "I found /observe and /ops/status are useful; structured mac_read_diagnostics is unimplemented. Receipts now expose irreversible run_shell and one stuck processing job. Any planner-side needs or expected job lifecycle contract I should report?"
+          },
+          "result": {
+            "sent": true,
+            "note": "They will see this on their next round."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "message_peer",
+          "args": {
+            "to": "browser-extension",
+            "subject": "Browser bridge status",
+            "body": "Mac /ops/status reports browser extension offline with 2 pending commands, while /observe shows 3 durable browser sessions. Can you confirm bridge status and what recovery/queue observability you need?"
+          },
+          "result": {
+            "sent": true,
+            "note": "They will see this on their next round."
+          }
+        },
+        {
+          "type": "say",
+          "text": "Environment reconnaissance is substantially complete.\n\n### Confirmed environment\n\n- Mac local agent: v0.5.0 at `127.0.0.1:8000`, healthy and authenticated.\n- Host: arm64 macOS, MacBook-Air-6.local, user home `/Users/evanliu`.\n- `FULL_CONTROL_MODE` is enabled; all required macOS permissions are present.\n- Relay is configured, reachable, and the Mac bridge is online.\n- Read-only observability routes are working:\n  - `/ops/status`\n  - `/observe`\n  - `/jobs`\n  - `/health`\n- Job receipts now include timing, touched resources, effect, reversibility, and irreversible reasons.\n- Shell jobs are correctly identified as irreversible; one shell job is currently still marked `processing`.\n- Browser state:\n  - Three durable browser sessions exist.\n  - Browser extension currently reports offline.\n  - Two browser commands are pending.\n- Accessibility is TCC-approved, but actual input delivery remains unverified; `/observe` explicitly warns that UI-action receipts may be untrustworthy.\n- The granted structured `mac_read_diagnostics` tool exists but has no implementation. HTTP observation is currently the usable diagnostic path.\n\n### What is still needed\n\n1. **Implement `mac_read_diagnostics`** so structured host checks work without relying on large, truncated HTTP payloads.\n2. **Job lifecycle recovery/inspection**:\n   - Explain or recover the currently stuck `processing` job.\n   - Expose reliable polling, timeout, retry, and cancellation semantics for long-running shell jobs.\n3. **Browser bridge recovery**:\n   - Determine why the extension is offline while durable sessions remain.\n   - Surface pending-command age, ownership, retry count, and expiry.\n   - Add an explicit reconnect/requeue mechanism.\n4. **Input-delivery verification**:\n   - Provide a safe, auditable no-op probe confirming that Accessibility events reach the intended host application, rather than merely trusting TCC state.\n5. **Receipt completeness for arbitrary shell**:\n   - Preserve command start/end, exit status, stdout/stderr size and hashes, timeout classification, cwd, and environment provenance.\n   - This improves observability without restricting the owner’s intentionally unrestricted shell policy.\n\nNo additional authorization gate or narrowed shell policy is needed; the owner explicitly wants maximum capability."
         }
       ]
     }

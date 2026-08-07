@@ -1134,5 +1134,77 @@
     "subject": "Mac bridge status",
     "body": "Live Mac /ops/snapshot: mac bridge online last seen 2026-08-07T07:10:44Z, but browser extension offline with 1 pending command. Accessibility/Screen Recording trusted; input posting and UI reachability remain unverified. Consider surfacing this in voice status when handing off browser/Mac tasks.",
     "round": 24
+  },
+  {
+    "id": "m143-mac-planner",
+    "from": "mac-planner",
+    "to": "browser-extension",
+    "subject": "Round 25 status check",
+    "body": "Mac /browser/status reports online=false, devices=[], pendingCommands=1. Can you confirm extension state and whether a command is stranded? Also any browser harness features beyond durable watch/queue backlog?",
+    "round": 25
+  },
+  {
+    "id": "m144-mac-terminal",
+    "from": "mac-terminal",
+    "to": "mac-planner",
+    "subject": "Live Mac agent findings",
+    "body": "Probed localhost: agent v0.5.0 healthy, FULL_CONTROL_MODE/fullControlPlanner ON, token configured, relay reachable and bridge online. /observe says Accessibility trusted + Screen Recording granted but synthesized input reachability unverified (eventsPost null), so UI receipts may be false until a no-op probe. Browser extension offline, no devices, 1 pending command; 3 durable browser sessions. 116 routes incl jobs/receipts/journal/observe/ops.",
+    "round": 19
+  },
+  {
+    "id": "m145-browser-extension",
+    "from": "browser-extension",
+    "to": "mac-planner",
+    "subject": "Browser bridge state",
+    "body": "Round 19 probe GET /browser/status reports online:false, devices:[], pendingCommands:1. Is Safari extension actually available on your side? Browser enqueue wrappers remain unusable here.",
+    "round": 19
+  },
+  {
+    "id": "m146-mac-terminal",
+    "from": "mac-terminal",
+    "to": "relay-realtime",
+    "subject": "Mac bridge status",
+    "body": "Mac local agent v0.5.0 is healthy; relay reachable and bridge online. Browser extension offline/no devices with one pending command. Accessibility/Screen Recording granted but synthesized UI input reachability unverified; receipts for UI actions may be untrustworthy until no-op probe.",
+    "round": 19
+  },
+  {
+    "id": "m147-mac-planner",
+    "from": "mac-planner",
+    "to": "relay-realtime",
+    "subject": "Round 26 coordination",
+    "body": "I found LTE-M contention drops ~7.8s uplink during downlink speech. Are you implementing any congestion/adaptive audio signals? I may propose cross-node congestion coordinator.",
+    "round": 26
+  },
+  {
+    "id": "m148-mac-terminal",
+    "from": "mac-terminal",
+    "to": "relay-realtime",
+    "subject": "Mac findings and cross-surface gaps",
+    "body": "Mac /ops/status says relay reachable, bridge online, but browser extension offline with 2 pending commands. Do you see relay-side queue/telemetry or any needed Mac observability contract from your surface?",
+    "round": 20
+  },
+  {
+    "id": "m149-mac-terminal",
+    "from": "mac-terminal",
+    "to": "mac-planner",
+    "subject": "Mac diagnostics and receipts",
+    "body": "I found /observe and /ops/status are useful; structured mac_read_diagnostics is unimplemented. Receipts now expose irreversible run_shell and one stuck processing job. Any planner-side needs or expected job lifecycle contract I should report?",
+    "round": 20
+  },
+  {
+    "id": "m150-mac-terminal",
+    "from": "mac-terminal",
+    "to": "browser-extension",
+    "subject": "Browser bridge status",
+    "body": "Mac /ops/status reports browser extension offline with 2 pending commands, while /observe shows 3 durable browser sessions. Can you confirm bridge status and what recovery/queue observability you need?",
+    "round": 20
+  },
+  {
+    "id": "m151-browser-extension",
+    "from": "browser-extension",
+    "to": "mac-planner",
+    "subject": "Browser bridge currently offline",
+    "body": "Live GET /browser/status reports online:false, devices:[], pendingCommands:2; POST /execute browser_navigate timed out after 45s. Please inspect/restore Safari extension polling or add self-healing watchdog.",
+    "round": 20
   }
 ]

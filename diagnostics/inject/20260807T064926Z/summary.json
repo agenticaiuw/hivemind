@@ -1,0 +1,19 @@
+{
+  "stamp": "20260807T064926Z",
+  "phrase": "What is my Mac battery level?",
+  "wav": null,
+  "peakDbfs": -6,
+  "sampleRate": 15625,
+  "frames": 34816,
+  "durationS": 2.228,
+  "injectedSha256": "b14eb8a298dd672e828205595a7c0ce0f92cfd431aacef7b1ae38c756d05f414",
+  "deviceFrames": 34816,
+  "deviceUnderruns": 5,
+  "framesAtEof": 34816,
+  "underrunsAtEof": 5,
+  "refills": 60,
+  "maxRefillMs": 105,
+  "minRunwayFrames": 0,
+  "minRunwayMs": 0,
+  "deliveredMs": 2327
+}

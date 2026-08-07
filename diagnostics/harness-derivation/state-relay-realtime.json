@@ -39,9 +39,13 @@
     "m119-mac-planner",
     "m122-browser-extension",
     "m123-mac-planner",
-    "m127-mac-terminal"
+    "m127-mac-terminal",
+    "m135-mac-vision",
+    "m139-mac-terminal",
+    "m142-mac-planner",
+    "m146-mac-terminal"
   ],
-  "round": 24,
+  "round": 26,
   "granted": {
     "context": [
       {
@@ -653,6 +657,46 @@
         "A queue for completion summaries for the relay to speak later (or a dashboard inbox)"
       ],
       "round": 24
+    },
+    {
+      "user_asks": "What’s connected right now, and can you hand this off to my Mac if needed?",
+      "why_useful": "The owner is often away from the Mac. A quick status check plus a clean handoff reduces friction and prevents asking the Mac to do things when the bridge is offline or the browser extension is down.",
+      "surfaces": [
+        "pendant",
+        "relay",
+        "mac-bridge",
+        "browser"
+      ],
+      "model_tier": "realtime for the spoken status; mac-planner for follow-on tasks if the owner asks to proceed",
+      "latency_budget": "Under 1 second for status from relay-visible sources; additional time only if the owner asks to proceed with a Mac task.",
+      "cost_estimate": "Very low for relay status probes; higher only if a delegated Mac plan is created.",
+      "security_concerns": "Status includes device presence and possibly network info; keep it minimal and do not expose anything beyond what the owner asked for.",
+      "missing": [
+        "A consistent status schema across relay and Mac surfaces so the spoken summary is stable.",
+        "A standard handoff intent taxonomy so the relay can say what it is delegating in a way downstream agents understand."
+      ],
+      "round": 25
+    },
+    {
+      "user_asks": "If this will take longer, keep working on my Mac and let me know when it’s done.",
+      "why_useful": "This matches real life: the owner speaks a goal, then walks away. The system should continue the task on the Mac, track progress, and report back when finished, without requiring the owner to babysit the process.",
+      "surfaces": [
+        "pendant",
+        "relay",
+        "mac-bridge",
+        "browser",
+        "relay"
+      ],
+      "model_tier": "Mac planner for the actual work; relay for quick conversational updates; cheaper completion model for summaries if available.",
+      "latency_budget": "Under a second for the initial acknowledgment; the work itself can take minutes. Progress updates should be brief and optional.",
+      "cost_estimate": "Low cost at the relay (short acknowledgments). Main cost is Mac-side planning/execution and any browser automation; dominant cost is tool calls and page processing.",
+      "security_concerns": "Must avoid executing irreversible actions without explicit confirmation. Progress/status messages may contain sensitive page content; redact where possible and keep summaries minimal.",
+      "missing": [
+        "A reliable job status channel from Mac to relay for long-running delegated tasks",
+        "A notification mechanism to reach the pendant when the owner is away (push or poll)",
+        "Durable storage for job state so the relay can reconnect after disconnects"
+      ],
+      "round": 26
     }
   ],
   "changes": [
@@ -984,6 +1028,31 @@
         "A durable store for receipts/state and cache invalidation hooks from mac-bridge"
       ],
       "round": 24
+    },
+    {
+      "layer": "context",
+      "change": "Add a typed discovery registry for granted tools and capabilities. When the orchestrator grants a tool, it registers under a stable name with a version and a canonical describe() entry so relay can reliably introspect and route without guessing names or relying on system prompt text.",
+      "why_useful_to_owner": "Fewer voice failures and faster handoffs. If I can always find what exists, I can route requests correctly instead of stumbling on missing descriptors.",
+      "effort": "Medium: define a registry schema, have the orchestrator populate it, and have list_capabilities/discover return canonical names that describe() resolves.",
+      "risk": "Low. Main risk is backward incompatibility with existing tool names; mitigate with alias support and deprecation windows.",
+      "cost_impact": "Small API cost per discovery call; reduces wasted tool calls and retries.",
+      "latency_impact": "Improves responsiveness by avoiding failed describe calls and misroutes.",
+      "security_impact": "Low; registry contains metadata, not secrets.",
+      "depends_on": [
+        "list_capabilities/discover/describe must support canonical naming and aliases"
+      ],
+      "round": 25
+    },
+    {
+      "layer": "context",
+      "change": "Add a typed capability registry that maps discovered tool names and surfaces to stable internal identifiers. The registry should reconcile differences between what’s granted, what’s discoverable, and what’s actually callable, and expose a single describe(name) namespace so newly granted tools are immediately describable without guessing the right category.",
+      "why_useful_to_owner": "Prevents the assistant from getting stuck when a tool is granted but not discoverable under the expected category, so voice requests keep working and upgrades don’t break the conversation.",
+      "effort": "Medium: requires changes to discovery/registry wiring and tests for backwards compatibility.",
+      "risk": "Low: risk is misrouting if mapping is wrong; mitigate with explicit validation against a simple health probe and a fallback to known-good tools.",
+      "cost_impact": "Small API overhead for registry sync; negligible runtime cost after cache.",
+      "latency_impact": "Slightly higher on cold start to reconcile, then faster because describe calls stop failing.",
+      "security_impact": "Low; must ensure registry cannot be poisoned by untrusted inputs and that tool metadata is not leaked across tenants.",
+      "round": 26
     }
   ],
   "pending": [
@@ -56191,6 +56260,2037 @@
           "result": {
             "recorded": true,
             "note": "Noted. Keep going, including layers you have not touched yet."
+          }
+        }
+      ]
+    },
+    {
+      "round": 25,
+      "transcript": [
+        {
+          "type": "say",
+          "text": "I’ll quickly scan what’s available now, then I’ll tell you what’s missing and what I’d build next."
+        },
+        {
+          "type": "tool",
+          "name": "list_capabilities",
+          "args": {},
+          "result": {
+            "note": "Call discover(category) for the contents of any of these, then describe(name) for detail on one item. Nothing here is in your system prompt — you are meant to pull only what you need.",
+            "categories": [
+              {
+                "name": "surfaces",
+                "what": "The machines and services in this system and how to reach each one.",
+                "count": 5
+              },
+              {
+                "name": "routes",
+                "what": "HTTP endpoints on the owner's Mac agent, read from its live route table.",
+                "count": 116
+              },
+              {
+                "name": "tools",
+                "what": "The tools the production voice agent actually ships with.",
+                "count": 6
+              },
+              {
+                "name": "devices",
+                "what": "Physical and virtual devices reachable right now, with live status.",
+                "count": null
+              },
+              {
+                "name": "hardware",
+                "what": "The pendant and bridge chips: memory, I/O, storage, radio, power.",
+                "count": 8
+              },
+              {
+                "name": "backlog",
+                "what": "What earlier rounds already proposed, and what became of each one. Restating one of these is a wasted round; building past it is not.",
+                "count": 59
+              },
+              {
+                "name": "granted",
+                "what": "What the orchestrator has already given you this run.",
+                "count": 11
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "granted"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "relay_route_intent",
+                "summary": "tool"
+              },
+              {
+                "name": "server_browser_actions",
+                "summary": "tool"
+              },
+              {
+                "name": "relay_job_status",
+                "summary": "tool"
+              },
+              {
+                "name": "current session pairing and owner state",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "job scheduling and background workers",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "Relay intent contract and supported intents/context fields",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "owner_workflows_and_preferences",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "available_tools_and_routing_contract",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "probe:post:/v1/mac/plan",
+                "summary": "permission"
+              },
+              {
+                "name": "probe:post:/v1/bridge/work",
+                "summary": "permission"
+              },
+              {
+                "name": "probe:get:/v1/state/* and probe:get:/v1/ops/* additional routes beyond latest/history/memory",
+                "summary": "permission"
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "tools"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "get_mac_status",
+                "summary": "PROACTIVE"
+              },
+              {
+                "name": "mac_run_actions",
+                "summary": "PROACTIVE for reversible control"
+              },
+              {
+                "name": "browser_run_actions",
+                "summary": "PROACTIVE when browser work is needed"
+              },
+              {
+                "name": "web_search",
+                "summary": "PROACTIVE for live public facts"
+              },
+              {
+                "name": "mac_delegate",
+                "summary": "ONLY for multi-step or ambiguous computer tasks that cannot fit a short action list"
+              },
+              {
+                "name": "read_web_page",
+                "summary": "PROACTIVE for reading a specific public web page without the Mac"
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "devices"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "home-macbook-bridge",
+                "summary": "mac_bridge · online · last seen 2026-08-07T07:18:14.747Z"
+              },
+              {
+                "name": "cloudflare-contract-test",
+                "summary": "mobile · offline · last seen 2026-07-31T23:42:56.525Z"
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "surfaces"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "relay-realtime",
+                "summary": "You run on a Cloudflare Worker and hold the live voice conversation with the owner through a wearable pendant",
+                "model": "gpt-realtime-2.1",
+                "base": "https://ai-pendant-relay.evan20050827.workers.dev",
+                "facetOf": null
+              },
+              {
+                "name": "mac-planner",
+                "summary": "You run on the owner's MacBook",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": null
+              },
+              {
+                "name": "mac-vision",
+                "summary": "You are the computer-use loop on the owner's MacBook",
+                "model": "gpt-4.1-mini",
+                "base": "http://localhost:8000",
+                "facetOf": null
+              },
+              {
+                "name": "browser-extension",
+                "summary": "You drive the owner's browser through the AI Pendant browser extension",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": "mac-planner"
+              },
+              {
+                "name": "mac-terminal",
+                "summary": "You are the shell tier on the owner's MacBook",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": "mac-planner"
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "routes"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "GET /health",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /capabilities",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /plan",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /execute",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /sessions",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /sessions",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /sessions/:sessionId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "PATCH /sessions/:sessionId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /sessions/:sessionId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /sessions/:sessionId/clear",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /logs",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /jobs",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /jobs/:jobId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /jobs/:jobId/receipts",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /jobs",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /jobs/undo-last",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /jobs/:jobId/cancel",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /jobs/:jobId/undo",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /thinking",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /thinking/latest",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /thinking/stream",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /pipeline",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /pipeline/events",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /pipeline/audio",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /pipeline/:pipelineId/audio/:direction",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /pipeline",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /pipeline/stream",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /context-graph",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /projects",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /projects/active",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /projects/active",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "PATCH /projects/active",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /context-graph/reset",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /context-graph/demo",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /context-graph/entities",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "PATCH /context-graph/entities/:entityId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /context-graph/entities/:entityId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /context-graph/relations",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /context-graph/relations/:relationId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /machine-context",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /machine-context/refresh",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /ops/status",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /ops/snapshot",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /routing",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /journal",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /journal/:jobId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /observe",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /browser/status",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /browser/heartbeat",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /browser/poll",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /browser/result/:commandId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /browser/sessions",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /browser/sessions",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /browser/sessions/:id",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /briefing",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /briefing/kinds",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /briefing/latest",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /research",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /research/briefings",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /research/briefings/:id",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /research/briefings/:id/speech",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /routines",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /routines",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "PATCH /routines/:routineId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /routines/:routineId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /routines/:routineId/run",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /capture",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /capture",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /capture/:key",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /reminders",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /tidy/preview",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /tidy",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /tidy/:planId/apply",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /tidy/:planId/undo",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /sweep/survey",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /sweep/preview",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /sweep",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /sweep/:planId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /sweep/:planId/apply",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /sweep/:planId/undo",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /preview",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /browser/inspect",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /browser/inspections",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /browser/inspections/:inspectionId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /browser/inspections/:inspectionId/act",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /focus",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /focus",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /focus",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /day-plan",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /meeting-prep",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /mail/triage",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /mail/triage",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /mail/triage/:runId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /meeting-followup",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /notifications",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /watches",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /watches",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /watches/reports",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /watches/:watchId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "PATCH /watches/:watchId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /watches/:watchId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /watches/:watchId/check",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /watches/:watchId/ack",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /forms/fill",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /forms/fills",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /forms/fills/:fillId",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /memory/facts",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /memory/facts",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "DELETE /memory/facts/:idOrKey",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /memory/browser-findings",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /memory/prune",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "POST /memory/sync-graph",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /memory/projection",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /dashboard",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /dashboard/",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              },
+              {
+                "name": "GET /dashboard/{*splat}",
+                "summary": "Mac agent endpoint. Bearer token required except /health."
+              }
+            ],
+            "note": "These are the Mac agent routes. Your own backend may differ — probe_http hits whichever backend you run against."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "backlog"
+          },
+          "result": {
+            "note": "59 still open, 132 already settled. describe(id) gives the full entry, including why something was rejected. timesProposed counts how many rounds independently arrived at the same idea — a high number means the gap is real and still unfilled, not that it needs saying again.",
+            "items": [
+              {
+                "name": "chg-a813b918",
+                "summary": "Enable a bounded audio-retention sweeper and per-job deletion controls: default to short retention for generated briefings, delete expired R2 objects and D1 pointers idempotently, and expose a dashboa",
+                "layer": "relay",
+                "timesProposed": 16
+              },
+              {
+                "name": "chg-16bc5dee",
+                "summary": "Add a durable browser job runner with two backends: the authenticated Safari bridge for owner-private pages and Cloudflare Browser Run for public pages. Represent each step as navigate/read/extract/cl",
+                "layer": "browser-harness",
+                "timesProposed": 15
+              },
+              {
+                "name": "cap-bff5f829",
+                "summary": "Check my logged-in web accounts for anything urgent, summarize it, and draft (but do not send) any replies that need my attention.",
+                "layer": "capability",
+                "timesProposed": 15
+              },
+              {
+                "name": "cap-8c36c70a",
+                "summary": "Every weekday morning, check my logged-in calendar, task board, and travel reservations, then tell me the three things I need to know and prepare a suggested plan.",
+                "layer": "capability",
+                "timesProposed": 15
+              },
+              {
+                "name": "cap-5bd640c5",
+                "summary": "Watch my chosen logged-in web pages once a day and tell me only what changed; prepare drafts for any follow-up forms, but stop before submitting.",
+                "layer": "capability",
+                "timesProposed": 15
+              },
+              {
+                "name": "chg-a82e0b13",
+                "summary": "Replace per-surface hand-written fleetContext prompt sections with a compact, typed context service that returns only task-relevant facts, each with source, timestamp, confidence, and expiry; automati",
+                "layer": "memory",
+                "timesProposed": 15
+              },
+              {
+                "name": "cap-4f5af34d",
+                "summary": "Check my authenticated browser accounts for anything that needs my attention, then put findings in a review queue instead of changing anything.",
+                "layer": "capability",
+                "timesProposed": 14
+              },
+              {
+                "name": "chg-18a9c60f",
+                "summary": "Replace hand-written per-surface fleetContext prompt sections with a single typed context service that stores compact facts, provenance, sensitivity, TTL, and last-used timestamps; retrieve only task-",
+                "layer": "memory",
+                "timesProposed": 14
+              },
+              {
+                "name": "chg-0096a2b3",
+                "summary": "Replace per-surface hand-written fleetContext prompt sections with a shared, typed context compiler: retrieve only task-relevant entities/relations, attach confidence and freshness, cap tokens per tie",
+                "layer": "memory",
+                "timesProposed": 14
+              },
+              {
+                "name": "chg-14accc01",
+                "summary": "Add a reliable browser command queue with request IDs, idempotency keys, tab/session affinity, typed results (page metadata, extracted text, screenshots), and explicit irreversible-action checkpoints.",
+                "layer": "browser-harness",
+                "timesProposed": 11
+              },
+              {
+                "name": "cap-a624ca3e",
+                "summary": "Every morning, check my private calendar, travel reservations, and important account notifications in Safari, then give me a concise spoken briefing with links and only flag things that need my attent",
+                "layer": "capability",
+                "timesProposed": 11
+              },
+              {
+                "name": "cap-b875c138",
+                "summary": "Draft a form, email, or support request from information on this private webpage, fill it in, and show me exactly what will be submitted before I approve it.",
+                "layer": "capability",
+                "timesProposed": 11
+              },
+              {
+                "name": "cap-a09b223f",
+                "summary": "Watch my authenticated order, appointment, and account pages for changes, and tell me only when a meaningful change happens—never pollute my daily briefing with unchanged pages.",
+                "layer": "capability",
+                "timesProposed": 11
+              },
+              {
+                "name": "chg-498a3489",
+                "summary": "Replace per-surface hand-written fleetContext prompt sections with a compact, typed context projection service: durable facts, current goals, and permissions are selected per job, with token budgets a",
+                "layer": "memory",
+                "timesProposed": 11
+              },
+              {
+                "name": "chg-e767dfc0",
+                "summary": "Build a first-class authenticated page-watch service: each watch stores URL/tab context, extraction selectors or semantic regions, a normalized baseline hash, volatile-field rules, cadence, and last s",
+                "layer": "browser-harness",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-5284a6ce",
+                "summary": "Build a durable authenticated page-watch service: named watch definitions store URL/tab/session binding, extraction selectors or an agentic extraction recipe, schedule, semantic fingerprint, last seen",
+                "layer": "browser-harness",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-e14fff33",
+                "summary": "Add a provenance-aware browser workbench: every extraction and field mutation gets a tabId, URL, timestamp, DOM locator, source snippet hash, action plan, and before/after value. Group tabs into a tas",
+                "layer": "browser-harness",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-fa84f9a7",
+                "summary": "Build a durable authenticated page-watch layer: named browser sessions with tab/window reattachment, per-watch cadence and quiet hours, DOM-region extraction plus normalized semantic fingerprints, enc",
+                "layer": "browser-harness",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-0c8c5dfe",
+                "summary": "Watch the authenticated pages I choose, detect meaningful changes, and leave me a concise, sourced briefing with suggested next steps—without sending or submitting anything.",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-391cae82",
+                "summary": "When I ask about something on a logged-in site, have several agents inspect it in parallel, reconcile their findings, and give me an evidence-backed answer or a prepared (not sent) action.",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-7217b17c",
+                "summary": "Prepare a browser transaction for me: gather the relevant logged-in data, fill the form or draft the message, show me exactly what will change with before/after evidence, and let me approve, edit, or ",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-0d11cf82",
+                "summary": "Every weekday morning, check my authenticated work portal for new high-priority items and tell me only what needs my attention.",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-df9ec55e",
+                "summary": "When I say 'handle this' about something I found in Safari, gather the needed details across my logged-in tabs, fill the reversible parts, and show me exactly what will be sent before stopping.",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-302a8868",
+                "summary": "“Every morning, check my logged-in work dashboards and tell me only what changed or needs my attention; keep watching the important pages and alert me when a genuinely urgent item appears.”",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-4b41e08a",
+                "summary": "While I sleep, investigate my open threads across Calendar, Mail, and authenticated browser tabs, then leave a ready-to-review workbench on my Mac when I wake: one folder with a prioritized brief, sou",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-26c609fc",
+                "summary": "“When I ask you to do something that takes time, keep working after I leave and tell me exactly what happened when it’s done.”",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-a267b7e8",
+                "summary": "“Just give it the goal; figure out whether the Mac, browser, pendant, or server should do each part, and use whichever can.”",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-ca6005c3",
+                "summary": "“While I sleep, prepare tomorrow’s brief and leave me a short audio queue I can listen to from the pendant.”",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-51c2dc88",
+                "summary": "“Get me ready for my next meeting.”",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-a4c0ec8d",
+                "summary": "Turn on mac-vision's accessibility-mode UI interaction loop to automate GUI tasks without taking over the screen or keyboard focus.",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-a1aa3bf5",
+                "summary": "Show me a history of recent actions taken by mac-vision in automation loops with human-readable explanations and option to undo.",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-e21eb7f4",
+                "summary": "“Every morning, give me a 30-second audio digest of what changed: calendar, reminders, and top emails.”",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-72fc9997",
+                "summary": "\"Queue this up and tell me when it’s done\" (for example: summarize a long document, compare options, draft an email, or research a topic).",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-e5132197",
+                "summary": "“When I press the pendant button, capture a short voice note, tag it with time and place if available, and later summarize it into tasks.”",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-9a6740ed",
+                "summary": "Add a compact, durable Mac execution context cache and handoff protocol. Each server plan gets a jobId, parentId, monotonic sequence, intent hash, referenced local resources, and a short result receip",
+                "layer": "context",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-f5d3b820",
+                "summary": "Replace the desk-bound nRF9160 DK prototype with a jewelry-sized cellular/BLE pendant built around an nRF9161-class modem/application module plus a low-power companion MCU, two digital MEMS microphone",
+                "layer": "hardware",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-258cbe5e",
+                "summary": "Build the wearable revision around the nRF9160 with an ultra-low-power 6-axis IMU on the unused I2C bus, a vibration/LRA haptic driver, and a real microphone/audio front end with physical mute. Keep t",
+                "layer": "hardware",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-d9ce5471",
+                "summary": "Add a dedicated low-power vision coprocessor or embedded GPU to the pendant hardware for on-device image analysis to recognize Mac screen contents and UI elements, enabling offline partial vision-base",
+                "layer": "hardware",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-a3af4c67",
+                "summary": "Define a cross-node Evidence Capsule protocol for browser results: immutable capsule ID, source URL/domain, capture time, tab/session identifier (pseudonymous), selected text/DOM region, content hash,",
+                "layer": "integration",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-91f3c214",
+                "summary": "Integrate mac-vision with the Cloudflare Worker relay to allow partial offloading of UI state classification and action suggestion to a cloud tier. This enables more powerful multimodal fusion with vo",
+                "layer": "integration",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-622e7336",
+                "summary": "Wire up a server-side browser path using Cloudflare Browser Run and a routing rule: web reads/extraction default to server_browser_actions; only fall back to Mac browser bridge when authentication req",
+                "layer": "integration",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-a7a155b1",
+                "summary": "Use the new server-side browser capability for public web tasks directly from the relay, reserving the Mac harness for authenticated sessions and local data. Add routing logic: public pages -> server ",
+                "layer": "integration",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-d2c2cc02",
+                "summary": "Add an idempotent Workbench transaction primitive to the Mac planner: accept a job_id and manifest, write all outputs into a temporary directory, fsync/rename atomically into ~/AI-Workbench/<date>/<jo",
+                "layer": "mac-harness",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-9596a2ad",
+                "summary": "Replace fleetContext.js's hand-written per-surface prompt section with a shared event log plus typed projections. Every node writes small signed events (preference, commitment, task state, source cita",
+                "layer": "memory",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-5cc0bd50",
+                "summary": "Replace per-surface hand-written fleetContext prompts with a shared, event-sourced personal memory broker. Every node writes typed facts, preferences, commitments, and task outcomes with provenance, c",
+                "layer": "memory",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-2903dddb",
+                "summary": "Unify memory across surfaces: replace hand-written prompt sections per surface with a shared, versioned memory API that returns small, purpose-built summaries (profile, preferences, current projects, ",
+                "layer": "memory",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-7613a731",
+                "summary": "Introduce a unified, cross-node memory write API with schema (entities, events, preferences, tasks) and TTLs, plus a pruning policy. Replace hand-written per-surface prompt sections with retrieval-bas",
+                "layer": "memory",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-67952158",
+                "summary": "Add a real scheduler: a Durable Object-backed job queue with delayed execution and recurring rules (cron-like). The relay can enqueue jobs, and a workers cron/alarm runner executes them, delegating to",
+                "layer": "routines",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-9b4366c7",
+                "summary": "Add a relay-owned durable work queue with retries and a receipt log, implemented as a Durable Object (or D1 + Durable Object alarms). The relay exposes enqueue/status endpoints, persists intent payloa",
+                "layer": "routines",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-ae7e4af5",
+                "summary": "Introduce a lightweight scheduler using Durable Object alarms or Cloudflare Cron to trigger queued jobs (summarize notes, send digests, retry failed uploads).",
+                "layer": "routines",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-9ffe4cd1",
+                "summary": "Add a browser-bridge self-healing lease protocol: each Safari heartbeat carries a device nonce, extension version, tab inventory, and last-applied command sequence; the Mac agent expires orphaned pend",
+                "layer": "browser-harness",
+                "timesProposed": 6
+              },
+              {
+                "name": "cap-951c7f45",
+                "summary": "“Check my logged-in accounts for inconsistent personal details, upcoming expirations, or duplicate subscriptions, and prepare a concise fix list without changing anything.”",
+                "layer": "capability",
+                "timesProposed": 6
+              },
+              {
+                "name": "cap-c67d4f1e",
+                "summary": "“I asked you to handle that on my Mac—what’s the status?”",
+                "layer": "capability",
+                "timesProposed": 6
+              },
+              {
+                "name": "chg-99e3117a",
+                "summary": "Introduce a typed, minimal context service for the relay: given an utterance and a desired outcome (status query, dictation, mac task), return only relevant facts (device online state, last job ids, l",
+                "layer": "context",
+                "timesProposed": 6
+              },
+              {
+                "name": "chg-44e46c8d",
+                "summary": "Add a focus-safe execution coordinator around the existing FULL_CONTROL Mac executor. Before each plan, capture the foreground app and a lightweight accessibility/state fingerprint; route UI actions b",
+                "layer": "mac-harness",
+                "timesProposed": 6
+              },
+              {
+                "name": "chg-31bcbfca",
+                "summary": "Add a startup and periodic no-op input reachability probe to the Mac agent health path. When Accessibility is reported trusted, post the documented zero-delta cursor event (or an equivalent harmless S",
+                "layer": "mac-harness",
+                "timesProposed": 6
+              },
+              {
+                "name": "skill-20934f8c",
+                "summary": "offline_alert_inbox",
+                "layer": "firmware",
+                "timesProposed": 1
+              },
+              {
+                "name": "skill-25e4ff13",
+                "summary": "offline_moment_bookmark",
+                "layer": "firmware",
+                "timesProposed": 1
+              },
+              {
+                "name": "skill-feb6116a",
+                "summary": "offline_voice_memo_store_and_forward",
+                "layer": "firmware",
+                "timesProposed": 1
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "relay_route_intent"
+          },
+          "result": {
+            "error": "Nothing named \"relay_route_intent\". Use discover(category) to see valid names."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "server_browser_actions"
+          },
+          "result": {
+            "error": "Nothing named \"server_browser_actions\". Use discover(category) to see valid names."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "relay_job_status"
+          },
+          "result": {
+            "error": "Nothing named \"relay_job_status\". Use discover(category) to see valid names."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "get_mac_status"
+          },
+          "result": {
+            "name": "get_mac_status",
+            "description": "PROACTIVE. Read live Mac device state: battery, wifi, volume, focused app, or all. Use when the owner asks about battery/charge, wifi/network, volume/mute, or what app is frontmost. Call immediately — no confirmation. Do NOT use when: controlling the Mac (open app, set volume, type, reminders — use mac_run_actions), browser work (browser_run_actions), public web facts (web_search), or multi-step ambiguous tasks (mac_delegate). Never invent readings; always call this tool instead of guessing numbers.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "fields": {
+                  "type": "array",
+                  "description": "Optional status fields to fetch. Omit or use [\"all\"] for a full snapshot.",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "battery",
+                      "wifi",
+                      "volume",
+                      "focused_app",
+                      "all"
+                    ]
+                  }
+                },
+                "spoken_reply": {
+                  "type": "string",
+                  "description": "Short pendant confirmation (e.g. \"Checking battery.\"). One sentence."
+                },
+                "transcript": {
+                  "type": "string",
+                  "description": "Optional history label only. Omit if unsure — never block on this."
+                }
+              },
+              "required": []
+            }
+          }
+        },
+        {
+          "type": "tool",
+          "name": "probe_http",
+          "args": {
+            "method": "GET",
+            "path": "/v1/devices/status"
+          },
+          "result": {
+            "ok": true,
+            "status": 200,
+            "body": "{\"ok\":true,\"devices\":[{\"deviceId\":\"home-macbook-bridge\",\"deviceType\":\"mac_bridge\",\"name\":\"Home MacBook Bridge\",\"registeredAt\":\"2026-07-31T23:44:09.275Z\",\"lastSeenAt\":\"2026-08-07T07:18:14.747Z\",\"updatedAt\":\"2026-08-07T07:18:14.747Z\",\"online\":true},{\"deviceId\":\"cloudflare-contract-test\",\"deviceType\":\"mobile\",\"name\":\"Cloudflare contract test\",\"registeredAt\":\"2026-07-31T23:42:56.103Z\",\"lastSeenAt\":\"2026-07-31T23:42:56.525Z\",\"updatedAt\":\"2026-07-31T23:42:56.525Z\",\"online\":false}]}"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "probe_http",
+          "args": {
+            "method": "GET",
+            "path": "/v1/ops/voice-runs/latest"
+          },
+          "result": {
+            "ok": true,
+            "status": 200,
+            "body": "{\"ok\":true,\"latest\":{\"pipelineId\":\"job_a60f6d28-ce1f-4b2b-808c-a257bb717f84\",\"status\":\"completed\",\"updatedAt\":\"2026-08-07T07:18:05.098Z\"},\"observedAt\":\"2026-08-07T07:18:24.180Z\"}"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "read_web_page"
+          },
+          "result": {
+            "name": "read_web_page",
+            "description": "PROACTIVE for reading a specific public web page without the Mac. Fetches one public URL with a cloud browser on the relay and returns its readable text — works when the Mac is asleep, closed, or offline. Use when: the owner names a page/site/article to read, or web_search returned a link whose contents you now need. Do NOT use when: the page needs the owner's login, is on their home network, or must be clicked/typed into — that browser has no sessions and no LAN access, so use browser_run_actions (Mac extension) instead. Do NOT use for open-ended lookups with no page in mind (web_search) or Mac state (get_mac_status). Read-only: it cannot click, type, or submit.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string",
+                  "description": "Full public URL to read (a bare hostname like \"example.com\" is fine)."
+                },
+                "spoken_reply": {
+                  "type": "string",
+                  "description": "Short pendant confirmation (e.g. \"Reading that page.\"). One sentence."
+                }
+              },
+              "required": [
+                "url"
+              ]
+            }
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_change",
+          "args": {
+            "layer": "context",
+            "change": "Add a typed discovery registry for granted tools and capabilities. When the orchestrator grants a tool, it registers under a stable name with a version and a canonical describe() entry so relay can reliably introspect and route without guessing names or relying on system prompt text.",
+            "why_useful_to_owner": "Fewer voice failures and faster handoffs. If I can always find what exists, I can route requests correctly instead of stumbling on missing descriptors.",
+            "effort": "Medium: define a registry schema, have the orchestrator populate it, and have list_capabilities/discover return canonical names that describe() resolves.",
+            "risk": "Low. Main risk is backward incompatibility with existing tool names; mitigate with alias support and deprecation windows.",
+            "cost_impact": "Small API cost per discovery call; reduces wasted tool calls and retries.",
+            "latency_impact": "Improves responsiveness by avoiding failed describe calls and misroutes.",
+            "security_impact": "Low; registry contains metadata, not secrets.",
+            "depends_on": [
+              "list_capabilities/discover/describe must support canonical naming and aliases"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going, including layers you have not touched yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_capability",
+          "args": {
+            "user_asks": "What’s connected right now, and can you hand this off to my Mac if needed?",
+            "why_useful": "The owner is often away from the Mac. A quick status check plus a clean handoff reduces friction and prevents asking the Mac to do things when the bridge is offline or the browser extension is down.",
+            "surfaces": [
+              "pendant",
+              "relay",
+              "mac-bridge",
+              "browser"
+            ],
+            "model_tier": "realtime for the spoken status; mac-planner for follow-on tasks if the owner asks to proceed",
+            "latency_budget": "Under 1 second for status from relay-visible sources; additional time only if the owner asks to proceed with a Mac task.",
+            "cost_estimate": "Very low for relay status probes; higher only if a delegated Mac plan is created.",
+            "security_concerns": "Status includes device presence and possibly network info; keep it minimal and do not expose anything beyond what the owner asked for.",
+            "missing": [
+              "A consistent status schema across relay and Mac surfaces so the spoken summary is stable.",
+              "A standard handoff intent taxonomy so the relay can say what it is delegating in a way downstream agents understand."
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going — propose others, including ones that need capabilities that do not exist yet."
+          }
+        }
+      ]
+    },
+    {
+      "round": 26,
+      "transcript": [
+        {
+          "type": "say",
+          "text": "I’m going to quickly explore what’s available in this round so I don’t assume anything, then I’ll tell you what’s missing."
+        },
+        {
+          "type": "tool",
+          "name": "list_capabilities",
+          "args": {},
+          "result": {
+            "note": "Call discover(category) for the contents of any of these, then describe(name) for detail on one item. Nothing here is in your system prompt — you are meant to pull only what you need.",
+            "categories": [
+              {
+                "name": "surfaces",
+                "what": "The machines and services in this system and how to reach each one.",
+                "count": 5
+              },
+              {
+                "name": "routes",
+                "what": "HTTP endpoints on the owner's Mac agent, read from its live route table.",
+                "count": 116
+              },
+              {
+                "name": "tools",
+                "what": "The tools the production voice agent actually ships with.",
+                "count": 6
+              },
+              {
+                "name": "devices",
+                "what": "Physical and virtual devices reachable right now, with live status.",
+                "count": null
+              },
+              {
+                "name": "hardware",
+                "what": "The pendant and bridge chips: memory, I/O, storage, radio, power.",
+                "count": 8
+              },
+              {
+                "name": "owner",
+                "what": "The person this is for: what they actually said, what they scheduled, what is remembered about them, and what they asked for and did not get. Every other category describes machines.",
+                "count": null
+              },
+              {
+                "name": "backlog",
+                "what": "What earlier rounds already proposed, and what became of each one. Restating one of these is a wasted round; building past it is not.",
+                "count": 57
+              },
+              {
+                "name": "granted",
+                "what": "What the orchestrator has already given you this run.",
+                "count": 11
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "surfaces"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "relay-realtime",
+                "summary": "You run on a Cloudflare Worker and hold the live voice conversation with the owner through a wearable pendant",
+                "model": "gpt-realtime-2.1",
+                "base": "https://ai-pendant-relay.evan20050827.workers.dev",
+                "facetOf": null
+              },
+              {
+                "name": "mac-planner",
+                "summary": "You run on the owner's MacBook",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": null
+              },
+              {
+                "name": "mac-vision",
+                "summary": "You are the computer-use loop on the owner's MacBook",
+                "model": "gpt-4.1-mini",
+                "base": "http://localhost:8000",
+                "facetOf": null
+              },
+              {
+                "name": "browser-extension",
+                "summary": "You drive the owner's browser through the AI Pendant browser extension",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": "mac-planner"
+              },
+              {
+                "name": "mac-terminal",
+                "summary": "You are the shell tier on the owner's MacBook",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": "mac-planner"
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "tools"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "get_mac_status",
+                "summary": "PROACTIVE"
+              },
+              {
+                "name": "mac_run_actions",
+                "summary": "PROACTIVE for reversible control"
+              },
+              {
+                "name": "browser_run_actions",
+                "summary": "PROACTIVE when browser work is needed"
+              },
+              {
+                "name": "web_search",
+                "summary": "PROACTIVE for live public facts"
+              },
+              {
+                "name": "mac_delegate",
+                "summary": "ONLY for multi-step or ambiguous computer tasks that cannot fit a short action list"
+              },
+              {
+                "name": "read_web_page",
+                "summary": "PROACTIVE for reading a specific public web page without the Mac"
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "devices"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "home-macbook-bridge",
+                "summary": "mac_bridge · online · last seen 2026-08-07T07:21:27.124Z"
+              },
+              {
+                "name": "cloudflare-contract-test",
+                "summary": "mobile · offline · last seen 2026-07-31T23:42:56.525Z"
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "granted"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "relay_route_intent",
+                "summary": "tool"
+              },
+              {
+                "name": "server_browser_actions",
+                "summary": "tool"
+              },
+              {
+                "name": "relay_job_status",
+                "summary": "tool"
+              },
+              {
+                "name": "current session pairing and owner state",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "job scheduling and background workers",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "Relay intent contract and supported intents/context fields",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "owner_workflows_and_preferences",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "available_tools_and_routing_contract",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "probe:post:/v1/mac/plan",
+                "summary": "permission"
+              },
+              {
+                "name": "probe:post:/v1/bridge/work",
+                "summary": "permission"
+              },
+              {
+                "name": "probe:get:/v1/state/* and probe:get:/v1/ops/* additional routes beyond latest/history/memory",
+                "summary": "permission"
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "backlog"
+          },
+          "result": {
+            "note": "57 still open, 134 already settled. describe(id) gives the full entry, including why something was rejected. timesProposed counts how many rounds independently arrived at the same idea — a high number means the gap is real and still unfilled, not that it needs saying again.",
+            "items": [
+              {
+                "name": "chg-a813b918",
+                "summary": "Enable a bounded audio-retention sweeper and per-job deletion controls: default to short retention for generated briefings, delete expired R2 objects and D1 pointers idempotently, and expose a dashboa",
+                "layer": "relay",
+                "timesProposed": 16
+              },
+              {
+                "name": "chg-16bc5dee",
+                "summary": "Add a durable browser job runner with two backends: the authenticated Safari bridge for owner-private pages and Cloudflare Browser Run for public pages. Represent each step as navigate/read/extract/cl",
+                "layer": "browser-harness",
+                "timesProposed": 15
+              },
+              {
+                "name": "cap-bff5f829",
+                "summary": "Check my logged-in web accounts for anything urgent, summarize it, and draft (but do not send) any replies that need my attention.",
+                "layer": "capability",
+                "timesProposed": 15
+              },
+              {
+                "name": "cap-8c36c70a",
+                "summary": "Every weekday morning, check my logged-in calendar, task board, and travel reservations, then tell me the three things I need to know and prepare a suggested plan.",
+                "layer": "capability",
+                "timesProposed": 15
+              },
+              {
+                "name": "cap-5bd640c5",
+                "summary": "Watch my chosen logged-in web pages once a day and tell me only what changed; prepare drafts for any follow-up forms, but stop before submitting.",
+                "layer": "capability",
+                "timesProposed": 15
+              },
+              {
+                "name": "chg-a82e0b13",
+                "summary": "Replace per-surface hand-written fleetContext prompt sections with a compact, typed context service that returns only task-relevant facts, each with source, timestamp, confidence, and expiry; automati",
+                "layer": "memory",
+                "timesProposed": 15
+              },
+              {
+                "name": "cap-4f5af34d",
+                "summary": "Check my authenticated browser accounts for anything that needs my attention, then put findings in a review queue instead of changing anything.",
+                "layer": "capability",
+                "timesProposed": 14
+              },
+              {
+                "name": "chg-18a9c60f",
+                "summary": "Replace hand-written per-surface fleetContext prompt sections with a single typed context service that stores compact facts, provenance, sensitivity, TTL, and last-used timestamps; retrieve only task-",
+                "layer": "memory",
+                "timesProposed": 14
+              },
+              {
+                "name": "chg-0096a2b3",
+                "summary": "Replace per-surface hand-written fleetContext prompt sections with a shared, typed context compiler: retrieve only task-relevant entities/relations, attach confidence and freshness, cap tokens per tie",
+                "layer": "memory",
+                "timesProposed": 14
+              },
+              {
+                "name": "chg-14accc01",
+                "summary": "Add a reliable browser command queue with request IDs, idempotency keys, tab/session affinity, typed results (page metadata, extracted text, screenshots), and explicit irreversible-action checkpoints.",
+                "layer": "browser-harness",
+                "timesProposed": 11
+              },
+              {
+                "name": "cap-a624ca3e",
+                "summary": "Every morning, check my private calendar, travel reservations, and important account notifications in Safari, then give me a concise spoken briefing with links and only flag things that need my attent",
+                "layer": "capability",
+                "timesProposed": 11
+              },
+              {
+                "name": "cap-b875c138",
+                "summary": "Draft a form, email, or support request from information on this private webpage, fill it in, and show me exactly what will be submitted before I approve it.",
+                "layer": "capability",
+                "timesProposed": 11
+              },
+              {
+                "name": "cap-a09b223f",
+                "summary": "Watch my authenticated order, appointment, and account pages for changes, and tell me only when a meaningful change happens—never pollute my daily briefing with unchanged pages.",
+                "layer": "capability",
+                "timesProposed": 11
+              },
+              {
+                "name": "chg-498a3489",
+                "summary": "Replace per-surface hand-written fleetContext prompt sections with a compact, typed context projection service: durable facts, current goals, and permissions are selected per job, with token budgets a",
+                "layer": "memory",
+                "timesProposed": 11
+              },
+              {
+                "name": "chg-e767dfc0",
+                "summary": "Build a first-class authenticated page-watch service: each watch stores URL/tab context, extraction selectors or semantic regions, a normalized baseline hash, volatile-field rules, cadence, and last s",
+                "layer": "browser-harness",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-5284a6ce",
+                "summary": "Build a durable authenticated page-watch service: named watch definitions store URL/tab/session binding, extraction selectors or an agentic extraction recipe, schedule, semantic fingerprint, last seen",
+                "layer": "browser-harness",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-e14fff33",
+                "summary": "Add a provenance-aware browser workbench: every extraction and field mutation gets a tabId, URL, timestamp, DOM locator, source snippet hash, action plan, and before/after value. Group tabs into a tas",
+                "layer": "browser-harness",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-fa84f9a7",
+                "summary": "Build a durable authenticated page-watch layer: named browser sessions with tab/window reattachment, per-watch cadence and quiet hours, DOM-region extraction plus normalized semantic fingerprints, enc",
+                "layer": "browser-harness",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-0c8c5dfe",
+                "summary": "Watch the authenticated pages I choose, detect meaningful changes, and leave me a concise, sourced briefing with suggested next steps—without sending or submitting anything.",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-391cae82",
+                "summary": "When I ask about something on a logged-in site, have several agents inspect it in parallel, reconcile their findings, and give me an evidence-backed answer or a prepared (not sent) action.",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-7217b17c",
+                "summary": "Prepare a browser transaction for me: gather the relevant logged-in data, fill the form or draft the message, show me exactly what will change with before/after evidence, and let me approve, edit, or ",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-0d11cf82",
+                "summary": "Every weekday morning, check my authenticated work portal for new high-priority items and tell me only what needs my attention.",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-df9ec55e",
+                "summary": "When I say 'handle this' about something I found in Safari, gather the needed details across my logged-in tabs, fill the reversible parts, and show me exactly what will be sent before stopping.",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-302a8868",
+                "summary": "“Every morning, check my logged-in work dashboards and tell me only what changed or needs my attention; keep watching the important pages and alert me when a genuinely urgent item appears.”",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-4b41e08a",
+                "summary": "While I sleep, investigate my open threads across Calendar, Mail, and authenticated browser tabs, then leave a ready-to-review workbench on my Mac when I wake: one folder with a prioritized brief, sou",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-26c609fc",
+                "summary": "“When I ask you to do something that takes time, keep working after I leave and tell me exactly what happened when it’s done.”",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-a267b7e8",
+                "summary": "“Just give it the goal; figure out whether the Mac, browser, pendant, or server should do each part, and use whichever can.”",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-ca6005c3",
+                "summary": "“While I sleep, prepare tomorrow’s brief and leave me a short audio queue I can listen to from the pendant.”",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-51c2dc88",
+                "summary": "“Get me ready for my next meeting.”",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-a4c0ec8d",
+                "summary": "Turn on mac-vision's accessibility-mode UI interaction loop to automate GUI tasks without taking over the screen or keyboard focus.",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-a1aa3bf5",
+                "summary": "Show me a history of recent actions taken by mac-vision in automation loops with human-readable explanations and option to undo.",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-e21eb7f4",
+                "summary": "“Every morning, give me a 30-second audio digest of what changed: calendar, reminders, and top emails.”",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-72fc9997",
+                "summary": "\"Queue this up and tell me when it’s done\" (for example: summarize a long document, compare options, draft an email, or research a topic).",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-e5132197",
+                "summary": "“When I press the pendant button, capture a short voice note, tag it with time and place if available, and later summarize it into tasks.”",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-9a6740ed",
+                "summary": "Add a compact, durable Mac execution context cache and handoff protocol. Each server plan gets a jobId, parentId, monotonic sequence, intent hash, referenced local resources, and a short result receip",
+                "layer": "context",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-f5d3b820",
+                "summary": "Replace the desk-bound nRF9160 DK prototype with a jewelry-sized cellular/BLE pendant built around an nRF9161-class modem/application module plus a low-power companion MCU, two digital MEMS microphone",
+                "layer": "hardware",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-258cbe5e",
+                "summary": "Build the wearable revision around the nRF9160 with an ultra-low-power 6-axis IMU on the unused I2C bus, a vibration/LRA haptic driver, and a real microphone/audio front end with physical mute. Keep t",
+                "layer": "hardware",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-d9ce5471",
+                "summary": "Add a dedicated low-power vision coprocessor or embedded GPU to the pendant hardware for on-device image analysis to recognize Mac screen contents and UI elements, enabling offline partial vision-base",
+                "layer": "hardware",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-a3af4c67",
+                "summary": "Define a cross-node Evidence Capsule protocol for browser results: immutable capsule ID, source URL/domain, capture time, tab/session identifier (pseudonymous), selected text/DOM region, content hash,",
+                "layer": "integration",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-91f3c214",
+                "summary": "Integrate mac-vision with the Cloudflare Worker relay to allow partial offloading of UI state classification and action suggestion to a cloud tier. This enables more powerful multimodal fusion with vo",
+                "layer": "integration",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-622e7336",
+                "summary": "Wire up a server-side browser path using Cloudflare Browser Run and a routing rule: web reads/extraction default to server_browser_actions; only fall back to Mac browser bridge when authentication req",
+                "layer": "integration",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-a7a155b1",
+                "summary": "Use the new server-side browser capability for public web tasks directly from the relay, reserving the Mac harness for authenticated sessions and local data. Add routing logic: public pages -> server ",
+                "layer": "integration",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-d2c2cc02",
+                "summary": "Add an idempotent Workbench transaction primitive to the Mac planner: accept a job_id and manifest, write all outputs into a temporary directory, fsync/rename atomically into ~/AI-Workbench/<date>/<jo",
+                "layer": "mac-harness",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-9596a2ad",
+                "summary": "Replace fleetContext.js's hand-written per-surface prompt section with a shared event log plus typed projections. Every node writes small signed events (preference, commitment, task state, source cita",
+                "layer": "memory",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-5cc0bd50",
+                "summary": "Replace per-surface hand-written fleetContext prompts with a shared, event-sourced personal memory broker. Every node writes typed facts, preferences, commitments, and task outcomes with provenance, c",
+                "layer": "memory",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-2903dddb",
+                "summary": "Unify memory across surfaces: replace hand-written prompt sections per surface with a shared, versioned memory API that returns small, purpose-built summaries (profile, preferences, current projects, ",
+                "layer": "memory",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-7613a731",
+                "summary": "Introduce a unified, cross-node memory write API with schema (entities, events, preferences, tasks) and TTLs, plus a pruning policy. Replace hand-written per-surface prompt sections with retrieval-bas",
+                "layer": "memory",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-67952158",
+                "summary": "Add a real scheduler: a Durable Object-backed job queue with delayed execution and recurring rules (cron-like). The relay can enqueue jobs, and a workers cron/alarm runner executes them, delegating to",
+                "layer": "routines",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-9b4366c7",
+                "summary": "Add a relay-owned durable work queue with retries and a receipt log, implemented as a Durable Object (or D1 + Durable Object alarms). The relay exposes enqueue/status endpoints, persists intent payloa",
+                "layer": "routines",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-ae7e4af5",
+                "summary": "Introduce a lightweight scheduler using Durable Object alarms or Cloudflare Cron to trigger queued jobs (summarize notes, send digests, retry failed uploads).",
+                "layer": "routines",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-9ffe4cd1",
+                "summary": "Add a browser-bridge self-healing lease protocol: each Safari heartbeat carries a device nonce, extension version, tab inventory, and last-applied command sequence; the Mac agent expires orphaned pend",
+                "layer": "browser-harness",
+                "timesProposed": 6
+              },
+              {
+                "name": "cap-951c7f45",
+                "summary": "“Check my logged-in accounts for inconsistent personal details, upcoming expirations, or duplicate subscriptions, and prepare a concise fix list without changing anything.”",
+                "layer": "capability",
+                "timesProposed": 6
+              },
+              {
+                "name": "cap-c67d4f1e",
+                "summary": "“I asked you to handle that on my Mac—what’s the status?”",
+                "layer": "capability",
+                "timesProposed": 6
+              },
+              {
+                "name": "chg-99e3117a",
+                "summary": "Introduce a typed, minimal context service for the relay: given an utterance and a desired outcome (status query, dictation, mac task), return only relevant facts (device online state, last job ids, l",
+                "layer": "context",
+                "timesProposed": 6
+              },
+              {
+                "name": "chg-44e46c8d",
+                "summary": "Add a focus-safe execution coordinator around the existing FULL_CONTROL Mac executor. Before each plan, capture the foreground app and a lightweight accessibility/state fingerprint; route UI actions b",
+                "layer": "mac-harness",
+                "timesProposed": 6
+              },
+              {
+                "name": "chg-31bcbfca",
+                "summary": "Add a startup and periodic no-op input reachability probe to the Mac agent health path. When Accessibility is reported trusted, post the documented zero-delta cursor event (or an equivalent harmless S",
+                "layer": "mac-harness",
+                "timesProposed": 6
+              },
+              {
+                "name": "skill-20934f8c",
+                "summary": "offline_alert_inbox",
+                "layer": "firmware",
+                "timesProposed": 1
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "relay_route_intent"
+          },
+          "result": {
+            "error": "Nothing named \"relay_route_intent\". Use discover(category) to see valid names."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "server_browser_actions"
+          },
+          "result": {
+            "error": "Nothing named \"server_browser_actions\". Use discover(category) to see valid names."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "relay_job_status"
+          },
+          "result": {
+            "error": "Nothing named \"relay_job_status\". Use discover(category) to see valid names."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "home-macbook-bridge"
+          },
+          "result": {
+            "error": "Nothing named \"home-macbook-bridge\". Use discover(category) to see valid names."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "get_mac_status"
+          },
+          "result": {
+            "name": "get_mac_status",
+            "description": "PROACTIVE. Read live Mac device state: battery, wifi, volume, focused app, or all. Use when the owner asks about battery/charge, wifi/network, volume/mute, or what app is frontmost. Call immediately — no confirmation. Do NOT use when: controlling the Mac (open app, set volume, type, reminders — use mac_run_actions), browser work (browser_run_actions), public web facts (web_search), or multi-step ambiguous tasks (mac_delegate). Never invent readings; always call this tool instead of guessing numbers.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "fields": {
+                  "type": "array",
+                  "description": "Optional status fields to fetch. Omit or use [\"all\"] for a full snapshot.",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "battery",
+                      "wifi",
+                      "volume",
+                      "focused_app",
+                      "all"
+                    ]
+                  }
+                },
+                "spoken_reply": {
+                  "type": "string",
+                  "description": "Short pendant confirmation (e.g. \"Checking battery.\"). One sentence."
+                },
+                "transcript": {
+                  "type": "string",
+                  "description": "Optional history label only. Omit if unsure — never block on this."
+                }
+              },
+              "required": []
+            }
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "mac_delegate"
+          },
+          "result": {
+            "name": "mac_delegate",
+            "description": "ONLY for multi-step or ambiguous computer tasks that cannot fit a short action list. Hands the goal to the local Mac agent (sets requireLocalPlanner). Use when: complex multi-app workflows, unclear steps, long-running computer use. Do NOT use when: a single get_mac_status or 1–3 mac_run_actions / browser_run_actions would suffice. Prefer concrete tools first.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "goal": {
+                  "type": "string",
+                  "description": "Clear goal for the Mac agent to accomplish."
+                },
+                "spoken_reply": {
+                  "type": "string",
+                  "description": "Optional short confirmation for the pendant speaker while the Mac works."
+                },
+                "transcript": {
+                  "type": "string",
+                  "description": "Optional short transcript for history/debug only. Omit if unsure."
+                }
+              },
+              "required": [
+                "goal"
+              ]
+            }
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "browser_run_actions"
+          },
+          "result": {
+            "name": "browser_run_actions",
+            "description": "PROACTIVE when browser work is needed. Execute 1–3 actions through the browser extension when online: browser_list_tabs, browser_snapshot, browser_navigate, browser_click/type by ref, browser_wait_for, browser_read_page, browser_select, scroll. Use when: web/logged-in site work, reading or interacting with a page. Do NOT use when: Mac desktop/system control (mac_run_actions / get_mac_status), public web facts without a page (web_search), or multi-step Mac workflows (mac_delegate). Prefer over Mac desktop control for in-browser tasks.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "actions": {
+                  "type": "array",
+                  "description": "1–3 browser-extension actions (primary product of this tool).",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "description": "Executor action type. Examples: run_shell, run_applescript, create_reminder, open_app, open_url, open_path, type_text, get_volume, set_volume, browser_snapshot, browser_list_tabs, browser_navigate, browser_click, browser_type, browser_wait_for, browser_read_page, browser_select."
+                      },
+                      "label": {
+                        "type": "string",
+                        "description": "Short human-readable label for logs / UI."
+                      },
+                      "params": {
+                        "type": "object",
+                        "description": "Parameters for the action type. Use only fields that type needs (e.g. command for run_shell, title/due for create_reminder, url for open_url or browser_navigate, selector/text for browser_click/type, appName for open_app matching the Mac software inventory exactly).",
+                        "properties": {
+                          "appName": {
+                            "type": "string"
+                          },
+                          "url": {
+                            "type": "string"
+                          },
+                          "path": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "due": {
+                            "type": "string"
+                          },
+                          "selector": {
+                            "type": "string"
+                          },
+                          "text": {
+                            "type": "string"
+                          },
+                          "query": {
+                            "type": "string"
+                          },
+                          "command": {
+                            "type": "string"
+                          },
+                          "script": {
+                            "type": "string"
+                          },
+                          "cwd": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "params"
+                    ]
+                  }
+                },
+                "spoken_reply": {
+                  "type": "string",
+                  "description": "Short confirmation for the pendant speaker (preferred user-facing reply)."
+                },
+                "transcript": {
+                  "type": "string",
+                  "description": "Optional short transcript for history/debug only. Omit if unsure — never block on this."
+                }
+              },
+              "required": [
+                "actions"
+              ]
+            }
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_change",
+          "args": {
+            "layer": "context",
+            "change": "Add a typed capability registry that maps discovered tool names and surfaces to stable internal identifiers. The registry should reconcile differences between what’s granted, what’s discoverable, and what’s actually callable, and expose a single describe(name) namespace so newly granted tools are immediately describable without guessing the right category.",
+            "why_useful_to_owner": "Prevents the assistant from getting stuck when a tool is granted but not discoverable under the expected category, so voice requests keep working and upgrades don’t break the conversation.",
+            "effort": "Medium: requires changes to discovery/registry wiring and tests for backwards compatibility.",
+            "risk": "Low: risk is misrouting if mapping is wrong; mitigate with explicit validation against a simple health probe and a fallback to known-good tools.",
+            "cost_impact": "Small API overhead for registry sync; negligible runtime cost after cache.",
+            "latency_impact": "Slightly higher on cold start to reconcile, then faster because describe calls stop failing.",
+            "security_impact": "Low; must ensure registry cannot be poisoned by untrusted inputs and that tool metadata is not leaked across tenants."
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going, including layers you have not touched yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_capability",
+          "args": {
+            "user_asks": "If this will take longer, keep working on my Mac and let me know when it’s done.",
+            "why_useful": "This matches real life: the owner speaks a goal, then walks away. The system should continue the task on the Mac, track progress, and report back when finished, without requiring the owner to babysit the process.",
+            "surfaces": [
+              "pendant",
+              "relay",
+              "mac-bridge",
+              "browser",
+              "relay"
+            ],
+            "model_tier": "Mac planner for the actual work; relay for quick conversational updates; cheaper completion model for summaries if available.",
+            "latency_budget": "Under a second for the initial acknowledgment; the work itself can take minutes. Progress updates should be brief and optional.",
+            "cost_estimate": "Low cost at the relay (short acknowledgments). Main cost is Mac-side planning/execution and any browser automation; dominant cost is tool calls and page processing.",
+            "security_concerns": "Must avoid executing irreversible actions without explicit confirmation. Progress/status messages may contain sensitive page content; redact where possible and keep summaries minimal.",
+            "missing": [
+              "A reliable job status channel from Mac to relay for long-running delegated tasks",
+              "A notification mechanism to reach the pendant when the owner is away (push or poll)",
+              "Durable storage for job state so the relay can reconnect after disconnects"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going — propose others, including ones that need capabilities that do not exist yet."
           }
         }
       ]
