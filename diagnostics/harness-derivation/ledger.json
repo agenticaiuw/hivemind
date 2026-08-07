@@ -70,8 +70,8 @@
       ],
       "timesProposed": 6,
       "round": 6,
-      "status": "implementing",
-      "note": "assigned to subagent: briefings"
+      "status": "rejected",
+      "note": "Not mine to claim: the core of this ask is an authenticated WORK PORTAL, and briefing.js reads Calendar/Mail/files/Notes only — it never opens a web session. The scheduling and 'only what needs my attention' filtering it shares with the briefing family are built (routines.js daily schedule + priority-vs-bulk ranking), but the portal read belongs with the browser harness (browserSessions.js/pageWatch.js). Re-file against that layer."
     },
     {
       "id": "cap-9764ec65",
@@ -154,8 +154,8 @@
       ],
       "timesProposed": 6,
       "round": 9,
-      "status": "implementing",
-      "note": "assigned to subagent: briefings"
+      "status": "implemented",
+      "note": "Inbox half built: briefing.js summarizes unread mail (priority vs bulk) and renders a real short audio briefing via audioBrief.js renderBriefAudio — .wav/.opus at the pendant's 24kHz mono wire format, on the same shelf as the research briefs. The 'authenticated work sites' source is browser-harness territory (browserSessions.js/pageWatch.js), not this module."
     },
     {
       "id": "cap-28eaa582",
@@ -196,8 +196,8 @@
       ],
       "timesProposed": 6,
       "round": 10,
-      "status": "implementing",
-      "note": "assigned to subagent: briefings"
+      "status": "implemented",
+      "note": "briefing.js: morning brief reads Calendar+Mail+recent files+Mac state, flags meetings needing prep, derives a priority list; spoken line + long-form audio + Notes.app note + markdown. Live-verified on the owner's real calendar/inbox."
     },
     {
       "id": "cap-b4dfb9ea",
@@ -238,8 +238,8 @@
       ],
       "timesProposed": 6,
       "round": 11,
-      "status": "implementing",
-      "note": "assigned to subagent: briefings"
+      "status": "implemented",
+      "note": "Covered by briefing.js kind=morning (same brief as cap-fb442a50): today's calendar, priority vs bulk unread mail, recent files, Mac state. Two parts of the ask are NOT built: weather is not folded in (get_weather exists as a separate action), and 'the files I need for my first meeting' is a recency list, not per-meeting file matching. Follow-ups/'open anything I mention' are the normal conversational path, not this module."
     },
     {
       "id": "cap-0fee609c",
@@ -266,8 +266,8 @@
       ],
       "timesProposed": 6,
       "round": 12,
-      "status": "implementing",
-      "note": "assigned to subagent: briefings"
+      "status": "implemented",
+      "note": "briefing.js kind=workday: 'prepare my workday' matches deterministically (no model call), reads Calendar+Mail, writes a Notes.app note and a markdown brief. Composes and stores only — assertNeverSends refuses any transmitting sink and there is no transport call in the module."
     },
     {
       "id": "cap-026858ec",
@@ -308,8 +308,8 @@
       ],
       "timesProposed": 6,
       "round": 12,
-      "status": "implementing",
-      "note": "assigned to subagent: briefings"
+      "status": "implemented",
+      "note": "briefing.js kind=wrapup + a daily 17:00 routine via routines.js: summarizes notes created today into <=3 next actions and creates real macOS Reminders. Never sends. Fixed a live feedback loop where it followed up on its own briefing notes."
     },
     {
       "id": "cap-5dbbe6df",
@@ -322,8 +322,8 @@
       ],
       "timesProposed": 6,
       "round": 10,
-      "status": "implementing",
-      "note": "assigned to subagent: briefings"
+      "status": "implemented",
+      "note": "briefing.js kind=mail, reachable as 'Summarize what I missed in my email today.' Deterministic route, 24h-bounded Mail query, separates priority mail from newsletters. Live output: 'Good morning. 3 unread emails, all newsletters.'"
     },
     {
       "id": "cap-0e994cfb",
@@ -336,8 +336,8 @@
       ],
       "timesProposed": 6,
       "round": 10,
-      "status": "implementing",
-      "note": "assigned to subagent: briefings"
+      "status": "implemented",
+      "note": "briefing.js kind=schedule, reachable as 'Read my upcoming schedule for the day.' Deterministic route, renders long-form audio. Live output: 'Good morning. 7 meetings today, next is stand up at 9:00 AM. 2 need preparation.'"
     },
     {
       "id": "cap-2d29628a",

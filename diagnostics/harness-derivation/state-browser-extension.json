@@ -7,9 +7,11 @@
     "m9-mac-terminal",
     "m49-mac-planner",
     "m57-mac-planner",
-    "m74-mac-terminal"
+    "m74-mac-terminal",
+    "m87-mac-planner",
+    "m91-mac-planner"
   ],
-  "round": 12,
+  "round": 13,
   "granted": {
     "context": [
       {
@@ -550,6 +552,86 @@
         "Notification queue with deduplication and quiet hours"
       ],
       "round": 12
+    },
+    {
+      "user_asks": "Every morning, check my private calendar, travel reservations, and important account notifications in Safari, then give me a concise spoken briefing with links and only flag things that need my attention.",
+      "why_useful": "Combines authenticated sources the server cannot access into one hands-free briefing, while avoiding costly realtime browsing during conversation.",
+      "surfaces": [
+        "browser",
+        "relay",
+        "pendant",
+        "dashboard"
+      ],
+      "model_tier": "Background planner (cheap batch model) runs browser reads and deduplication; realtime model only speaks the final 30–60 second summary. Use server web search only for public context.",
+      "latency_budget": "Runs asynchronously in 2–5 minutes; cached result is ready before the owner's routine. Playback starts immediately when requested.",
+      "cost_estimate": "Low: a handful of browser page extracts plus a short summary; dominant cost is model tokens from changed private pages, reduced by hashes and per-site cursors.",
+      "security_concerns": "Private calendar/account content leaves Safari through the local bridge to the Worker. Store only extracted event/task summaries, not page bodies; encrypt in transit/storage. Never click external links that trigger actions; read-only by default and require confirmation for any booking, cancellation, or reply.",
+      "missing": [
+        "Scheduled job trigger with per-site authenticated browser session",
+        "Browser extraction normalization and change hashing",
+        "Encrypted per-user secret/session policy and retention controls"
+      ],
+      "round": 13
+    },
+    {
+      "user_asks": "When I ask, find the exact information on a logged-in website—such as my latest bill, a delivery status, or an insurance claim—and read me the answer, citing the page and date.",
+      "why_useful": "Authenticated lookup is the browser tier's unique advantage over public search and avoids making the owner manually hunt through portals.",
+      "surfaces": [
+        "pendant",
+        "relay",
+        "browser",
+        "dashboard"
+      ],
+      "model_tier": "Realtime model classifies intent and confirms the target site; browser agent performs deterministic navigation/extraction; cheap model compresses the result. Escalate to realtime only for ambiguous follow-up conversation.",
+      "latency_budget": "First answer in 10–30 seconds; if a site is slow, return a progress notification and finish asynchronously.",
+      "cost_estimate": "Low to moderate per lookup; browser latency dominates, while bounded DOM extraction and a short answer keep token cost small.",
+      "security_concerns": "Do not expose full account numbers, health data, or page dumps in audio; redact sensitive fields and speak only requested values. Read-only actions need no confirmation; changing settings, downloading documents, or sending anything requires explicit confirmation.",
+      "missing": [
+        "Site-specific extraction schemas with redaction",
+        "Tab/session isolation and sensitive-field redaction before model input",
+        "Progress and timeout events surfaced to pendant"
+      ],
+      "round": 13
+    },
+    {
+      "user_asks": "Draft a form, email, or support request from information on this private webpage, fill it in, and show me exactly what will be submitted before I approve it.",
+      "why_useful": "Turns authenticated browser access into useful work while preserving a hard safety boundary before irreversible external actions.",
+      "surfaces": [
+        "browser",
+        "dashboard",
+        "relay",
+        "pendant"
+      ],
+      "model_tier": "Background planner extracts facts and drafts with a cheap model; realtime is used only to resolve ambiguities and present the final concise preview.",
+      "latency_budget": "Draft within 30–60 seconds. Pause indefinitely at the submit/send button until approval; after approval, a deterministic browser action completes it and returns confirmation.",
+      "cost_estimate": "Moderate for long forms; minimize by extracting only relevant labels/values and using local template filling. Browser time and page complexity dominate.",
+      "security_concerns": "A malicious page could inject instructions; treat page text as untrusted data and never let it override policy. Display recipient, fields, attachments, amount, and final body. Require explicit one-time confirmation immediately before submit/send/purchase; never reuse approval.",
+      "missing": [
+        "Structured action preview/approval protocol",
+        "DOM field mapping with origin and recipient display",
+        "Prompt-injection isolation for webpage content"
+      ],
+      "round": 13
+    },
+    {
+      "user_asks": "Watch my authenticated order, appointment, and account pages for changes, and tell me only when a meaningful change happens—never pollute my daily briefing with unchanged pages.",
+      "why_useful": "A private-site change detector saves repeated manual checks and uses the browser only when necessary, especially for delivery, appointment, and billing portals that require login.",
+      "surfaces": [
+        "browser",
+        "dashboard",
+        "relay",
+        "pendant"
+      ],
+      "model_tier": "Cheap scheduled worker compares normalized DOM/content hashes and extracts changed fields; realtime is not involved unless the owner asks a follow-up. Use background model only when a change needs semantic classification.",
+      "latency_budget": "Polling cadence configurable from 15 minutes to daily; notification within one polling cycle. Respect site rate limits and back off on errors.",
+      "cost_estimate": "Low when hashes are compared locally and unchanged pages skip model calls; browser requests and scheduled Worker invocations dominate.",
+      "security_concerns": "Watching pages can reveal sensitive health/financial information. Keep per-site allowlist, minimize stored diffs, redact identifiers, provide pause/delete controls, and never follow newly appearing links or trigger actions automatically.",
+      "missing": [
+        "Scheduled browser jobs with rate-limit/backoff",
+        "Normalized page snapshot hashing and semantic diff",
+        "Notification deduplication and per-site sensitivity controls"
+      ],
+      "round": 13
     }
   ],
   "changes": [
@@ -771,6 +853,68 @@
         "Working browser command enqueue path"
       ],
       "round": 12
+    },
+    {
+      "layer": "browser-harness",
+      "change": "Add a reliable browser command queue with request IDs, idempotency keys, tab/session affinity, typed results (page metadata, extracted text, screenshots), and explicit irreversible-action checkpoints. Replace the current single 45-second wait with progress events and resumable polling.",
+      "why_useful_to_owner": "Private-site tasks stop timing out or acting on the wrong tab, and the owner gets understandable progress instead of a silent failure.",
+      "effort": "Medium: bridge and extension protocol changes plus dashboard/pedant progress handling.",
+      "risk": "Queued duplicate commands could double-click; enforce idempotency and cancel-on-timeout. Extension disconnects should leave the page untouched and mark the task unknown rather than retrying writes.",
+      "cost_impact": "Small Worker/storage overhead; lower model cost from fewer retries and smaller typed extracts.",
+      "latency_impact": "Same best-case latency; better long-page tasks can continue asynchronously rather than blocking 45 seconds.",
+      "security_impact": "Per-tab origin/session binding and action audit logs reduce cross-site leakage; screenshots should be opt-in and short-lived.",
+      "depends_on": [
+        "Structured browser action/result schema",
+        "Dashboard approval UI"
+      ],
+      "round": 13
+    },
+    {
+      "layer": "model-routing",
+      "change": "Route public web research to web_search, authenticated read-only lookups to a cheap browser-extraction model, long multi-page workflows to background planner, and reserve realtime for intent, ambiguity, and spoken delivery.",
+      "why_useful_to_owner": "Answers arrive faster and cost less without sacrificing conversational quality where it matters.",
+      "effort": "Low to medium: routing policy, token budgets, and evaluation set of browser tasks.",
+      "risk": "Cheap model may miss nuance; use confidence thresholds and escalate when extraction conflicts or sensitive fields appear.",
+      "cost_impact": "Material reduction in realtime tokens and audio duration; browser work remains bounded by changed content only.",
+      "latency_impact": "Public answers faster; private workflows may complete asynchronously but do not hold the conversation open.",
+      "security_impact": "Sensitive page text can be processed by a restricted model path with redaction and no long-term retention.",
+      "depends_on": [
+        "Sensitive-field redaction",
+        "Task confidence and escalation policy"
+      ],
+      "round": 13
+    },
+    {
+      "layer": "dashboard-ux",
+      "change": "Create a unified task timeline showing source site/origin, extracted facts, pending approval cards, exact submit payload, model used, and retention/deletion controls; mirror a compact approval prompt in the pendant audio flow.",
+      "why_useful_to_owner": "The owner can trust what happened, approve risky actions knowingly, and recover from a failed browser task without repeating it.",
+      "effort": "Medium across SvelteKit dashboard, iOS/WKWebView, and relay event schema.",
+      "risk": "Too much detail could overwhelm; default to a concise summary with expandable evidence and redact sensitive values by default.",
+      "cost_impact": "Minimal UI/storage cost; reduces expensive repeated interactions and accidental actions.",
+      "latency_impact": "No impact on execution; approval rendering should be instant from stored task state.",
+      "security_impact": "Makes recipient, origin, and data egress visible; supports deletion of page extracts and audit history.",
+      "depends_on": [
+        "Typed browser result schema",
+        "Action checkpoint protocol",
+        "Per-task retention metadata"
+      ],
+      "round": 13
+    },
+    {
+      "layer": "memory",
+      "change": "Store browser tasks as short-lived provenance records: origin, timestamp, normalized facts, confidence, redaction class, approval state, and content hash—not raw authenticated page text. Automatically expire raw extracts quickly and let the owner delete a site’s history from every surface.",
+      "why_useful_to_owner": "The assistant can remember useful facts and avoid repeating work without quietly retaining private account pages or leaking them into future conversations.",
+      "effort": "Medium: D1 schema, retention worker, redaction pipeline, and shared SvelteKit controls.",
+      "risk": "Over-aggressive expiry could lose evidence needed to resolve a task; retain a user-visible minimal audit record and let active tasks pin data temporarily.",
+      "cost_impact": "Lower storage and future prompt-token costs; small scheduled cleanup cost.",
+      "latency_impact": "Negligible; hashes and summaries make later lookups faster.",
+      "security_impact": "Substantially reduces blast radius of a compromised Worker or prompt injection; provenance prevents confusing one site's facts with another's.",
+      "depends_on": [
+        "Typed browser results",
+        "Sensitive-field classifier",
+        "Unified task timeline"
+      ],
+      "round": 13
     }
   ],
   "pending": [
@@ -823,6 +967,15 @@
       },
       "expected_output": "A correlated command id plus completion result from the Safari extension, including tab id, URL/title, extracted text or action status, and an error/timeout field.",
       "summary": "browser_command_enqueue_live"
+    },
+    {
+      "id": "c13-guqs",
+      "kind": "context",
+      "round": 13,
+      "topic": "owner's first authenticated browser workflows and sensitivity preferences",
+      "why": "No real user workflow has been observed, so prioritization is based on generic high-value private lookups. Knowing the owner's actual sites, routine, and sensitive categories would let me design safer, more useful browser automations.",
+      "how_it_changes_my_behavior": "I would propose site-specific extraction/redaction rules and schedules rather than generic browsing, and would exclude categories the owner does not want read aloud or stored.",
+      "summary": "owner's first authenticated browser workflows and sensitivity preferences"
     }
   ],
   "denied": [],
@@ -27993,6 +28146,295 @@
           "args": {
             "summary": "I proposed concrete browser-first capabilities: authenticated account triage with unsent drafts, weekday calendar/task/travel briefs, logged-in page-change monitors, and a two-phase inspect/apply interaction. I also proposed a durable dual-backend browser job runner, evidence-backed expiring memory, and a shared Jobs inbox across web/menubar/iOS with pendant audio delivery. These designs use cheap background extraction/planning for scheduled and page-parsing work, reserving realtime for short conversations and notifications; they minimize page/audio/context costs and stop before irreversible sends, purchases, or submissions. The most important implementation dependency is a real browser command enqueue path: Safari is online, but the available enqueue wrappers remain stubs. I informed mac-planner to prioritize that and to keep Safari-private data separate from server-side public browsing.",
             "biggest_unknown": "Whether the orchestrator will provide a functioning browser enqueue endpoint (POST /execute dispatch through the Mac bridge) this round. Without it I can design browser workflows but cannot execute or validate them. Other needed pieces are durable browser evidence/job artifacts, an audio notification queue, and unified sensitive-data retention controls."
+          },
+          "result": {
+            "acknowledged": true
+          }
+        }
+      ]
+    },
+    {
+      "round": 13,
+      "transcript": [
+        {
+          "type": "tool",
+          "name": "get_hardware_spec",
+          "args": {
+            "component": "stack"
+          },
+          "result": {
+            "relay": "Cloudflare Worker (Express-style). D1 for jobs/history/memory, R2 for audio. Audio retention 30 days, sweep disabled, ~100 recordings stored.",
+            "agent_tools_today": "The realtime agent currently has exactly 5 tools: get_mac_status, mac_run_actions, browser_run_actions, web_search, mac_delegate.",
+            "mac_harness": "A Node \"local agent\" on the owner's Mac: planner (gpt-5.6-luna), computer-use loop, browser bridge, action risk scoring, atomic JSON store, context graph. It polls /v1/bridge/work for jobs and posts results back.",
+            "browser_harness": "Driven through the Mac agent's browser bridge today. Cloudflare Browser Run now exists and could give the relay its own server-side browser, removing the Mac from web tasks entirely.",
+            "clients": "ONE SvelteKit dashboard renders on all three surfaces: web, a Swift menubar app via WKWebView, and iOS via Capacitor pointed at the same Worker URL. A change to the web app ships to all three.",
+            "memory": "Knowledge-graph style store behind /v1/ops/memory: entities, relations, sessions. Separately, fleetContext.js hand-writes a prompt section per surface, which means adding a surface means editing a prompt.",
+            "source": "cloud-relay/, local-agent/, dashboard-sveltekit/, mac-menubar/",
+            "you_are_here": "You run on the owner's MacBook (browser-extension). Every device described here is REMOTE to you — you are not running on the pendant or the ESP32."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "message_peer",
+          "args": {
+            "to": "mac-planner",
+            "subject": "Browser workflows and risks",
+            "body": "Browser tier's unique value is authenticated Safari pages: read dashboards, invoices, travel, email/web apps; public research should use cheaper server web_search. Navigate bootstraps tab; read/extract; fill reversible fields but stop before submit/send/purchase and show exact payload. Current Safari extension real; home-chrome stub ignore. Need Mac planner to orchestrate browser_* via POST /execute, with 45s timeout, bounded extraction, explicit confirmation for irreversible actions."
+          },
+          "result": {
+            "sent": true,
+            "note": "They will see this on their next round."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "message_peer",
+          "args": {
+            "to": "relay-realtime",
+            "subject": "Browser capability summary",
+            "body": "Browser extension can access owner's authenticated Safari pages, unlike server. Best use: private dashboards/inbox/travel/accounts; public web delegated cheaper. Browser navigation bootstraps empty Safari tab. Reversible actions okay; stop before send/submit/purchase and present payload for confirmation."
+          },
+          "result": {
+            "sent": true,
+            "note": "They will see this on their next round."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_capability",
+          "args": {
+            "user_asks": "Every morning, check my private calendar, travel reservations, and important account notifications in Safari, then give me a concise spoken briefing with links and only flag things that need my attention.",
+            "why_useful": "Combines authenticated sources the server cannot access into one hands-free briefing, while avoiding costly realtime browsing during conversation.",
+            "surfaces": [
+              "browser",
+              "relay",
+              "pendant",
+              "dashboard"
+            ],
+            "model_tier": "Background planner (cheap batch model) runs browser reads and deduplication; realtime model only speaks the final 30–60 second summary. Use server web search only for public context.",
+            "latency_budget": "Runs asynchronously in 2–5 minutes; cached result is ready before the owner's routine. Playback starts immediately when requested.",
+            "cost_estimate": "Low: a handful of browser page extracts plus a short summary; dominant cost is model tokens from changed private pages, reduced by hashes and per-site cursors.",
+            "security_concerns": "Private calendar/account content leaves Safari through the local bridge to the Worker. Store only extracted event/task summaries, not page bodies; encrypt in transit/storage. Never click external links that trigger actions; read-only by default and require confirmation for any booking, cancellation, or reply.",
+            "missing": [
+              "Scheduled job trigger with per-site authenticated browser session",
+              "Browser extraction normalization and change hashing",
+              "Encrypted per-user secret/session policy and retention controls"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going — propose others, including ones that need capabilities that do not exist yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_capability",
+          "args": {
+            "user_asks": "When I ask, find the exact information on a logged-in website—such as my latest bill, a delivery status, or an insurance claim—and read me the answer, citing the page and date.",
+            "why_useful": "Authenticated lookup is the browser tier's unique advantage over public search and avoids making the owner manually hunt through portals.",
+            "surfaces": [
+              "pendant",
+              "relay",
+              "browser",
+              "dashboard"
+            ],
+            "model_tier": "Realtime model classifies intent and confirms the target site; browser agent performs deterministic navigation/extraction; cheap model compresses the result. Escalate to realtime only for ambiguous follow-up conversation.",
+            "latency_budget": "First answer in 10–30 seconds; if a site is slow, return a progress notification and finish asynchronously.",
+            "cost_estimate": "Low to moderate per lookup; browser latency dominates, while bounded DOM extraction and a short answer keep token cost small.",
+            "security_concerns": "Do not expose full account numbers, health data, or page dumps in audio; redact sensitive fields and speak only requested values. Read-only actions need no confirmation; changing settings, downloading documents, or sending anything requires explicit confirmation.",
+            "missing": [
+              "Site-specific extraction schemas with redaction",
+              "Tab/session isolation and sensitive-field redaction before model input",
+              "Progress and timeout events surfaced to pendant"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going — propose others, including ones that need capabilities that do not exist yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_capability",
+          "args": {
+            "user_asks": "Draft a form, email, or support request from information on this private webpage, fill it in, and show me exactly what will be submitted before I approve it.",
+            "why_useful": "Turns authenticated browser access into useful work while preserving a hard safety boundary before irreversible external actions.",
+            "surfaces": [
+              "browser",
+              "dashboard",
+              "relay",
+              "pendant"
+            ],
+            "model_tier": "Background planner extracts facts and drafts with a cheap model; realtime is used only to resolve ambiguities and present the final concise preview.",
+            "latency_budget": "Draft within 30–60 seconds. Pause indefinitely at the submit/send button until approval; after approval, a deterministic browser action completes it and returns confirmation.",
+            "cost_estimate": "Moderate for long forms; minimize by extracting only relevant labels/values and using local template filling. Browser time and page complexity dominate.",
+            "security_concerns": "A malicious page could inject instructions; treat page text as untrusted data and never let it override policy. Display recipient, fields, attachments, amount, and final body. Require explicit one-time confirmation immediately before submit/send/purchase; never reuse approval.",
+            "missing": [
+              "Structured action preview/approval protocol",
+              "DOM field mapping with origin and recipient display",
+              "Prompt-injection isolation for webpage content"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going — propose others, including ones that need capabilities that do not exist yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_change",
+          "args": {
+            "layer": "browser-harness",
+            "change": "Add a reliable browser command queue with request IDs, idempotency keys, tab/session affinity, typed results (page metadata, extracted text, screenshots), and explicit irreversible-action checkpoints. Replace the current single 45-second wait with progress events and resumable polling.",
+            "why_useful_to_owner": "Private-site tasks stop timing out or acting on the wrong tab, and the owner gets understandable progress instead of a silent failure.",
+            "effort": "Medium: bridge and extension protocol changes plus dashboard/pedant progress handling.",
+            "risk": "Queued duplicate commands could double-click; enforce idempotency and cancel-on-timeout. Extension disconnects should leave the page untouched and mark the task unknown rather than retrying writes.",
+            "cost_impact": "Small Worker/storage overhead; lower model cost from fewer retries and smaller typed extracts.",
+            "latency_impact": "Same best-case latency; better long-page tasks can continue asynchronously rather than blocking 45 seconds.",
+            "security_impact": "Per-tab origin/session binding and action audit logs reduce cross-site leakage; screenshots should be opt-in and short-lived.",
+            "depends_on": [
+              "Structured browser action/result schema",
+              "Dashboard approval UI"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going, including layers you have not touched yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_change",
+          "args": {
+            "layer": "model-routing",
+            "change": "Route public web research to web_search, authenticated read-only lookups to a cheap browser-extraction model, long multi-page workflows to background planner, and reserve realtime for intent, ambiguity, and spoken delivery.",
+            "why_useful_to_owner": "Answers arrive faster and cost less without sacrificing conversational quality where it matters.",
+            "effort": "Low to medium: routing policy, token budgets, and evaluation set of browser tasks.",
+            "risk": "Cheap model may miss nuance; use confidence thresholds and escalate when extraction conflicts or sensitive fields appear.",
+            "cost_impact": "Material reduction in realtime tokens and audio duration; browser work remains bounded by changed content only.",
+            "latency_impact": "Public answers faster; private workflows may complete asynchronously but do not hold the conversation open.",
+            "security_impact": "Sensitive page text can be processed by a restricted model path with redaction and no long-term retention.",
+            "depends_on": [
+              "Sensitive-field redaction",
+              "Task confidence and escalation policy"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going, including layers you have not touched yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_change",
+          "args": {
+            "layer": "dashboard-ux",
+            "change": "Create a unified task timeline showing source site/origin, extracted facts, pending approval cards, exact submit payload, model used, and retention/deletion controls; mirror a compact approval prompt in the pendant audio flow.",
+            "why_useful_to_owner": "The owner can trust what happened, approve risky actions knowingly, and recover from a failed browser task without repeating it.",
+            "effort": "Medium across SvelteKit dashboard, iOS/WKWebView, and relay event schema.",
+            "risk": "Too much detail could overwhelm; default to a concise summary with expandable evidence and redact sensitive values by default.",
+            "cost_impact": "Minimal UI/storage cost; reduces expensive repeated interactions and accidental actions.",
+            "latency_impact": "No impact on execution; approval rendering should be instant from stored task state.",
+            "security_impact": "Makes recipient, origin, and data egress visible; supports deletion of page extracts and audit history.",
+            "depends_on": [
+              "Typed browser result schema",
+              "Action checkpoint protocol",
+              "Per-task retention metadata"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going, including layers you have not touched yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_capability",
+          "args": {
+            "user_asks": "Watch my authenticated order, appointment, and account pages for changes, and tell me only when a meaningful change happens—never pollute my daily briefing with unchanged pages.",
+            "why_useful": "A private-site change detector saves repeated manual checks and uses the browser only when necessary, especially for delivery, appointment, and billing portals that require login.",
+            "surfaces": [
+              "browser",
+              "dashboard",
+              "relay",
+              "pendant"
+            ],
+            "model_tier": "Cheap scheduled worker compares normalized DOM/content hashes and extracts changed fields; realtime is not involved unless the owner asks a follow-up. Use background model only when a change needs semantic classification.",
+            "latency_budget": "Polling cadence configurable from 15 minutes to daily; notification within one polling cycle. Respect site rate limits and back off on errors.",
+            "cost_estimate": "Low when hashes are compared locally and unchanged pages skip model calls; browser requests and scheduled Worker invocations dominate.",
+            "security_concerns": "Watching pages can reveal sensitive health/financial information. Keep per-site allowlist, minimize stored diffs, redact identifiers, provide pause/delete controls, and never follow newly appearing links or trigger actions automatically.",
+            "missing": [
+              "Scheduled browser jobs with rate-limit/backoff",
+              "Normalized page snapshot hashing and semantic diff",
+              "Notification deduplication and per-site sensitivity controls"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going — propose others, including ones that need capabilities that do not exist yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "message_peer",
+          "args": {
+            "to": "mac-planner",
+            "subject": "Concrete browser product proposals",
+            "body": "Proposed: scheduled authenticated morning briefing (calendar/travel/account alerts), on-demand private lookup with redaction/citations, draft-fill-preview before submit, and change watcher with hashes/diffs. Key harness needs: typed request/result schema, tab/session affinity, idempotency, progress events beyond 45s, origin binding, and irreversible-action checkpoints. Route public research web_search; browser extraction cheap/background; realtime only intent/ambiguity/spoken summary."
+          },
+          "result": {
+            "sent": true,
+            "note": "They will see this on their next round."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "request_context",
+          "args": {
+            "topic": "owner's first authenticated browser workflows and sensitivity preferences",
+            "why": "No real user workflow has been observed, so prioritization is based on generic high-value private lookups. Knowing the owner's actual sites, routine, and sensitive categories would let me design safer, more useful browser automations.",
+            "how_it_changes_my_behavior": "I would propose site-specific extraction/redaction rules and schedules rather than generic browsing, and would exclude categories the owner does not want read aloud or stored."
+          },
+          "result": {
+            "queued": true,
+            "id": "c13-guqs",
+            "note": "The orchestrator will decide between rounds. Continue without it for now."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_change",
+          "args": {
+            "layer": "memory",
+            "change": "Store browser tasks as short-lived provenance records: origin, timestamp, normalized facts, confidence, redaction class, approval state, and content hash—not raw authenticated page text. Automatically expire raw extracts quickly and let the owner delete a site’s history from every surface.",
+            "why_useful_to_owner": "The assistant can remember useful facts and avoid repeating work without quietly retaining private account pages or leaking them into future conversations.",
+            "effort": "Medium: D1 schema, retention worker, redaction pipeline, and shared SvelteKit controls.",
+            "risk": "Over-aggressive expiry could lose evidence needed to resolve a task; retain a user-visible minimal audit record and let active tasks pin data temporarily.",
+            "cost_impact": "Lower storage and future prompt-token costs; small scheduled cleanup cost.",
+            "latency_impact": "Negligible; hashes and summaries make later lookups faster.",
+            "security_impact": "Substantially reduces blast radius of a compromised Worker or prompt injection; provenance prevents confusing one site's facts with another's.",
+            "depends_on": [
+              "Typed browser results",
+              "Sensitive-field classifier",
+              "Unified task timeline"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going, including layers you have not touched yet."
+          }
+        },
+        {
+          "type": "finish",
+          "summary": "Browser tier proposals are complete: authenticated morning briefings, on-demand private lookups, draft-and-preview forms, change watchers, reliable tab-bound/idempotent command queuing, cheaper model routing, approval-focused dashboard UX, and short-lived provenance memory. I informed mac-planner and relay-realtime that browser access is uniquely valuable for logged-in pages, while public research belongs to web_search. All irreversible browser actions should stop before submit/send/purchase and show the exact payload.",
+          "biggest_unknown": "The owner's actual authenticated sites, routines, and categories they do not want spoken or retained. I requested that context; until it arrives, site-specific workflows and redaction policies remain generic."
+        },
+        {
+          "type": "tool",
+          "name": "finish",
+          "args": {
+            "summary": "Browser tier proposals are complete: authenticated morning briefings, on-demand private lookups, draft-and-preview forms, change watchers, reliable tab-bound/idempotent command queuing, cheaper model routing, approval-focused dashboard UX, and short-lived provenance memory. I informed mac-planner and relay-realtime that browser access is uniquely valuable for logged-in pages, while public research belongs to web_search. All irreversible browser actions should stop before submit/send/purchase and show the exact payload.",
+            "biggest_unknown": "The owner's actual authenticated sites, routines, and categories they do not want spoken or retained. I requested that context; until it arrives, site-specific workflows and redaction policies remain generic."
           },
           "result": {
             "acknowledged": true

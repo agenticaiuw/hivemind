@@ -4,7 +4,7 @@ Written by `scripts/harness-ledger.mjs`. Status is owned by this file and
 survives re-runs — refreshing adds new proposals, it never resets what you
 have already marked done.
 
-**38 open · 20 implemented · 46 other**
+**38 open · 27 implemented · 39 other**
 
 The `×` column counts how many times a proposal was made. Anything above 1
 was arrived at independently more than once, which is the strongest signal
@@ -59,7 +59,14 @@ in here.
 | --- | --- | --- | --- | --- |
 | `cap-d65785c8` | capability | browser-extension | 6 | “Read the relevant pages in my open browser tabs, compare the options, and give me a short brief with links and any deadlines.” |
 | `cap-9764ec65` | capability | browser-extension | 6 | “Research this topic across the public web, check the sources, and send me a cited answer later.” |
+| `cap-eb3ab088` | capability | browser-extension | 6 | “Check my authenticated work sites and inboxes for anything urgent, summarize it, and leave me a short audio briefing.” |
+| `cap-fb442a50` | capability | mac-planner | 6 | “Every morning, check my calendar, unread email, and today’s files, then give me a short spoken brief with the meetings that need preparation and a pr |
 | `cap-2a60c5ba` | capability | mac-planner | 6 | “Research this topic and leave me a concise source-linked briefing on my Mac, with an audio version I can play later.” |
+| `cap-c071fa0a` | capability | mac-planner | 6 | “Every morning, give me a concise briefing of today’s calendar, unread priority messages, weather, and the files I need for my first meeting; let me a |
+| `cap-70db8ef3` | capability | mac-planner | 6 | “When I say ‘prepare my workday’, check my calendar and inbox, make a concise brief, and put it in a note on my Mac; don't send anything.” |
+| `cap-23af3e85` | capability | mac-planner | 6 | “Every weekday at 5 pm, summarize the notes I created today into three next actions and put them in my task app; never send messages.” |
+| `cap-5dbbe6df` | capability | relay-realtime | 6 | “Summarize what I missed in my email today.” |
+| `cap-0e994cfb` | capability | relay-realtime | 6 | “Read my upcoming schedule for the day.” |
 | `cap-d9af189b` | capability | relay-realtime | 6 | “Summarize the key points from this page and read them to me later.” |
 | `chg-43804606` | dashboard-ux | browser-extension | 6 | Add a Browser Jobs view shared by web, menubar, and iOS: active/queued/completed jobs, per-site permission scope, source evidence, extracted result, p |
 | `chg-56aa1998` | dashboard-ux | mac-planner | 6 | Add a unified Jobs and Approvals view shared by web, menubar, and iOS: each job shows purpose, sources accessed, files/apps touched, risk level, estim |
@@ -90,19 +97,12 @@ in here.
 | `cap-daaf6d3e` | capability | browser-extension | 6 | Research this topic across my logged-in websites, compare the results, and send me a concise audio brief later. |
 | `cap-c18a0fce` | capability | browser-extension | 6 | Watch this logged-in page or price/availability page and tell me only when the specified condition changes. |
 | `cap-75ee1730` | capability | browser-extension | 6 | Fill out this online form using the details we discussed, stop before the final submit, and show me exactly what will be sent. |
-| `cap-eb3ab088` | capability | browser-extension | 6 | “Check my authenticated work sites and inboxes for anything urgent, summarize it, and leave me a short audio briefing.” |
 | `cap-28eaa582` | capability | browser-extension | 6 | “Fill out this web form from my notes, but stop before submitting and show me exactly what will be sent.” |
 | `cap-ea762950` | capability | browser-extension | 6 | “Watch this authenticated page and tell me when the status, price, or availability changes.” |
-| `cap-fb442a50` | capability | mac-planner | 6 | “Every morning, check my calendar, unread email, and today’s files, then give me a short spoken brief with the meetings that need preparation and a pr |
 | `cap-b4dfb9ea` | capability | mac-planner | 6 | “Clean up my Downloads every Friday: group files by project, rename obvious duplicates, and show me a review list before anything is deleted.” |
-| `cap-c071fa0a` | capability | mac-planner | 6 | “Every morning, give me a concise briefing of today’s calendar, unread priority messages, weather, and the files I need for my first meeting; let me a |
 | `cap-0fee609c` | capability | mac-planner | 6 | “Prepare me for my next meeting: find the agenda and related local documents, summarize the open decisions and prior action items, and put the three m |
-| `cap-70db8ef3` | capability | mac-planner | 6 | “When I say ‘prepare my workday’, check my calendar and inbox, make a concise brief, and put it in a note on my Mac; don't send anything.” |
 | `cap-026858ec` | capability | mac-planner | 6 | “Find the best flight options for next Thursday, compare total price and duration, and leave me a shortlist; do not book.” |
 | `cap-0e0b8d35` | capability | mac-planner | 6 | “Clean up my Downloads: group files by type into folders and show me what will be moved before doing it.” |
-| `cap-23af3e85` | capability | mac-planner | 6 | “Every weekday at 5 pm, summarize the notes I created today into three next actions and put them in my task app; never send messages.” |
-| `cap-5dbbe6df` | capability | relay-realtime | 6 | “Summarize what I missed in my email today.” |
-| `cap-0e994cfb` | capability | relay-realtime | 6 | “Read my upcoming schedule for the day.” |
 | `cap-2d29628a` | capability | relay-realtime | 6 | “Save this idea for later.” |
 | `cap-1634d96f` | capability | relay-realtime | 6 | “Plan my day. Pull my calendar, summarize critical tasks and travel time, and give me a 30-second briefing.” |
 | `cap-f66f7f6e` | capability | relay-realtime | 6 | “Read my notifications and tell me only what’s important.” |
