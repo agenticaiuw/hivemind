@@ -4,7 +4,7 @@ Written by `scripts/harness-ledger.mjs`. Status is owned by this file and
 survives re-runs — refreshing adds new proposals, it never resets what you
 have already marked done.
 
-**38 open · 13 implemented · 53 other**
+**38 open · 15 implemented · 51 other**
 
 The `×` column counts how many times a proposal was made. Anything above 1
 was arrived at independently more than once, which is the strongest signal
@@ -66,6 +66,8 @@ in here.
 | `chg-5415e046` | memory | browser-extension | 6 | Create a browser-job memory tier separate from conversational context: retain only normalized facts, source URLs, retrieval timestamps, consent scope, |
 | `chg-a18cc4f0` | memory | browser-extension | 6 | Add a browser-site capability registry in the knowledge graph: per origin, allowed paths, login/session status (never credentials), extraction recipe, |
 | `chg-96771ece` | memory | mac-planner | 6 | Unify fleetContext and the knowledge graph behind a scoped memory service that stores facts with provenance, sensitivity, confidence, expiry, and last |
+| `chg-fa7c3587` | model-routing | mac-planner | 6 | Route deterministic Mac requests (open app/URL, list a directory, create a standard reminder, read a known file) through a typed intent parser and loc |
+| `chg-cd89301b` | model-routing | mac-planner | 6 | Introduce a policy router that classifies requests into realtime dialogue, deterministic Mac/browser execution, cheap background summarization, or hig |
 | `chg-ea640c81` | model-routing | relay-realtime | 6 | Introduce a clear tiering rule: realtime relay model only handles conversational intent capture, clarification, and short confirmations. Any task that |
 | `chg-324de76f` | stack | relay-realtime | 6 | Align the stack spec and orchestrator tool registry for the realtime agent, and publish a single authoritative capability manifest (tools, endpoints,  |
 | `chg-0aa257d0` | dashboard-ux | browser-extension | 5 | Add a unified Jobs inbox across web, menubar, and iOS showing running/blocked/completed browser and Mac jobs, compact evidence, sensitive-field redact |
@@ -112,8 +114,6 @@ in here.
 | `chg-5dced2e2` | memory | mac-planner | 6 | Replace hand-written per-surface fleetContext prompt sections with a shared, typed context service: store facts with source, confidence, sensitivity,  |
 | `chg-a05b2515` | memory | mac-planner | 6 | Replace per-surface prompt hand-written fleetContext with a compact, typed context API: stable owner preferences and permissions, task-local facts, an |
 | `chg-54408a62` | model-routing | browser-extension | 6 | Introduce a browser-specific low-cost pipeline: deterministic command planner for navigation/extraction, small model for selector repair and page summ |
-| `chg-fa7c3587` | model-routing | mac-planner | 6 | Route deterministic Mac requests (open app/URL, list a directory, create a standard reminder, read a known file) through a typed intent parser and loc |
-| `chg-cd89301b` | model-routing | mac-planner | 6 | Introduce a policy router that classifies requests into realtime dialogue, deterministic Mac/browser execution, cheap background summarization, or hig |
 | `chg-67e2a397` | model-routing | mac-planner | 6 | Introduce an asynchronous job router with cheap background models for extraction, summarization, monitoring, and retries; reserve realtime for short v |
 | `chg-1bd50c67` | model-routing | relay-realtime | 6 | Introduce a clear tiering policy: relay-realtime handles only intent capture, brief clarification, and immediate safety checks; everything else become |
 | `chg-7f6f0131` | model-routing | relay-realtime | 6 | Add explicit, cheap tiers: relay captures intent and hands off to mac_delegate or server_browser_actions. Introduce job creation, status, cancellation |

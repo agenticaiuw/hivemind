@@ -644,8 +644,8 @@
       ],
       "timesProposed": 6,
       "round": 8,
-      "status": "implementing",
-      "note": "assigned to subagent: model-routing"
+      "status": "duplicate",
+      "note": "The model-tiering half is chg-cd89301b (implemented): browser_* actions are excluded from the cheap schema and any request mentioning a browser/tab/page routes straight to the full planner, so realtime is no longer in that loop. The browser-specific pieces — a deterministic navigation/extraction planner, a small model for selector repair, and compact evidence bundles instead of full page HTML — belong to the browser layer (browserBridge.js / browser-extension) and are NOT built here; re-file them there if still wanted."
     },
     {
       "id": "chg-fa7c3587",
@@ -658,8 +658,8 @@
       ],
       "timesProposed": 6,
       "round": 10,
-      "status": "implementing",
-      "note": "assigned to subagent: model-routing"
+      "status": "implemented",
+      "note": "Typed intent parser is local-agent/policyRouter.js: 14 anchored whole-utterance matchers (open app/URL/path, list directory, volume, mute, brightness, battery/wifi status, time, weather, clipboard, screenshot) that validate slots against the real machine — installed .app list, fs.statSync — before claiming a request, then run it through executeActions with no LLM. gpt-5.6-luna is reserved for ambiguous work. Cheap tier added via LLM_BACKGROUND_MODEL (default gpt-4.1-mini) with a derived 21-action schema, a compact machine block and a 768-token ceiling. Also fixed: get_mac_status/get_battery were missing from the planner schema, so 'what is my battery' was answered with run_shell pmset."
     },
     {
       "id": "chg-cd89301b",
@@ -672,8 +672,8 @@
       ],
       "timesProposed": 6,
       "round": 11,
-      "status": "implementing",
-      "note": "assigned to subagent: model-routing"
+      "status": "implemented",
+      "note": "Built local-agent/policyRouter.js + routingStats.js: every /plan request is classified into deterministic (no model call, straight to the executor), background (gpt-4.1-mini, trimmed 21-action schema, apps-only machine block) or planner (gpt-5.6-luna, full schema). Wired into orchestratePlan; GET /routing and a per-plan 'routing' receipt show tier, reason, model, llmCalls and estimated tokens. Measured: deterministic commands 1802ms -> 353ms median (5.1x) and 7,600 -> 0 tokens; background tier 7,615 -> 1,847 tokens/request (76% cheaper). Cheap tiers escalate to the full planner on failure, so nothing is narrowed."
     },
     {
       "id": "chg-67e2a397",
@@ -686,8 +686,8 @@
       ],
       "timesProposed": 6,
       "round": 12,
-      "status": "implementing",
-      "note": "assigned to subagent: model-routing"
+      "status": "duplicate",
+      "note": "Same tiering proposal as chg-cd89301b (implemented): the tier classifier, cheap background model and escalation-on-failure now live in local-agent/policyRouter.js, and work nobody is waiting on already runs off the voice turn via routines.js on the background tier. The relay-side half — job IDs, cancellation and completion notifications inside cloud-relay/openaiRealtimeVoice.js — is owned by another agent and is not covered here."
     },
     {
       "id": "chg-ea640c81",
@@ -714,8 +714,8 @@
       ],
       "timesProposed": 6,
       "round": 12,
-      "status": "implementing",
-      "note": "assigned to subagent: model-routing"
+      "status": "duplicate",
+      "note": "Same tiering proposal as chg-cd89301b (implemented): the tier classifier, cheap background model and escalation-on-failure now live in local-agent/policyRouter.js, and work nobody is waiting on already runs off the voice turn via routines.js on the background tier. The relay-side half — job IDs, cancellation and completion notifications inside cloud-relay/openaiRealtimeVoice.js — is owned by another agent and is not covered here."
     },
     {
       "id": "chg-7f6f0131",
@@ -728,8 +728,8 @@
       ],
       "timesProposed": 6,
       "round": 14,
-      "status": "implementing",
-      "note": "assigned to subagent: model-routing"
+      "status": "duplicate",
+      "note": "Same tiering proposal as chg-cd89301b (implemented): the tier classifier, cheap background model and escalation-on-failure now live in local-agent/policyRouter.js, and work nobody is waiting on already runs off the voice turn via routines.js on the background tier. The relay-side half — job IDs, cancellation and completion notifications inside cloud-relay/openaiRealtimeVoice.js — is owned by another agent and is not covered here."
     },
     {
       "id": "chg-324de76f",
@@ -924,8 +924,8 @@
       ],
       "timesProposed": 5,
       "round": 13,
-      "status": "implementing",
-      "note": "assigned to subagent: model-routing"
+      "status": "duplicate",
+      "note": "Same tiering proposal as chg-cd89301b (implemented): the tier classifier, cheap background model and escalation-on-failure now live in local-agent/policyRouter.js, and work nobody is waiting on already runs off the voice turn via routines.js on the background tier. The relay-side half — job IDs, cancellation and completion notifications inside cloud-relay/openaiRealtimeVoice.js — is owned by another agent and is not covered here."
     },
     {
       "id": "chg-a813b918",
