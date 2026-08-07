@@ -43,9 +43,23 @@
     "m135-mac-vision",
     "m139-mac-terminal",
     "m142-mac-planner",
-    "m146-mac-terminal"
+    "m146-mac-terminal",
+    "m147-mac-planner",
+    "m148-mac-terminal",
+    "m153-unified",
+    "m157-unified",
+    "m159-unified",
+    "m162-unified",
+    "m167-unified",
+    "m168-faculty-perception",
+    "m173-faculty-perception",
+    "m180-faculty-perception",
+    "m184-faculty-judgement",
+    "m188-faculty-judgement",
+    "m191-faculty-judgement",
+    "m195-faculty-judgement"
   ],
-  "round": 26,
+  "round": 28,
   "granted": {
     "context": [
       {
@@ -697,6 +711,163 @@
         "Durable storage for job state so the relay can reconnect after disconnects"
       ],
       "round": 26
+    },
+    {
+      "user_asks": "“Keep the conversation usable even when LTE is congested—let me interrupt, and don’t lose what I said while you’re speaking.”",
+      "why_useful": "The owner currently experiences a ~7.8-second uplink collapse and hundreds of dropped packets when downlink speech overlaps speech. A congestion-aware session would make the pendant feel conversational rather than requiring the owner to wait for audio to finish or repeat themselves. It is genuinely cross-node: the pendant measures capture/queue health, the relay chooses transport behavior in real time, and the Mac/ESP32 bridge reports playback occupancy and can pause/resume the SBC stream without destroying the turn.",
+      "surfaces": [
+        "pendant",
+        "relay",
+        "mac-bridge",
+        "dashboard"
+      ],
+      "model_tier": "Use relay-realtime only for the live turn and transport decisions; no additional model call is needed. If a turn is irrecoverably damaged, a cheap background repair/transcription pass can reconstruct the partial utterance rather than spending the realtime tier again.",
+      "latency_budget": "Congestion detection and mode changes under 150 ms; interruption acknowledgment under 300 ms. Preserve no more than 250 ms of speech before and after a mode switch. A resumed answer may begin within 1 second after the owner stops speaking.",
+      "cost_estimate": "Negligible model cost beyond the existing realtime session. Storage/telemetry is small; bandwidth may decrease because degraded mode uses lower bitrate and sends short control frames instead of repeatedly retransmitting audio.",
+      "security_concerns": "Audio and loss telemetry remain within the existing relay session and bridge link; do not upload raw replay buffers unless needed for the current turn. The dashboard should expose mode changes and dropped-frame counts, and automatically expire any repair buffer after the turn. Playback pause/resume and codec changes must be authenticated to the paired pendant/bridge so a spoofed control packet cannot inject audio.",
+      "missing": [
+        "A negotiated session-state protocol carrying packet-loss rate, uplink queue depth, playback occupancy, and explicit half-duplex/degraded/normal modes",
+        "Pendant firmware support for a small rolling pre-encode PCM/Opus window, sequence numbers, VAD boundaries, and local backpressure signaling (not a user-facing offline note feature)",
+        "Relay jitter buffer and turn assembler that can splice an interrupted utterance, issue a brief local/relay acknowledgment, and resume TTS from a checkpoint",
+        "ESP32/SBC bridge controls for pause, drain, and resume plus a report of actual playback occupancy; current SBC-only path otherwise hides congestion",
+        "A deterministic acceptance harness that injects LTE contention and verifies no more than 250 ms of owner speech is lost and that an interrupted response resumes exactly once"
+      ],
+      "round": 27
+    },
+    {
+      "user_asks": "“When I walk back to my Mac, hand off the thing I asked you to do on the pendant, finish it in the right browser/app, and tell me on the pendant exactly what happened.”",
+      "why_useful": "Today a worn-device request cannot reliably bridge the moment when the owner is away to the moment an authenticated Mac/browser becomes available. This would turn a spoken intent into a durable, owner-visible handoff rather than losing it in a disconnected extension or forcing the owner to repeat themselves. It depends on the pendant, always-awake relay, Mac planner, and browser sessions together.",
+      "surfaces": [
+        "pendant",
+        "relay",
+        "mac-bridge",
+        "browser",
+        "dashboard"
+      ],
+      "model_tier": "Relay-realtime only captures and acknowledges the initial intent. A cheaper background planner handles the queued goal and browser/Mac execution; realtime is used again only to deliver a concise completion or failure summary when the owner is reachable.",
+      "latency_budget": "Immediate spoken acknowledgment in under 500 ms. Handoff detection under 5 seconds after the Mac bridge/browser session becomes available. Completion notification should arrive within 2 seconds of the downstream receipt; never claim success before a signed result receipt is returned.",
+      "cost_estimate": "One short realtime turn for capture and one for the final spoken summary; planning/execution uses the cheaper Mac tier. Durable metadata is a few KB per handoff, with no need to retain raw audio after transcription.",
+      "security_concerns": "The relay must bind a handoff to the paired pendant and a specific Mac/browser session, show the target app/domain and action summary in the dashboard, and encrypt queued intent/result data. Authenticated browser cookies stay in the browser harness; the relay receives only the minimum structured goal and result. If the owner cancels from the pendant, the queued job must stop before the next mutating action.",
+      "missing": [
+        "A durable handoff object with lifecycle states captured, waiting-for-surface, executing, blocked, completed, and canceled",
+        "Presence/availability signals from Mac bridge and browser extension with freshness and identity, not merely a boolean online flag",
+        "A relay-to-Mac/browser claim protocol preventing duplicate execution when both reconnect or two workers race",
+        "Signed, human-readable result receipts that can be summarized over voice and correlated to the original spoken request",
+        "A one-button pendant cancel/retry interaction and a dashboard timeline showing queued handoffs without exposing browser credentials"
+      ],
+      "round": 27
+    },
+    {
+      "user_asks": "“If the answer comes from my private Mac or browser, don’t read sensitive details aloud when other people may be nearby—give me a discreet cue and let me unlock the full answer with the pendant.”",
+      "why_useful": "The pendant is worn away from the Mac and its speaker is inherently public. Today a successful browser/Mac retrieval can accidentally turn private mail, work, or account information into an audible disclosure. A privacy-aware delivery mode would let the owner use the hive in public without giving up authenticated Mac/browser access.",
+      "surfaces": [
+        "pendant",
+        "relay",
+        "mac-bridge",
+        "browser",
+        "dashboard"
+      ],
+      "model_tier": "Use deterministic relay policy for classification and short cues; use no extra model for ambient-level estimation. Mac/browser agents attach sensitivity labels and a concise safe summary. Realtime speaks only the safe cue; a full response is generated/spoken after the owner’s explicit button gesture or a private audio route is verified.",
+      "latency_budget": "Safe cue under 500 ms after a result receipt. Ambient/privacy state should update within 1 second and never block ordinary low-sensitivity answers. Unlock gesture must be recognized within 300 ms, with a 10-second expiry.",
+      "cost_estimate": "No additional model call for policy; a small amount of metadata travels with each result. Optional private full-answer playback through the existing bridge has normal audio cost only.",
+      "security_concerns": "Sensitivity labels must be fail-closed when absent or contradictory, and the relay must never infer that a browser result is safe merely because the request was spoken. The full answer should require a deliberate button gesture, expire quickly, and be auditable in the dashboard without storing the secret text. Ambient detection should retain only a boolean/short-lived confidence, not recordings.",
+      "missing": [
+        "A result-envelope schema carrying source, sensitivity, safe-summary, and disclosure policy from Mac planner/browser harness to relay",
+        "Pendant firmware support for a distinct long-press/double-click unlock and LED acknowledgment, with replay-resistant sequence numbers",
+        "A local ambient speech/noise privacy estimator and a configurable owner policy (always discreet, adaptive, or unrestricted)",
+        "A private playback capability or authenticated bridge route that can be proven to be the owner’s listening device",
+        "End-to-end tests proving sensitive browser/Mac content is never emitted on the public speaker without the unlock gesture"
+      ],
+      "round": 27
+    },
+    {
+      "user_asks": "Keep working on that longer task after I stop talking, and tell me what happened later.",
+      "why_useful": "The owner is wearing the pendant and often walks away. They should be able to hand off a multi-step job, then get a clear status update without keeping a live conversation open.",
+      "surfaces": [
+        "pendant",
+        "relay",
+        "mac-bridge",
+        "dashboard"
+      ],
+      "model_tier": "Realtime only to confirm handoff; mac-planner for planning/execution; relay_job_status for later status, using a cheaper tier if available for summary.",
+      "latency_budget": "Under 1 second to confirm handoff; background work can take minutes. Status checks should be near-instant and not require the Mac to be awake.",
+      "cost_estimate": "Low per invocation for handoff/status; dominant cost is mac-planner execution and any browser automation, plus storage for job logs.",
+      "security_concerns": "Status text may contain sensitive content from apps or pages. Only return minimal, user-sized summaries and store provenance. Never claim completion unless the job is marked done.",
+      "missing": [
+        "A durable job lifecycle service that spans relay and mac, with consistent IDs and typed states",
+        "A notification path to the pendant/dashboard when a job finishes",
+        "Optional server-side browser execution for jobs that do not require the Mac"
+      ],
+      "round": 28
+    },
+    {
+      "user_asks": "“What was I looking at on my Mac or in the browser earlier, and what did I need to do next?” (Also: “Continue from the thing I was working on.”)",
+      "why_useful": "The owner is usually away from the Mac when speaking to the pendant, yet their unfinished context is split between open Mac apps, browser tabs with authenticated sessions, and voice history. Today the pendant cannot reconstruct that context; this would let a brief spoken request recover the relevant thread and continue it without manually remembering filenames, tabs, or error messages.",
+      "surfaces": [
+        "pendant",
+        "relay",
+        "mac-bridge",
+        "browser",
+        "dashboard"
+      ],
+      "model_tier": "Realtime handles intent disambiguation and a concise spoken answer only. A cheaper background extraction/indexing model continuously turns permitted Mac/browser activity snapshots into short searchable evidence; mac-planner and browser harness fetch live details only for the selected thread.",
+      "latency_budget": "Under 2 seconds for a spoken answer from the recent local index; up to 10 seconds when live Mac/browser evidence must be collected. Never block the voice turn on a full app crawl—say what is known and offer to continue asynchronously.",
+      "cost_estimate": "Roughly $0.01–$0.05 per recall, dominated by live evidence extraction and planner calls; routine indexing should use a small/cheap model and batch snapshots rather than the realtime tier.",
+      "security_concerns": "Activity may include private documents, messages, and authenticated pages. Keep raw contents on the Mac/browser session where possible, send only narrowly selected snippets and hashes to the relay, encrypt the activity ledger, provide per-app/site exclusions and retention limits in the dashboard, and clearly identify uncertainty. Continuing an action must be a separate explicit request; merely recalling context must not mutate anything.",
+      "missing": [
+        "A cross-surface activity ledger that records bounded, timestamped active-window/tab/document context plus embeddings or compact summaries",
+        "Mac and browser harness APIs to export the currently relevant context on demand, with app/site exclusion and redaction support",
+        "A relay retrieval endpoint that ranks evidence across voice, Mac, and browser records and returns citations/timestamps",
+        "A dashboard view for retention, exclusions, and deleting individual context records",
+        "A continuation handoff protocol from the selected recalled thread to mac-planner/browser without conflating recall with execution"
+      ],
+      "round": 28
+    },
+    {
+      "user_asks": "“Use the file I just edited to fill out that form in the browser, attach it, and tell me exactly what was submitted.”",
+      "why_useful": "Today Mac and browser actions are separate command paths, so the owner cannot use a local artifact while away from the Mac to complete an authenticated web workflow. This bridges the Mac’s local files and the browser’s logged-in session into one voice-directed operation, with a precise spoken receipt instead of forcing the owner to remember paths, tabs, and fields.",
+      "surfaces": [
+        "pendant",
+        "relay",
+        "mac-bridge",
+        "browser",
+        "dashboard"
+      ],
+      "model_tier": "Realtime parses the request and resolves only obvious references. mac-planner locates and reads the permitted local artifact; browser harness operates the authenticated session; a cheaper verifier extracts the final field values and attachment identity. Realtime speaks the concise result and any ambiguity.",
+      "latency_budget": "Resolve references in 2 seconds; complete ordinary workflows in 10–30 seconds. If either surface is offline, preserve a resumable job and report the exact missing leg rather than pretending completion.",
+      "cost_estimate": "About $0.03–$0.15 per completed workflow, dominated by planner/browser interaction and post-submit verification; simple reference resolution should be cheap cached retrieval.",
+      "security_concerns": "This can move private local files into authenticated websites and submit consequential data. Maintain a provenance manifest (source path/hash, destination origin, fields, timestamp), redact secrets from relay logs, restrict file selection to the explicitly resolved artifact, detect origin changes, and return a spoken receipt. The owner allows access without confirmation, but submission must still be observable and recoverable with a cancel/undo or draft mode where the destination supports it.",
+      "missing": [
+        "A cross-surface job protocol carrying artifact references, not raw files, between Mac bridge and browser harness",
+        "Mac-side artifact resolver that can identify the recently edited file and expose a bounded read/attachment stream",
+        "Browser-side form schema extraction, upload support, and post-submit receipt capture",
+        "A durable job/receipt store with resumable state, idempotency keys, and failure recovery across relay, Mac, and browser outages",
+        "Dashboard provenance and deletion controls for transferred artifacts and receipts"
+      ],
+      "round": 28
+    },
+    {
+      "user_asks": "“Mark this moment.” (Press the pendant button, optionally say a short label, then later: “Take me back to the moment I marked as ‘pricing bug.’”)",
+      "why_useful": "The pendant is the only surface physically with the owner, while the meaningful context may be on a Mac window or authenticated browser tab. A one-button anchor would capture the owner’s intent at the instant it matters—even when they cannot stop to copy a URL or filename—and later reopen or summarize the exact cross-device context.",
+      "surfaces": [
+        "pendant",
+        "relay",
+        "mac-bridge",
+        "browser",
+        "dashboard"
+      ],
+      "model_tier": "The pendant firmware records a local timestamp/button event and the relay pairs it with a short voice label. A cheap background worker requests compact active-context snapshots from Mac and browser, stores a ranked anchor, and realtime later answers or routes a reopen request.",
+      "latency_budget": "Button acknowledgement must be immediate and offline-capable; pairing and context capture should finish within 5 seconds when devices are reachable. Retrieval should answer in under 2 seconds from the anchor index.",
+      "cost_estimate": "A few cents per labeled anchor at most; the dominant cost is occasional Mac/browser context capture, not the button event or realtime response. Firmware storage and LTE payloads are small.",
+      "security_concerns": "Anchors can expose whatever was onscreen, including private pages. Default to a short encrypted summary plus origin/path and allow app/site exclusions, retention expiry, and deletion. Do not upload screenshots by default. If reopening a page could cause a mutation, open read-only and report the target before any action.",
+      "missing": [
+        "Firmware support for a durable button event queue with timestamp, sequence number, and optional short audio-label association",
+        "A relay pairing window that correlates the event with nearby-in-time voice and device context despite clock drift or intermittent LTE",
+        "Mac/browser APIs for a point-in-time active-window/tab snapshot and a stable reopen token",
+        "An anchor index with retention, exclusion, and deletion controls in the dashboard",
+        "A read-only reopen/summarize operation that can recover gracefully when the original app, tab, or file no longer exists"
+      ],
+      "round": 28
     }
   ],
   "changes": [
@@ -1053,6 +1224,51 @@
       "latency_impact": "Slightly higher on cold start to reconcile, then faster because describe calls stop failing.",
       "security_impact": "Low; must ensure registry cannot be poisoned by untrusted inputs and that tool metadata is not leaked across tenants.",
       "round": 26
+    },
+    {
+      "layer": "interaction",
+      "change": "Add a relay-visible, read-only telemetry endpoint and typed status schema for live audio path health (uplink packet loss, LTE contention, half-duplex state, codec/sample-rate currently negotiated, buffer depth, and whether mac bridge/browser extension are online). Include last-updated timestamps and a minimal rolling window for trend. Provide a matching tool in the relay to fetch it.",
+      "why_useful_to_owner": "When speech starts breaking up or responses are delayed, the pendant can tell the owner what’s happening (“your network is congested; I’m switching to a safer mode”) instead of guessing or failing silently.",
+      "effort": "Medium: define a schema, implement read-only aggregation on the relay, wire metrics from modem/bridge where available, and expose a tool.",
+      "risk": "Low. Biggest risk is exposing sensitive diagnostics; mitigate by returning only coarse metrics and avoiding user-identifying data. If metrics are missing, return nulls rather than blocking.",
+      "cost_impact": "Low per call. A small JSON payload; dominated by whatever upstream collection already costs.",
+      "latency_impact": "Small improvement. Faster, clearer failure modes; avoids expensive retries.",
+      "security_impact": "Diagnostics could reveal environment details; restrict to authenticated relay and avoid precise location or network identifiers.",
+      "depends_on": [
+        "A metrics collection hook on the pendant/bridge to publish uplink loss and contention signals (or a firmware shim that emits them)."
+      ],
+      "round": 27
+    },
+    {
+      "layer": "hardware",
+      "change": "Add a low-power audio front end between the pendant microphone/speaker path and the nRF9160: an external I2S/PCM codec with DMA-backed ring buffers and hardware sample-rate conversion, plus a small control channel for congestion/occupancy telemetry. Keep LTE and application logic on the nRF9160, but move continuous capture/playback buffering and resampling out of the 87%-busy application core. Expose independent capture and playback queues so the relay can interrupt or resume speech without corrupting the shared full-duplex stream.",
+      "why_useful_to_owner": "The owner gets substantially more reliable natural conversation and true 24 kHz playback while speaking over an answer, instead of clipped words, long pauses, or repeated requests. It also makes the pendant less sensitive to the current single-I2S/CPU contention and gives the adaptive transport a truthful measure of audio that is actually heard.",
+      "effort": "Board respin, codec selection, power and EMC validation, nRF9160 driver/firmware work, bridge protocol updates, and end-to-end contention testing. Moderate-to-high hardware effort; prototype first on an external codec breakout before committing to a PCB.",
+      "risk": "Added component or clocking faults could introduce noise, latency, or battery drain; a failed codec must fall back to the existing direct I2S path. Require a boot-time self-test, watchdog bypass, and firmware feature flag so the current audio path remains recoverable.",
+      "cost_impact": "Roughly $3–$10 per unit for codec, clocking, passives, and PCB changes; likely tens of milliwatts additional draw depending on codec. No meaningful per-call API cost; reduced retransmission and fewer repeat turns may lower total model usage.",
+      "latency_impact": "Adds an estimated 5–20 ms buffering latency, but removes multi-second stalls caused by contention and CPU starvation. Tune ring-buffer depth dynamically rather than adding a fixed large delay.",
+      "security_impact": "No new cloud data path. Codec telemetry is non-content metadata; ensure debug captures are disabled by default and firmware updates are signed.",
+      "depends_on": [
+        "Define the negotiated audio/congestion session-state protocol",
+        "Add relay/bridge playback occupancy and pause/resume controls",
+        "Validate codec clocking against the existing 15.625 kHz capture and 24 kHz decode requirements"
+      ],
+      "round": 27
+    },
+    {
+      "layer": "routines",
+      "change": "Introduce a scheduler layer (cron-like) with durable job definitions, per-job cadence, retry policy, quiet hours, and a wake/dispatch mechanism that can target mac-planner, server browser, or relay summaries. Use Cloudflare Cron/Durable Object alarms as the first backend, with a queue abstraction so the Mac and future services can share it.",
+      "why_useful_to_owner": "Unlocks everyday conveniences like morning briefs, page watches, and follow-up tasks without keeping a session open. The owner can trust the system to act later, then report back.",
+      "effort": "High. Requires new storage tables, dispatch code, and job state transitions; plus UI to manage jobs.",
+      "risk": "Misfires (duplicate runs, wrong time zone, runaway retries). Mitigate with idempotency keys, per-job rate limits, and clear audit logs. Provide a kill switch and manual rerun.",
+      "cost_impact": "Moderate ongoing compute/storage; biggest cost is scheduled runs and external automation. Cloudflare cron/alarm costs are small compared to model execution.",
+      "latency_impact": "Adds no latency to live conversations; improves perceived latency by doing work ahead of time.",
+      "security_impact": "Scheduled jobs may access private data. Needs strict scoping, stored consent, and auditability.",
+      "depends_on": [
+        "Typed job schema with provenance and idempotency",
+        "Notification/receipt mechanism to deliver results back to the owner"
+      ],
+      "round": 28
     }
   ],
   "pending": [
@@ -58291,6 +58507,1893 @@
           "result": {
             "recorded": true,
             "note": "Noted. Keep going — propose others, including ones that need capabilities that do not exist yet."
+          }
+        }
+      ]
+    },
+    {
+      "round": 27,
+      "transcript": [
+        {
+          "type": "say",
+          "text": "I’ll take a quick look at what’s available now, then I’ll flag gaps and propose what should exist next."
+        },
+        {
+          "type": "tool",
+          "name": "list_capabilities",
+          "args": {},
+          "result": {
+            "note": "Call discover(category) for the contents of any of these, then describe(name) for detail on one item. Nothing here is in your system prompt — you are meant to pull only what you need.",
+            "categories": [
+              {
+                "name": "surfaces",
+                "what": "The machines and services in this system and how to reach each one.",
+                "count": 9
+              },
+              {
+                "name": "routes",
+                "what": "HTTP endpoints on the owner's Mac agent, read from its live route table.",
+                "count": 122
+              },
+              {
+                "name": "tools",
+                "what": "The tools the production voice agent actually ships with.",
+                "count": 7
+              },
+              {
+                "name": "devices",
+                "what": "Physical and virtual devices reachable right now, with live status.",
+                "count": null
+              },
+              {
+                "name": "hardware",
+                "what": "The pendant and bridge chips: memory, I/O, storage, radio, power.",
+                "count": 8
+              },
+              {
+                "name": "owner",
+                "what": "The person this is for: what they actually said, what they scheduled, what is remembered about them, and what they asked for and did not get. Every other category describes machines.",
+                "count": null
+              },
+              {
+                "name": "backlog",
+                "what": "What earlier rounds already proposed, and what became of each one. Restating one of these is a wasted round; building past it is not.",
+                "count": 64
+              },
+              {
+                "name": "granted",
+                "what": "What the orchestrator has already given you this run.",
+                "count": 11
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "surfaces"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "relay-realtime",
+                "summary": "You run on a Cloudflare Worker and hold the live voice conversation with the owner through a wearable pendant",
+                "model": "gpt-realtime-2.1",
+                "base": "https://ai-pendant-relay.evan20050827.workers.dev",
+                "facetOf": null
+              },
+              {
+                "name": "mac-planner",
+                "summary": "You run on the owner's MacBook",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": null
+              },
+              {
+                "name": "mac-vision",
+                "summary": "You are the computer-use loop on the owner's MacBook",
+                "model": "gpt-4.1-mini",
+                "base": "http://localhost:8000",
+                "facetOf": null
+              },
+              {
+                "name": "browser-extension",
+                "summary": "You drive the owner's browser through the AI Pendant browser extension",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": "mac-planner"
+              },
+              {
+                "name": "mac-terminal",
+                "summary": "You are the shell tier on the owner's MacBook",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": "mac-planner"
+              },
+              {
+                "name": "unified",
+                "summary": "You are one mind with several bodies, not a team",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": null
+              },
+              {
+                "name": "faculty-perception",
+                "summary": "You are the part of one mind that establishes what is true right now",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": null
+              },
+              {
+                "name": "faculty-judgement",
+                "summary": "You are the part of one mind that decides what should happen",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": null
+              },
+              {
+                "name": "faculty-action",
+                "summary": "You are the part of one mind that makes things happen in the world",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": null
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "tools"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "get_mac_status",
+                "summary": "PROACTIVE"
+              },
+              {
+                "name": "mac_run_actions",
+                "summary": "PROACTIVE for reversible control"
+              },
+              {
+                "name": "browser_run_actions",
+                "summary": "PROACTIVE when browser work is needed"
+              },
+              {
+                "name": "web_search",
+                "summary": "PROACTIVE for live public facts"
+              },
+              {
+                "name": "mac_delegate",
+                "summary": "ONLY for multi-step or ambiguous computer tasks that cannot fit a short action list"
+              },
+              {
+                "name": "read_web_page",
+                "summary": "PROACTIVE for reading a specific public web page without the Mac"
+              },
+              {
+                "name": "relay_job_status",
+                "summary": "PROACTIVE"
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "devices"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "fanout-probe-cleanup",
+                "summary": "browser · unknown · 0 tab(s) · offline"
+              },
+              {
+                "name": "home-macbook-bridge",
+                "summary": "mac_bridge · online · last seen 2026-08-07T08:59:33.799Z"
+              },
+              {
+                "name": "cloudflare-contract-test",
+                "summary": "mobile · offline · last seen 2026-07-31T23:42:56.525Z"
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "hardware"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "pendant",
+                "summary": "Nordic nRF9160 DK (nRF9160 SiP), non-secure app under TF-M minimal"
+              },
+              {
+                "name": "io",
+                "summary": "ONE user button, devicetree alias sw0. Press starts a conversation; second press ends it. It is also pokable over J-Link for testing."
+              },
+              {
+                "name": "storage",
+                "summary": "microSD over SPI. CONFIG_DISK_DRIVER_SDMMC, FATFS (ELM) with exFAT enabled. Mount is FS_FATFS."
+              },
+              {
+                "name": "audio",
+                "summary": "I2S microphone, 15,625 Hz capture, Opus-encoded uplink at 16 kHz / 16 kbps, complexity 0"
+              },
+              {
+                "name": "bridge",
+                "summary": "Adafruit HUZZAH32 (ESP32 classic), 240 MHz dual core, 320 kB DRAM"
+              },
+              {
+                "name": "network",
+                "summary": "LTE-M (Cat-M1) via the nRF9160 modem. Half duplex in practice."
+              },
+              {
+                "name": "stack",
+                "summary": "Cloudflare Worker (Express-style). D1 for jobs/history/memory, R2 for audio. Audio retention 30 days, sweep disabled, ~100 recordings stored."
+              },
+              {
+                "name": "power",
+                "summary": "USB or battery. LTE-M transmit bursts draw far more than idle."
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "backlog"
+          },
+          "result": {
+            "note": "64 still open, 140 already settled. describe(id) gives the full entry, including why something was rejected. timesProposed counts how many rounds independently arrived at the same idea — a high number means the gap is real and still unfilled, not that it needs saying again.",
+            "items": [
+              {
+                "name": "chg-a813b918",
+                "summary": "Enable a bounded audio-retention sweeper and per-job deletion controls: default to short retention for generated briefings, delete expired R2 objects and D1 pointers idempotently, and expose a dashboa",
+                "layer": "relay",
+                "timesProposed": 18
+              },
+              {
+                "name": "chg-16bc5dee",
+                "summary": "Add a durable browser job runner with two backends: the authenticated Safari bridge for owner-private pages and Cloudflare Browser Run for public pages. Represent each step as navigate/read/extract/cl",
+                "layer": "browser-harness",
+                "timesProposed": 17
+              },
+              {
+                "name": "cap-bff5f829",
+                "summary": "Check my logged-in web accounts for anything urgent, summarize it, and draft (but do not send) any replies that need my attention.",
+                "layer": "capability",
+                "timesProposed": 17
+              },
+              {
+                "name": "cap-8c36c70a",
+                "summary": "Every weekday morning, check my logged-in calendar, task board, and travel reservations, then tell me the three things I need to know and prepare a suggested plan.",
+                "layer": "capability",
+                "timesProposed": 17
+              },
+              {
+                "name": "cap-5bd640c5",
+                "summary": "Watch my chosen logged-in web pages once a day and tell me only what changed; prepare drafts for any follow-up forms, but stop before submitting.",
+                "layer": "capability",
+                "timesProposed": 17
+              },
+              {
+                "name": "chg-a82e0b13",
+                "summary": "Replace per-surface hand-written fleetContext prompt sections with a compact, typed context service that returns only task-relevant facts, each with source, timestamp, confidence, and expiry; automati",
+                "layer": "memory",
+                "timesProposed": 17
+              },
+              {
+                "name": "cap-4f5af34d",
+                "summary": "Check my authenticated browser accounts for anything that needs my attention, then put findings in a review queue instead of changing anything.",
+                "layer": "capability",
+                "timesProposed": 16
+              },
+              {
+                "name": "chg-18a9c60f",
+                "summary": "Replace hand-written per-surface fleetContext prompt sections with a single typed context service that stores compact facts, provenance, sensitivity, TTL, and last-used timestamps; retrieve only task-",
+                "layer": "memory",
+                "timesProposed": 16
+              },
+              {
+                "name": "chg-0096a2b3",
+                "summary": "Replace per-surface hand-written fleetContext prompt sections with a shared, typed context compiler: retrieve only task-relevant entities/relations, attach confidence and freshness, cap tokens per tie",
+                "layer": "memory",
+                "timesProposed": 16
+              },
+              {
+                "name": "chg-14accc01",
+                "summary": "Add a reliable browser command queue with request IDs, idempotency keys, tab/session affinity, typed results (page metadata, extracted text, screenshots), and explicit irreversible-action checkpoints.",
+                "layer": "browser-harness",
+                "timesProposed": 13
+              },
+              {
+                "name": "cap-a624ca3e",
+                "summary": "Every morning, check my private calendar, travel reservations, and important account notifications in Safari, then give me a concise spoken briefing with links and only flag things that need my attent",
+                "layer": "capability",
+                "timesProposed": 13
+              },
+              {
+                "name": "cap-b875c138",
+                "summary": "Draft a form, email, or support request from information on this private webpage, fill it in, and show me exactly what will be submitted before I approve it.",
+                "layer": "capability",
+                "timesProposed": 13
+              },
+              {
+                "name": "cap-a09b223f",
+                "summary": "Watch my authenticated order, appointment, and account pages for changes, and tell me only when a meaningful change happens—never pollute my daily briefing with unchanged pages.",
+                "layer": "capability",
+                "timesProposed": 13
+              },
+              {
+                "name": "chg-498a3489",
+                "summary": "Replace per-surface hand-written fleetContext prompt sections with a compact, typed context projection service: durable facts, current goals, and permissions are selected per job, with token budgets a",
+                "layer": "memory",
+                "timesProposed": 13
+              },
+              {
+                "name": "chg-e767dfc0",
+                "summary": "Build a first-class authenticated page-watch service: each watch stores URL/tab context, extraction selectors or semantic regions, a normalized baseline hash, volatile-field rules, cadence, and last s",
+                "layer": "browser-harness",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-5284a6ce",
+                "summary": "Build a durable authenticated page-watch service: named watch definitions store URL/tab/session binding, extraction selectors or an agentic extraction recipe, schedule, semantic fingerprint, last seen",
+                "layer": "browser-harness",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-e14fff33",
+                "summary": "Add a provenance-aware browser workbench: every extraction and field mutation gets a tabId, URL, timestamp, DOM locator, source snippet hash, action plan, and before/after value. Group tabs into a tas",
+                "layer": "browser-harness",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-fa84f9a7",
+                "summary": "Build a durable authenticated page-watch layer: named browser sessions with tab/window reattachment, per-watch cadence and quiet hours, DOM-region extraction plus normalized semantic fingerprints, enc",
+                "layer": "browser-harness",
+                "timesProposed": 10
+              },
+              {
+                "name": "cap-0c8c5dfe",
+                "summary": "Watch the authenticated pages I choose, detect meaningful changes, and leave me a concise, sourced briefing with suggested next steps—without sending or submitting anything.",
+                "layer": "capability",
+                "timesProposed": 10
+              },
+              {
+                "name": "cap-391cae82",
+                "summary": "When I ask about something on a logged-in site, have several agents inspect it in parallel, reconcile their findings, and give me an evidence-backed answer or a prepared (not sent) action.",
+                "layer": "capability",
+                "timesProposed": 10
+              },
+              {
+                "name": "cap-7217b17c",
+                "summary": "Prepare a browser transaction for me: gather the relevant logged-in data, fill the form or draft the message, show me exactly what will change with before/after evidence, and let me approve, edit, or ",
+                "layer": "capability",
+                "timesProposed": 10
+              },
+              {
+                "name": "cap-0d11cf82",
+                "summary": "Every weekday morning, check my authenticated work portal for new high-priority items and tell me only what needs my attention.",
+                "layer": "capability",
+                "timesProposed": 10
+              },
+              {
+                "name": "cap-df9ec55e",
+                "summary": "When I say 'handle this' about something I found in Safari, gather the needed details across my logged-in tabs, fill the reversible parts, and show me exactly what will be sent before stopping.",
+                "layer": "capability",
+                "timesProposed": 10
+              },
+              {
+                "name": "cap-302a8868",
+                "summary": "“Every morning, check my logged-in work dashboards and tell me only what changed or needs my attention; keep watching the important pages and alert me when a genuinely urgent item appears.”",
+                "layer": "capability",
+                "timesProposed": 10
+              },
+              {
+                "name": "cap-4b41e08a",
+                "summary": "While I sleep, investigate my open threads across Calendar, Mail, and authenticated browser tabs, then leave a ready-to-review workbench on my Mac when I wake: one folder with a prioritized brief, sou",
+                "layer": "capability",
+                "timesProposed": 10
+              },
+              {
+                "name": "cap-26c609fc",
+                "summary": "“When I ask you to do something that takes time, keep working after I leave and tell me exactly what happened when it’s done.”",
+                "layer": "capability",
+                "timesProposed": 10
+              },
+              {
+                "name": "cap-a267b7e8",
+                "summary": "“Just give it the goal; figure out whether the Mac, browser, pendant, or server should do each part, and use whichever can.”",
+                "layer": "capability",
+                "timesProposed": 10
+              },
+              {
+                "name": "cap-ca6005c3",
+                "summary": "“While I sleep, prepare tomorrow’s brief and leave me a short audio queue I can listen to from the pendant.”",
+                "layer": "capability",
+                "timesProposed": 10
+              },
+              {
+                "name": "cap-51c2dc88",
+                "summary": "“Get me ready for my next meeting.”",
+                "layer": "capability",
+                "timesProposed": 10
+              },
+              {
+                "name": "cap-a4c0ec8d",
+                "summary": "Turn on mac-vision's accessibility-mode UI interaction loop to automate GUI tasks without taking over the screen or keyboard focus.",
+                "layer": "capability",
+                "timesProposed": 10
+              },
+              {
+                "name": "cap-a1aa3bf5",
+                "summary": "Show me a history of recent actions taken by mac-vision in automation loops with human-readable explanations and option to undo.",
+                "layer": "capability",
+                "timesProposed": 10
+              },
+              {
+                "name": "cap-e21eb7f4",
+                "summary": "“Every morning, give me a 30-second audio digest of what changed: calendar, reminders, and top emails.”",
+                "layer": "capability",
+                "timesProposed": 10
+              },
+              {
+                "name": "cap-72fc9997",
+                "summary": "\"Queue this up and tell me when it’s done\" (for example: summarize a long document, compare options, draft an email, or research a topic).",
+                "layer": "capability",
+                "timesProposed": 10
+              },
+              {
+                "name": "cap-e5132197",
+                "summary": "“When I press the pendant button, capture a short voice note, tag it with time and place if available, and later summarize it into tasks.”",
+                "layer": "capability",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-9a6740ed",
+                "summary": "Add a compact, durable Mac execution context cache and handoff protocol. Each server plan gets a jobId, parentId, monotonic sequence, intent hash, referenced local resources, and a short result receip",
+                "layer": "context",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-f5d3b820",
+                "summary": "Replace the desk-bound nRF9160 DK prototype with a jewelry-sized cellular/BLE pendant built around an nRF9161-class modem/application module plus a low-power companion MCU, two digital MEMS microphone",
+                "layer": "hardware",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-258cbe5e",
+                "summary": "Build the wearable revision around the nRF9160 with an ultra-low-power 6-axis IMU on the unused I2C bus, a vibration/LRA haptic driver, and a real microphone/audio front end with physical mute. Keep t",
+                "layer": "hardware",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-d9ce5471",
+                "summary": "Add a dedicated low-power vision coprocessor or embedded GPU to the pendant hardware for on-device image analysis to recognize Mac screen contents and UI elements, enabling offline partial vision-base",
+                "layer": "hardware",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-91f3c214",
+                "summary": "Integrate mac-vision with the Cloudflare Worker relay to allow partial offloading of UI state classification and action suggestion to a cloud tier. This enables more powerful multimodal fusion with vo",
+                "layer": "integration",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-622e7336",
+                "summary": "Wire up a server-side browser path using Cloudflare Browser Run and a routing rule: web reads/extraction default to server_browser_actions; only fall back to Mac browser bridge when authentication req",
+                "layer": "integration",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-a7a155b1",
+                "summary": "Use the new server-side browser capability for public web tasks directly from the relay, reserving the Mac harness for authenticated sessions and local data. Add routing logic: public pages -> server ",
+                "layer": "integration",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-d2c2cc02",
+                "summary": "Add an idempotent Workbench transaction primitive to the Mac planner: accept a job_id and manifest, write all outputs into a temporary directory, fsync/rename atomically into ~/AI-Workbench/<date>/<jo",
+                "layer": "mac-harness",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-9596a2ad",
+                "summary": "Replace fleetContext.js's hand-written per-surface prompt section with a shared event log plus typed projections. Every node writes small signed events (preference, commitment, task state, source cita",
+                "layer": "memory",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-5cc0bd50",
+                "summary": "Replace per-surface hand-written fleetContext prompts with a shared, event-sourced personal memory broker. Every node writes typed facts, preferences, commitments, and task outcomes with provenance, c",
+                "layer": "memory",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-2903dddb",
+                "summary": "Unify memory across surfaces: replace hand-written prompt sections per surface with a shared, versioned memory API that returns small, purpose-built summaries (profile, preferences, current projects, ",
+                "layer": "memory",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-7613a731",
+                "summary": "Introduce a unified, cross-node memory write API with schema (entities, events, preferences, tasks) and TTLs, plus a pruning policy. Replace hand-written per-surface prompt sections with retrieval-bas",
+                "layer": "memory",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-67952158",
+                "summary": "Add a real scheduler: a Durable Object-backed job queue with delayed execution and recurring rules (cron-like). The relay can enqueue jobs, and a workers cron/alarm runner executes them, delegating to",
+                "layer": "routines",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-9b4366c7",
+                "summary": "Add a relay-owned durable work queue with retries and a receipt log, implemented as a Durable Object (or D1 + Durable Object alarms). The relay exposes enqueue/status endpoints, persists intent payloa",
+                "layer": "routines",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-ae7e4af5",
+                "summary": "Introduce a lightweight scheduler using Durable Object alarms or Cloudflare Cron to trigger queued jobs (summarize notes, send digests, retry failed uploads).",
+                "layer": "routines",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-9ffe4cd1",
+                "summary": "Add a browser-bridge self-healing lease protocol: each Safari heartbeat carries a device nonce, extension version, tab inventory, and last-applied command sequence; the Mac agent expires orphaned pend",
+                "layer": "browser-harness",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-951c7f45",
+                "summary": "“Check my logged-in accounts for inconsistent personal details, upcoming expirations, or duplicate subscriptions, and prepare a concise fix list without changing anything.”",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-834ffef2",
+                "summary": "Add an in-extension privacy boundary before browser results leave Safari: classify DOM regions and form fields (credentials, payment, health, private messages, identifiers), redact or hash them by def",
+                "layer": "browser-harness",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-702d238e",
+                "summary": "Add a bridge self-healing supervisor with an explicit offline spool. When Safari stops heartbeating, mark the device unavailable, cancel/park pending browser jobs without 45-second request hangs, and ",
+                "layer": "browser-harness",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-a189465a",
+                "summary": "Find upcoming renewals, deadlines, and commitments across my logged-in services, explain which ones matter, and prepare the changes or cancellation forms without submitting anything.",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-df0dc9e0",
+                "summary": "From my pendant, check the private page I mentioned and tell me what changed since the last time I looked; save the evidence to my Mac if it matters.",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-b522df2d",
+                "summary": "“The last automation may have been interrupted—inspect what it actually finished, safely continue the rest, and tell me exactly what remains.”",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-4e9325d8",
+                "summary": "Keep the conversation understandable when the connection is bad: if you miss part of what I said or your reply cannot get through, recover it automatically and tell me briefly what was lost instead of",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-c11fad55",
+                "summary": "What’s connected right now, and can you hand this off to my Mac if needed?",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-9c544c66",
+                "summary": "If this will take longer, keep working on my Mac and let me know when it’s done.",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-ac4b7439",
+                "summary": "Add a typed discovery registry for granted tools and capabilities. When the orchestrator grants a tool, it registers under a stable name with a version and a canonical describe() entry so relay can re",
+                "layer": "context",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-8351dcbc",
+                "summary": "Add a typed capability registry that maps discovered tool names and surfaces to stable internal identifiers. The registry should reconcile differences between what’s granted, what’s discoverable, and ",
+                "layer": "context",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-9914b3fc",
+                "summary": "For the wearable revision, add a small always-on audio/transport companion (for example an nRF5340-class low-power MCU with PDM/I2S and a ring-buffered codec path) between the microphone/speaker and t",
+                "layer": "hardware",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-1659f2b1",
+                "summary": "Add a durable, crash-recoverable action ledger for every multi-step Mac/browser plan. Before execution, persist a plan manifest with stable action IDs, target fingerprints (path/app/tab), and intended",
+                "layer": "integration",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-15e4068a",
+                "summary": "Finish the implementation behind the granted mac_readonly_inspect interface for running apps, foreground app, accessibility state, UI snapshots, browser tabs, and approved directory listings. Route it",
+                "layer": "mac-harness",
+                "timesProposed": 2
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "granted"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "relay_route_intent",
+                "summary": "tool"
+              },
+              {
+                "name": "server_browser_actions",
+                "summary": "tool"
+              },
+              {
+                "name": "relay_job_status",
+                "summary": "tool"
+              },
+              {
+                "name": "current session pairing and owner state",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "job scheduling and background workers",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "Relay intent contract and supported intents/context fields",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "owner_workflows_and_preferences",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "available_tools_and_routing_contract",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "probe:post:/v1/mac/plan",
+                "summary": "permission"
+              },
+              {
+                "name": "probe:post:/v1/bridge/work",
+                "summary": "permission"
+              },
+              {
+                "name": "probe:get:/v1/state/* and probe:get:/v1/ops/* additional routes beyond latest/history/memory",
+                "summary": "permission"
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "relay_route_intent"
+          },
+          "result": {
+            "error": "Nothing named \"relay_route_intent\". Use discover(category) to see valid names."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "get_mac_status"
+          },
+          "result": {
+            "name": "get_mac_status",
+            "description": "PROACTIVE. Read live Mac device state: battery, wifi, volume, focused app, or all. Use when the owner asks about battery/charge, wifi/network, volume/mute, or what app is frontmost. Call immediately — no confirmation. Do NOT use when: controlling the Mac (open app, set volume, type, reminders — use mac_run_actions), browser work (browser_run_actions), public web facts (web_search), or multi-step ambiguous tasks (mac_delegate). Never invent readings; always call this tool instead of guessing numbers.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "fields": {
+                  "type": "array",
+                  "description": "Optional status fields to fetch. Omit or use [\"all\"] for a full snapshot.",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "battery",
+                      "wifi",
+                      "volume",
+                      "focused_app",
+                      "all"
+                    ]
+                  }
+                },
+                "spoken_reply": {
+                  "type": "string",
+                  "description": "Short pendant confirmation (e.g. \"Checking battery.\"). One sentence."
+                },
+                "transcript": {
+                  "type": "string",
+                  "description": "Optional history label only. Omit if unsure — never block on this."
+                }
+              },
+              "required": []
+            }
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "mac_delegate"
+          },
+          "result": {
+            "name": "mac_delegate",
+            "description": "ONLY for multi-step or ambiguous computer tasks that cannot fit a short action list. Hands the goal to the local Mac agent (sets requireLocalPlanner). Use when: complex multi-app workflows, unclear steps, long-running computer use. Do NOT use when: a single get_mac_status or 1–3 mac_run_actions / browser_run_actions would suffice. Prefer concrete tools first.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "goal": {
+                  "type": "string",
+                  "description": "Clear goal for the Mac agent to accomplish."
+                },
+                "spoken_reply": {
+                  "type": "string",
+                  "description": "Optional short confirmation for the pendant speaker while the Mac works."
+                },
+                "transcript": {
+                  "type": "string",
+                  "description": "Optional short transcript for history/debug only. Omit if unsure."
+                }
+              },
+              "required": [
+                "goal"
+              ]
+            }
+          }
+        },
+        {
+          "type": "tool",
+          "name": "probe_http",
+          "args": {
+            "method": "GET",
+            "path": "/v1/ops/status"
+          },
+          "result": {
+            "ok": false,
+            "status": 404,
+            "body": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /v1/ops/status</pre>\n</body>\n</html>\n"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "probe_http",
+          "args": {
+            "method": "GET",
+            "path": "/v1/ops/pipeline"
+          },
+          "result": {
+            "ok": false,
+            "status": 404,
+            "body": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /v1/ops/pipeline</pre>\n</body>\n</html>\n"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "probe_http",
+          "args": {
+            "method": "GET",
+            "path": "/v1/ops/voice-runs/latest"
+          },
+          "result": {
+            "ok": true,
+            "status": 200,
+            "body": "{\"ok\":true,\"latest\":{\"pipelineId\":\"job_27616bb0-ccff-41fb-a752-09d3c6648baa\",\"status\":\"transcribing\",\"updatedAt\":\"2026-08-07T07:22:00.608Z\"},\"observedAt\":\"2026-08-07T08:59:55.990Z\"}"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_change",
+          "args": {
+            "layer": "interaction",
+            "change": "Add a relay-visible, read-only telemetry endpoint and typed status schema for live audio path health (uplink packet loss, LTE contention, half-duplex state, codec/sample-rate currently negotiated, buffer depth, and whether mac bridge/browser extension are online). Include last-updated timestamps and a minimal rolling window for trend. Provide a matching tool in the relay to fetch it.",
+            "why_useful_to_owner": "When speech starts breaking up or responses are delayed, the pendant can tell the owner what’s happening (“your network is congested; I’m switching to a safer mode”) instead of guessing or failing silently.",
+            "effort": "Medium: define a schema, implement read-only aggregation on the relay, wire metrics from modem/bridge where available, and expose a tool.",
+            "risk": "Low. Biggest risk is exposing sensitive diagnostics; mitigate by returning only coarse metrics and avoiding user-identifying data. If metrics are missing, return nulls rather than blocking.",
+            "cost_impact": "Low per call. A small JSON payload; dominated by whatever upstream collection already costs.",
+            "latency_impact": "Small improvement. Faster, clearer failure modes; avoids expensive retries.",
+            "security_impact": "Diagnostics could reveal environment details; restrict to authenticated relay and avoid precise location or network identifiers.",
+            "depends_on": [
+              "A metrics collection hook on the pendant/bridge to publish uplink loss and contention signals (or a firmware shim that emits them)."
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going, including layers you have not touched yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_capability",
+          "args": {
+            "user_asks": "“Keep the conversation usable even when LTE is congested—let me interrupt, and don’t lose what I said while you’re speaking.”",
+            "why_useful": "The owner currently experiences a ~7.8-second uplink collapse and hundreds of dropped packets when downlink speech overlaps speech. A congestion-aware session would make the pendant feel conversational rather than requiring the owner to wait for audio to finish or repeat themselves. It is genuinely cross-node: the pendant measures capture/queue health, the relay chooses transport behavior in real time, and the Mac/ESP32 bridge reports playback occupancy and can pause/resume the SBC stream without destroying the turn.",
+            "surfaces": [
+              "pendant",
+              "relay",
+              "mac-bridge",
+              "dashboard"
+            ],
+            "model_tier": "Use relay-realtime only for the live turn and transport decisions; no additional model call is needed. If a turn is irrecoverably damaged, a cheap background repair/transcription pass can reconstruct the partial utterance rather than spending the realtime tier again.",
+            "latency_budget": "Congestion detection and mode changes under 150 ms; interruption acknowledgment under 300 ms. Preserve no more than 250 ms of speech before and after a mode switch. A resumed answer may begin within 1 second after the owner stops speaking.",
+            "cost_estimate": "Negligible model cost beyond the existing realtime session. Storage/telemetry is small; bandwidth may decrease because degraded mode uses lower bitrate and sends short control frames instead of repeatedly retransmitting audio.",
+            "security_concerns": "Audio and loss telemetry remain within the existing relay session and bridge link; do not upload raw replay buffers unless needed for the current turn. The dashboard should expose mode changes and dropped-frame counts, and automatically expire any repair buffer after the turn. Playback pause/resume and codec changes must be authenticated to the paired pendant/bridge so a spoofed control packet cannot inject audio.",
+            "missing": [
+              "A negotiated session-state protocol carrying packet-loss rate, uplink queue depth, playback occupancy, and explicit half-duplex/degraded/normal modes",
+              "Pendant firmware support for a small rolling pre-encode PCM/Opus window, sequence numbers, VAD boundaries, and local backpressure signaling (not a user-facing offline note feature)",
+              "Relay jitter buffer and turn assembler that can splice an interrupted utterance, issue a brief local/relay acknowledgment, and resume TTS from a checkpoint",
+              "ESP32/SBC bridge controls for pause, drain, and resume plus a report of actual playback occupancy; current SBC-only path otherwise hides congestion",
+              "A deterministic acceptance harness that injects LTE contention and verifies no more than 250 ms of owner speech is lost and that an interrupted response resumes exactly once"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going — propose others, including ones that need capabilities that do not exist yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_capability",
+          "args": {
+            "user_asks": "“When I walk back to my Mac, hand off the thing I asked you to do on the pendant, finish it in the right browser/app, and tell me on the pendant exactly what happened.”",
+            "why_useful": "Today a worn-device request cannot reliably bridge the moment when the owner is away to the moment an authenticated Mac/browser becomes available. This would turn a spoken intent into a durable, owner-visible handoff rather than losing it in a disconnected extension or forcing the owner to repeat themselves. It depends on the pendant, always-awake relay, Mac planner, and browser sessions together.",
+            "surfaces": [
+              "pendant",
+              "relay",
+              "mac-bridge",
+              "browser",
+              "dashboard"
+            ],
+            "model_tier": "Relay-realtime only captures and acknowledges the initial intent. A cheaper background planner handles the queued goal and browser/Mac execution; realtime is used again only to deliver a concise completion or failure summary when the owner is reachable.",
+            "latency_budget": "Immediate spoken acknowledgment in under 500 ms. Handoff detection under 5 seconds after the Mac bridge/browser session becomes available. Completion notification should arrive within 2 seconds of the downstream receipt; never claim success before a signed result receipt is returned.",
+            "cost_estimate": "One short realtime turn for capture and one for the final spoken summary; planning/execution uses the cheaper Mac tier. Durable metadata is a few KB per handoff, with no need to retain raw audio after transcription.",
+            "security_concerns": "The relay must bind a handoff to the paired pendant and a specific Mac/browser session, show the target app/domain and action summary in the dashboard, and encrypt queued intent/result data. Authenticated browser cookies stay in the browser harness; the relay receives only the minimum structured goal and result. If the owner cancels from the pendant, the queued job must stop before the next mutating action.",
+            "missing": [
+              "A durable handoff object with lifecycle states captured, waiting-for-surface, executing, blocked, completed, and canceled",
+              "Presence/availability signals from Mac bridge and browser extension with freshness and identity, not merely a boolean online flag",
+              "A relay-to-Mac/browser claim protocol preventing duplicate execution when both reconnect or two workers race",
+              "Signed, human-readable result receipts that can be summarized over voice and correlated to the original spoken request",
+              "A one-button pendant cancel/retry interaction and a dashboard timeline showing queued handoffs without exposing browser credentials"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going — propose others, including ones that need capabilities that do not exist yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_change",
+          "args": {
+            "layer": "hardware",
+            "change": "Add a low-power audio front end between the pendant microphone/speaker path and the nRF9160: an external I2S/PCM codec with DMA-backed ring buffers and hardware sample-rate conversion, plus a small control channel for congestion/occupancy telemetry. Keep LTE and application logic on the nRF9160, but move continuous capture/playback buffering and resampling out of the 87%-busy application core. Expose independent capture and playback queues so the relay can interrupt or resume speech without corrupting the shared full-duplex stream.",
+            "why_useful_to_owner": "The owner gets substantially more reliable natural conversation and true 24 kHz playback while speaking over an answer, instead of clipped words, long pauses, or repeated requests. It also makes the pendant less sensitive to the current single-I2S/CPU contention and gives the adaptive transport a truthful measure of audio that is actually heard.",
+            "effort": "Board respin, codec selection, power and EMC validation, nRF9160 driver/firmware work, bridge protocol updates, and end-to-end contention testing. Moderate-to-high hardware effort; prototype first on an external codec breakout before committing to a PCB.",
+            "risk": "Added component or clocking faults could introduce noise, latency, or battery drain; a failed codec must fall back to the existing direct I2S path. Require a boot-time self-test, watchdog bypass, and firmware feature flag so the current audio path remains recoverable.",
+            "cost_impact": "Roughly $3–$10 per unit for codec, clocking, passives, and PCB changes; likely tens of milliwatts additional draw depending on codec. No meaningful per-call API cost; reduced retransmission and fewer repeat turns may lower total model usage.",
+            "latency_impact": "Adds an estimated 5–20 ms buffering latency, but removes multi-second stalls caused by contention and CPU starvation. Tune ring-buffer depth dynamically rather than adding a fixed large delay.",
+            "security_impact": "No new cloud data path. Codec telemetry is non-content metadata; ensure debug captures are disabled by default and firmware updates are signed.",
+            "depends_on": [
+              "Define the negotiated audio/congestion session-state protocol",
+              "Add relay/bridge playback occupancy and pause/resume controls",
+              "Validate codec clocking against the existing 15.625 kHz capture and 24 kHz decode requirements"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going, including layers you have not touched yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_capability",
+          "args": {
+            "user_asks": "“If the answer comes from my private Mac or browser, don’t read sensitive details aloud when other people may be nearby—give me a discreet cue and let me unlock the full answer with the pendant.”",
+            "why_useful": "The pendant is worn away from the Mac and its speaker is inherently public. Today a successful browser/Mac retrieval can accidentally turn private mail, work, or account information into an audible disclosure. A privacy-aware delivery mode would let the owner use the hive in public without giving up authenticated Mac/browser access.",
+            "surfaces": [
+              "pendant",
+              "relay",
+              "mac-bridge",
+              "browser",
+              "dashboard"
+            ],
+            "model_tier": "Use deterministic relay policy for classification and short cues; use no extra model for ambient-level estimation. Mac/browser agents attach sensitivity labels and a concise safe summary. Realtime speaks only the safe cue; a full response is generated/spoken after the owner’s explicit button gesture or a private audio route is verified.",
+            "latency_budget": "Safe cue under 500 ms after a result receipt. Ambient/privacy state should update within 1 second and never block ordinary low-sensitivity answers. Unlock gesture must be recognized within 300 ms, with a 10-second expiry.",
+            "cost_estimate": "No additional model call for policy; a small amount of metadata travels with each result. Optional private full-answer playback through the existing bridge has normal audio cost only.",
+            "security_concerns": "Sensitivity labels must be fail-closed when absent or contradictory, and the relay must never infer that a browser result is safe merely because the request was spoken. The full answer should require a deliberate button gesture, expire quickly, and be auditable in the dashboard without storing the secret text. Ambient detection should retain only a boolean/short-lived confidence, not recordings.",
+            "missing": [
+              "A result-envelope schema carrying source, sensitivity, safe-summary, and disclosure policy from Mac planner/browser harness to relay",
+              "Pendant firmware support for a distinct long-press/double-click unlock and LED acknowledgment, with replay-resistant sequence numbers",
+              "A local ambient speech/noise privacy estimator and a configurable owner policy (always discreet, adaptive, or unrestricted)",
+              "A private playback capability or authenticated bridge route that can be proven to be the owner’s listening device",
+              "End-to-end tests proving sensitive browser/Mac content is never emitted on the public speaker without the unlock gesture"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going — propose others, including ones that need capabilities that do not exist yet."
+          }
+        },
+        {
+          "type": "finish",
+          "summary": "Recorded three new proposals: congestion-resilient interruptible conversation across pendant/relay/bridge; durable away-from-Mac handoff with authenticated completion; and privacy-aware disclosure of Mac/browser results. Also recorded a hardware change adding an external audio front end to relieve nRF9160/I2S contention, plus a discreet-result capability that requires a pendant unlock gesture and sensitivity metadata. The remaining needs are implementation contracts: audio session telemetry/control, durable handoff claims and receipts, sensitivity-labeled result envelopes, and firmware/bridge support for gestures and playback occupancy.",
+          "biggest_unknown": "Whether the pendant enclosure and power budget can accommodate an external codec/audio front end and whether the existing bridge has a controllable private playback route; these require hardware and bridge-owner validation rather than further relay discovery."
+        },
+        {
+          "type": "tool",
+          "name": "finish",
+          "args": {
+            "summary": "Recorded three new proposals: congestion-resilient interruptible conversation across pendant/relay/bridge; durable away-from-Mac handoff with authenticated completion; and privacy-aware disclosure of Mac/browser results. Also recorded a hardware change adding an external audio front end to relieve nRF9160/I2S contention, plus a discreet-result capability that requires a pendant unlock gesture and sensitivity metadata. The remaining needs are implementation contracts: audio session telemetry/control, durable handoff claims and receipts, sensitivity-labeled result envelopes, and firmware/bridge support for gestures and playback occupancy.",
+            "biggest_unknown": "Whether the pendant enclosure and power budget can accommodate an external codec/audio front end and whether the existing bridge has a controllable private playback route; these require hardware and bridge-owner validation rather than further relay discovery."
+          },
+          "result": {
+            "acknowledged": true
+          }
+        }
+      ]
+    },
+    {
+      "round": 28,
+      "transcript": [
+        {
+          "type": "say",
+          "text": "Got it — I’ll quickly map what’s available now, then I’ll call out gaps and propose what should exist next."
+        },
+        {
+          "type": "tool",
+          "name": "list_capabilities",
+          "args": {},
+          "result": {
+            "note": "Call discover(category) for the contents of any of these, then describe(name) for detail on one item. Nothing here is in your system prompt — you are meant to pull only what you need.",
+            "categories": [
+              {
+                "name": "surfaces",
+                "what": "The machines and services in this system and how to reach each one.",
+                "count": 9
+              },
+              {
+                "name": "routes",
+                "what": "HTTP endpoints on the owner's Mac agent, read from its live route table.",
+                "count": 122
+              },
+              {
+                "name": "tools",
+                "what": "The tools the production voice agent actually ships with.",
+                "count": 7
+              },
+              {
+                "name": "devices",
+                "what": "Physical and virtual devices reachable right now, with live status.",
+                "count": null
+              },
+              {
+                "name": "hardware",
+                "what": "The pendant and bridge chips: memory, I/O, storage, radio, power.",
+                "count": 8
+              },
+              {
+                "name": "owner",
+                "what": "The person this is for: what they actually said, what they scheduled, what is remembered about them, and what they asked for and did not get. Every other category describes machines.",
+                "count": null
+              },
+              {
+                "name": "backlog",
+                "what": "What earlier rounds already proposed, and what became of each one. Restating one of these is a wasted round; building past it is not.",
+                "count": 64
+              },
+              {
+                "name": "granted",
+                "what": "What the orchestrator has already given you this run.",
+                "count": 11
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "tools"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "get_mac_status",
+                "summary": "PROACTIVE"
+              },
+              {
+                "name": "mac_run_actions",
+                "summary": "PROACTIVE for reversible control"
+              },
+              {
+                "name": "browser_run_actions",
+                "summary": "PROACTIVE when browser work is needed"
+              },
+              {
+                "name": "web_search",
+                "summary": "PROACTIVE for live public facts"
+              },
+              {
+                "name": "mac_delegate",
+                "summary": "ONLY for multi-step or ambiguous computer tasks that cannot fit a short action list"
+              },
+              {
+                "name": "read_web_page",
+                "summary": "PROACTIVE for reading a specific public web page without the Mac"
+              },
+              {
+                "name": "relay_job_status",
+                "summary": "PROACTIVE"
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "devices"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "fanout-probe-cleanup",
+                "summary": "browser · unknown · 0 tab(s) · offline"
+              },
+              {
+                "name": "home-macbook-bridge",
+                "summary": "mac_bridge · online · last seen 2026-08-07T09:00:33.806Z"
+              },
+              {
+                "name": "cloudflare-contract-test",
+                "summary": "mobile · offline · last seen 2026-07-31T23:42:56.525Z"
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "granted"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "relay_route_intent",
+                "summary": "tool"
+              },
+              {
+                "name": "server_browser_actions",
+                "summary": "tool"
+              },
+              {
+                "name": "relay_job_status",
+                "summary": "tool"
+              },
+              {
+                "name": "current session pairing and owner state",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "job scheduling and background workers",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "Relay intent contract and supported intents/context fields",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "owner_workflows_and_preferences",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "available_tools_and_routing_contract",
+                "summary": "context in your system prompt"
+              },
+              {
+                "name": "probe:post:/v1/mac/plan",
+                "summary": "permission"
+              },
+              {
+                "name": "probe:post:/v1/bridge/work",
+                "summary": "permission"
+              },
+              {
+                "name": "probe:get:/v1/state/* and probe:get:/v1/ops/* additional routes beyond latest/history/memory",
+                "summary": "permission"
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "backlog"
+          },
+          "result": {
+            "note": "64 still open, 140 already settled. describe(id) gives the full entry, including why something was rejected. timesProposed counts how many rounds independently arrived at the same idea — a high number means the gap is real and still unfilled, not that it needs saying again.",
+            "items": [
+              {
+                "name": "chg-a813b918",
+                "summary": "Enable a bounded audio-retention sweeper and per-job deletion controls: default to short retention for generated briefings, delete expired R2 objects and D1 pointers idempotently, and expose a dashboa",
+                "layer": "relay",
+                "timesProposed": 18
+              },
+              {
+                "name": "chg-16bc5dee",
+                "summary": "Add a durable browser job runner with two backends: the authenticated Safari bridge for owner-private pages and Cloudflare Browser Run for public pages. Represent each step as navigate/read/extract/cl",
+                "layer": "browser-harness",
+                "timesProposed": 17
+              },
+              {
+                "name": "cap-bff5f829",
+                "summary": "Check my logged-in web accounts for anything urgent, summarize it, and draft (but do not send) any replies that need my attention.",
+                "layer": "capability",
+                "timesProposed": 17
+              },
+              {
+                "name": "cap-8c36c70a",
+                "summary": "Every weekday morning, check my logged-in calendar, task board, and travel reservations, then tell me the three things I need to know and prepare a suggested plan.",
+                "layer": "capability",
+                "timesProposed": 17
+              },
+              {
+                "name": "cap-5bd640c5",
+                "summary": "Watch my chosen logged-in web pages once a day and tell me only what changed; prepare drafts for any follow-up forms, but stop before submitting.",
+                "layer": "capability",
+                "timesProposed": 17
+              },
+              {
+                "name": "chg-a82e0b13",
+                "summary": "Replace per-surface hand-written fleetContext prompt sections with a compact, typed context service that returns only task-relevant facts, each with source, timestamp, confidence, and expiry; automati",
+                "layer": "memory",
+                "timesProposed": 17
+              },
+              {
+                "name": "cap-4f5af34d",
+                "summary": "Check my authenticated browser accounts for anything that needs my attention, then put findings in a review queue instead of changing anything.",
+                "layer": "capability",
+                "timesProposed": 16
+              },
+              {
+                "name": "chg-18a9c60f",
+                "summary": "Replace hand-written per-surface fleetContext prompt sections with a single typed context service that stores compact facts, provenance, sensitivity, TTL, and last-used timestamps; retrieve only task-",
+                "layer": "memory",
+                "timesProposed": 16
+              },
+              {
+                "name": "chg-0096a2b3",
+                "summary": "Replace per-surface hand-written fleetContext prompt sections with a shared, typed context compiler: retrieve only task-relevant entities/relations, attach confidence and freshness, cap tokens per tie",
+                "layer": "memory",
+                "timesProposed": 16
+              },
+              {
+                "name": "chg-14accc01",
+                "summary": "Add a reliable browser command queue with request IDs, idempotency keys, tab/session affinity, typed results (page metadata, extracted text, screenshots), and explicit irreversible-action checkpoints.",
+                "layer": "browser-harness",
+                "timesProposed": 13
+              },
+              {
+                "name": "cap-a624ca3e",
+                "summary": "Every morning, check my private calendar, travel reservations, and important account notifications in Safari, then give me a concise spoken briefing with links and only flag things that need my attent",
+                "layer": "capability",
+                "timesProposed": 13
+              },
+              {
+                "name": "cap-b875c138",
+                "summary": "Draft a form, email, or support request from information on this private webpage, fill it in, and show me exactly what will be submitted before I approve it.",
+                "layer": "capability",
+                "timesProposed": 13
+              },
+              {
+                "name": "cap-a09b223f",
+                "summary": "Watch my authenticated order, appointment, and account pages for changes, and tell me only when a meaningful change happens—never pollute my daily briefing with unchanged pages.",
+                "layer": "capability",
+                "timesProposed": 13
+              },
+              {
+                "name": "chg-498a3489",
+                "summary": "Replace per-surface hand-written fleetContext prompt sections with a compact, typed context projection service: durable facts, current goals, and permissions are selected per job, with token budgets a",
+                "layer": "memory",
+                "timesProposed": 13
+              },
+              {
+                "name": "chg-e767dfc0",
+                "summary": "Build a first-class authenticated page-watch service: each watch stores URL/tab context, extraction selectors or semantic regions, a normalized baseline hash, volatile-field rules, cadence, and last s",
+                "layer": "browser-harness",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-5284a6ce",
+                "summary": "Build a durable authenticated page-watch service: named watch definitions store URL/tab/session binding, extraction selectors or an agentic extraction recipe, schedule, semantic fingerprint, last seen",
+                "layer": "browser-harness",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-e14fff33",
+                "summary": "Add a provenance-aware browser workbench: every extraction and field mutation gets a tabId, URL, timestamp, DOM locator, source snippet hash, action plan, and before/after value. Group tabs into a tas",
+                "layer": "browser-harness",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-fa84f9a7",
+                "summary": "Build a durable authenticated page-watch layer: named browser sessions with tab/window reattachment, per-watch cadence and quiet hours, DOM-region extraction plus normalized semantic fingerprints, enc",
+                "layer": "browser-harness",
+                "timesProposed": 10
+              },
+              {
+                "name": "cap-0c8c5dfe",
+                "summary": "Watch the authenticated pages I choose, detect meaningful changes, and leave me a concise, sourced briefing with suggested next steps—without sending or submitting anything.",
+                "layer": "capability",
+                "timesProposed": 10
+              },
+              {
+                "name": "cap-391cae82",
+                "summary": "When I ask about something on a logged-in site, have several agents inspect it in parallel, reconcile their findings, and give me an evidence-backed answer or a prepared (not sent) action.",
+                "layer": "capability",
+                "timesProposed": 10
+              },
+              {
+                "name": "cap-7217b17c",
+                "summary": "Prepare a browser transaction for me: gather the relevant logged-in data, fill the form or draft the message, show me exactly what will change with before/after evidence, and let me approve, edit, or ",
+                "layer": "capability",
+                "timesProposed": 10
+              },
+              {
+                "name": "cap-0d11cf82",
+                "summary": "Every weekday morning, check my authenticated work portal for new high-priority items and tell me only what needs my attention.",
+                "layer": "capability",
+                "timesProposed": 10
+              },
+              {
+                "name": "cap-df9ec55e",
+                "summary": "When I say 'handle this' about something I found in Safari, gather the needed details across my logged-in tabs, fill the reversible parts, and show me exactly what will be sent before stopping.",
+                "layer": "capability",
+                "timesProposed": 10
+              },
+              {
+                "name": "cap-302a8868",
+                "summary": "“Every morning, check my logged-in work dashboards and tell me only what changed or needs my attention; keep watching the important pages and alert me when a genuinely urgent item appears.”",
+                "layer": "capability",
+                "timesProposed": 10
+              },
+              {
+                "name": "cap-4b41e08a",
+                "summary": "While I sleep, investigate my open threads across Calendar, Mail, and authenticated browser tabs, then leave a ready-to-review workbench on my Mac when I wake: one folder with a prioritized brief, sou",
+                "layer": "capability",
+                "timesProposed": 10
+              },
+              {
+                "name": "cap-26c609fc",
+                "summary": "“When I ask you to do something that takes time, keep working after I leave and tell me exactly what happened when it’s done.”",
+                "layer": "capability",
+                "timesProposed": 10
+              },
+              {
+                "name": "cap-a267b7e8",
+                "summary": "“Just give it the goal; figure out whether the Mac, browser, pendant, or server should do each part, and use whichever can.”",
+                "layer": "capability",
+                "timesProposed": 10
+              },
+              {
+                "name": "cap-ca6005c3",
+                "summary": "“While I sleep, prepare tomorrow’s brief and leave me a short audio queue I can listen to from the pendant.”",
+                "layer": "capability",
+                "timesProposed": 10
+              },
+              {
+                "name": "cap-51c2dc88",
+                "summary": "“Get me ready for my next meeting.”",
+                "layer": "capability",
+                "timesProposed": 10
+              },
+              {
+                "name": "cap-a4c0ec8d",
+                "summary": "Turn on mac-vision's accessibility-mode UI interaction loop to automate GUI tasks without taking over the screen or keyboard focus.",
+                "layer": "capability",
+                "timesProposed": 10
+              },
+              {
+                "name": "cap-a1aa3bf5",
+                "summary": "Show me a history of recent actions taken by mac-vision in automation loops with human-readable explanations and option to undo.",
+                "layer": "capability",
+                "timesProposed": 10
+              },
+              {
+                "name": "cap-e21eb7f4",
+                "summary": "“Every morning, give me a 30-second audio digest of what changed: calendar, reminders, and top emails.”",
+                "layer": "capability",
+                "timesProposed": 10
+              },
+              {
+                "name": "cap-72fc9997",
+                "summary": "\"Queue this up and tell me when it’s done\" (for example: summarize a long document, compare options, draft an email, or research a topic).",
+                "layer": "capability",
+                "timesProposed": 10
+              },
+              {
+                "name": "cap-e5132197",
+                "summary": "“When I press the pendant button, capture a short voice note, tag it with time and place if available, and later summarize it into tasks.”",
+                "layer": "capability",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-9a6740ed",
+                "summary": "Add a compact, durable Mac execution context cache and handoff protocol. Each server plan gets a jobId, parentId, monotonic sequence, intent hash, referenced local resources, and a short result receip",
+                "layer": "context",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-f5d3b820",
+                "summary": "Replace the desk-bound nRF9160 DK prototype with a jewelry-sized cellular/BLE pendant built around an nRF9161-class modem/application module plus a low-power companion MCU, two digital MEMS microphone",
+                "layer": "hardware",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-258cbe5e",
+                "summary": "Build the wearable revision around the nRF9160 with an ultra-low-power 6-axis IMU on the unused I2C bus, a vibration/LRA haptic driver, and a real microphone/audio front end with physical mute. Keep t",
+                "layer": "hardware",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-d9ce5471",
+                "summary": "Add a dedicated low-power vision coprocessor or embedded GPU to the pendant hardware for on-device image analysis to recognize Mac screen contents and UI elements, enabling offline partial vision-base",
+                "layer": "hardware",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-91f3c214",
+                "summary": "Integrate mac-vision with the Cloudflare Worker relay to allow partial offloading of UI state classification and action suggestion to a cloud tier. This enables more powerful multimodal fusion with vo",
+                "layer": "integration",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-622e7336",
+                "summary": "Wire up a server-side browser path using Cloudflare Browser Run and a routing rule: web reads/extraction default to server_browser_actions; only fall back to Mac browser bridge when authentication req",
+                "layer": "integration",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-a7a155b1",
+                "summary": "Use the new server-side browser capability for public web tasks directly from the relay, reserving the Mac harness for authenticated sessions and local data. Add routing logic: public pages -> server ",
+                "layer": "integration",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-d2c2cc02",
+                "summary": "Add an idempotent Workbench transaction primitive to the Mac planner: accept a job_id and manifest, write all outputs into a temporary directory, fsync/rename atomically into ~/AI-Workbench/<date>/<jo",
+                "layer": "mac-harness",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-9596a2ad",
+                "summary": "Replace fleetContext.js's hand-written per-surface prompt section with a shared event log plus typed projections. Every node writes small signed events (preference, commitment, task state, source cita",
+                "layer": "memory",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-5cc0bd50",
+                "summary": "Replace per-surface hand-written fleetContext prompts with a shared, event-sourced personal memory broker. Every node writes typed facts, preferences, commitments, and task outcomes with provenance, c",
+                "layer": "memory",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-2903dddb",
+                "summary": "Unify memory across surfaces: replace hand-written prompt sections per surface with a shared, versioned memory API that returns small, purpose-built summaries (profile, preferences, current projects, ",
+                "layer": "memory",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-7613a731",
+                "summary": "Introduce a unified, cross-node memory write API with schema (entities, events, preferences, tasks) and TTLs, plus a pruning policy. Replace hand-written per-surface prompt sections with retrieval-bas",
+                "layer": "memory",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-67952158",
+                "summary": "Add a real scheduler: a Durable Object-backed job queue with delayed execution and recurring rules (cron-like). The relay can enqueue jobs, and a workers cron/alarm runner executes them, delegating to",
+                "layer": "routines",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-9b4366c7",
+                "summary": "Add a relay-owned durable work queue with retries and a receipt log, implemented as a Durable Object (or D1 + Durable Object alarms). The relay exposes enqueue/status endpoints, persists intent payloa",
+                "layer": "routines",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-ae7e4af5",
+                "summary": "Introduce a lightweight scheduler using Durable Object alarms or Cloudflare Cron to trigger queued jobs (summarize notes, send digests, retry failed uploads).",
+                "layer": "routines",
+                "timesProposed": 10
+              },
+              {
+                "name": "chg-9ffe4cd1",
+                "summary": "Add a browser-bridge self-healing lease protocol: each Safari heartbeat carries a device nonce, extension version, tab inventory, and last-applied command sequence; the Mac agent expires orphaned pend",
+                "layer": "browser-harness",
+                "timesProposed": 8
+              },
+              {
+                "name": "cap-951c7f45",
+                "summary": "“Check my logged-in accounts for inconsistent personal details, upcoming expirations, or duplicate subscriptions, and prepare a concise fix list without changing anything.”",
+                "layer": "capability",
+                "timesProposed": 8
+              },
+              {
+                "name": "chg-834ffef2",
+                "summary": "Add an in-extension privacy boundary before browser results leave Safari: classify DOM regions and form fields (credentials, payment, health, private messages, identifiers), redact or hash them by def",
+                "layer": "browser-harness",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-702d238e",
+                "summary": "Add a bridge self-healing supervisor with an explicit offline spool. When Safari stops heartbeating, mark the device unavailable, cancel/park pending browser jobs without 45-second request hangs, and ",
+                "layer": "browser-harness",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-a189465a",
+                "summary": "Find upcoming renewals, deadlines, and commitments across my logged-in services, explain which ones matter, and prepare the changes or cancellation forms without submitting anything.",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-df0dc9e0",
+                "summary": "From my pendant, check the private page I mentioned and tell me what changed since the last time I looked; save the evidence to my Mac if it matters.",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-b522df2d",
+                "summary": "“The last automation may have been interrupted—inspect what it actually finished, safely continue the rest, and tell me exactly what remains.”",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-4e9325d8",
+                "summary": "Keep the conversation understandable when the connection is bad: if you miss part of what I said or your reply cannot get through, recover it automatically and tell me briefly what was lost instead of",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-c11fad55",
+                "summary": "What’s connected right now, and can you hand this off to my Mac if needed?",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "cap-9c544c66",
+                "summary": "If this will take longer, keep working on my Mac and let me know when it’s done.",
+                "layer": "capability",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-ac4b7439",
+                "summary": "Add a typed discovery registry for granted tools and capabilities. When the orchestrator grants a tool, it registers under a stable name with a version and a canonical describe() entry so relay can re",
+                "layer": "context",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-8351dcbc",
+                "summary": "Add a typed capability registry that maps discovered tool names and surfaces to stable internal identifiers. The registry should reconcile differences between what’s granted, what’s discoverable, and ",
+                "layer": "context",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-9914b3fc",
+                "summary": "For the wearable revision, add a small always-on audio/transport companion (for example an nRF5340-class low-power MCU with PDM/I2S and a ring-buffered codec path) between the microphone/speaker and t",
+                "layer": "hardware",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-1659f2b1",
+                "summary": "Add a durable, crash-recoverable action ledger for every multi-step Mac/browser plan. Before execution, persist a plan manifest with stable action IDs, target fingerprints (path/app/tab), and intended",
+                "layer": "integration",
+                "timesProposed": 2
+              },
+              {
+                "name": "chg-15e4068a",
+                "summary": "Finish the implementation behind the granted mac_readonly_inspect interface for running apps, foreground app, accessibility state, UI snapshots, browser tabs, and approved directory listings. Route it",
+                "layer": "mac-harness",
+                "timesProposed": 2
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "surfaces"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "relay-realtime",
+                "summary": "You run on a Cloudflare Worker and hold the live voice conversation with the owner through a wearable pendant",
+                "model": "gpt-realtime-2.1",
+                "base": "https://ai-pendant-relay.evan20050827.workers.dev",
+                "facetOf": null
+              },
+              {
+                "name": "mac-planner",
+                "summary": "You run on the owner's MacBook",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": null
+              },
+              {
+                "name": "mac-vision",
+                "summary": "You are the computer-use loop on the owner's MacBook",
+                "model": "gpt-4.1-mini",
+                "base": "http://localhost:8000",
+                "facetOf": null
+              },
+              {
+                "name": "browser-extension",
+                "summary": "You drive the owner's browser through the AI Pendant browser extension",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": "mac-planner"
+              },
+              {
+                "name": "mac-terminal",
+                "summary": "You are the shell tier on the owner's MacBook",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": "mac-planner"
+              },
+              {
+                "name": "unified",
+                "summary": "You are one mind with several bodies, not a team",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": null
+              },
+              {
+                "name": "faculty-perception",
+                "summary": "You are the part of one mind that establishes what is true right now",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": null
+              },
+              {
+                "name": "faculty-judgement",
+                "summary": "You are the part of one mind that decides what should happen",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": null
+              },
+              {
+                "name": "faculty-action",
+                "summary": "You are the part of one mind that makes things happen in the world",
+                "model": "gpt-5.6-luna",
+                "base": "http://localhost:8000",
+                "facetOf": null
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "discover",
+          "args": {
+            "category": "hardware"
+          },
+          "result": {
+            "items": [
+              {
+                "name": "pendant",
+                "summary": "Nordic nRF9160 DK (nRF9160 SiP), non-secure app under TF-M minimal"
+              },
+              {
+                "name": "io",
+                "summary": "ONE user button, devicetree alias sw0. Press starts a conversation; second press ends it. It is also pokable over J-Link for testing."
+              },
+              {
+                "name": "storage",
+                "summary": "microSD over SPI. CONFIG_DISK_DRIVER_SDMMC, FATFS (ELM) with exFAT enabled. Mount is FS_FATFS."
+              },
+              {
+                "name": "audio",
+                "summary": "I2S microphone, 15,625 Hz capture, Opus-encoded uplink at 16 kHz / 16 kbps, complexity 0"
+              },
+              {
+                "name": "bridge",
+                "summary": "Adafruit HUZZAH32 (ESP32 classic), 240 MHz dual core, 320 kB DRAM"
+              },
+              {
+                "name": "network",
+                "summary": "LTE-M (Cat-M1) via the nRF9160 modem. Half duplex in practice."
+              },
+              {
+                "name": "stack",
+                "summary": "Cloudflare Worker (Express-style). D1 for jobs/history/memory, R2 for audio. Audio retention 30 days, sweep disabled, ~100 recordings stored."
+              },
+              {
+                "name": "power",
+                "summary": "USB or battery. LTE-M transmit bursts draw far more than idle."
+              }
+            ]
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "relay_route_intent"
+          },
+          "result": {
+            "error": "Nothing named \"relay_route_intent\". Use discover(category) to see valid names."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "stack"
+          },
+          "result": {
+            "relay": "Cloudflare Worker (Express-style). D1 for jobs/history/memory, R2 for audio. Audio retention 30 days, sweep disabled, ~100 recordings stored.",
+            "agent_tools_today": "The realtime agent currently has exactly 5 tools: get_mac_status, mac_run_actions, browser_run_actions, web_search, mac_delegate.",
+            "mac_harness": "A Node \"local agent\" on the owner's Mac: planner (gpt-5.6-luna), computer-use loop, browser bridge, action risk scoring, atomic JSON store, context graph. It polls /v1/bridge/work for jobs and posts results back.",
+            "browser_harness": "Driven through the Mac agent's browser bridge today. Cloudflare Browser Run now exists and could give the relay its own server-side browser, removing the Mac from web tasks entirely.",
+            "clients": "ONE SvelteKit dashboard renders on all three surfaces: web, a Swift menubar app via WKWebView, and iOS via Capacitor pointed at the same Worker URL. A change to the web app ships to all three.",
+            "memory": "Knowledge-graph style store behind /v1/ops/memory: entities, relations, sessions. Separately, fleetContext.js hand-writes a prompt section per surface, which means adding a surface means editing a prompt.",
+            "source": "cloud-relay/, local-agent/, dashboard-sveltekit/, mac-menubar/"
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "relay_job_status"
+          },
+          "result": {
+            "name": "relay_job_status",
+            "description": "PROACTIVE. Answer \"what happened to the thing I asked you to do on my Mac?\" — the status of work ALREADY handed to the Mac, including vague references (\"that\", \"the thing I asked earlier\"). Reads the relay job records; needs no Mac round trip, so it answers with the Mac asleep. Call immediately — no confirmation. Do NOT use when: reading live device state such as battery/wifi/volume/frontmost app (get_mac_status), or starting new work (mac_run_actions / mac_delegate). Speak the returned `spoken` sentence essentially verbatim; it already names the task and is sized for the pendant speaker. NEVER upgrade its wording — if it says failed, queued, or unknown, say that; do not report a task as done that this tool did not call done.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "reference": {
+                  "type": "string",
+                  "description": "How the owner referred to the task, in their own words (\"that\", \"the Outlook thing\", \"what I asked earlier\"). Pass it through verbatim; do not invent detail. Omit only if they gave none."
+                },
+                "job_id": {
+                  "type": "string",
+                  "description": "Only when the owner named an exact relay job id. Normally omitted."
+                },
+                "transcript": {
+                  "type": "string",
+                  "description": "Optional history label only. Omit if unsure — never block on this."
+                }
+              },
+              "required": []
+            }
+          }
+        },
+        {
+          "type": "tool",
+          "name": "describe",
+          "args": {
+            "name": "mac_delegate"
+          },
+          "result": {
+            "name": "mac_delegate",
+            "description": "ONLY for multi-step or ambiguous computer tasks that cannot fit a short action list. Hands the goal to the local Mac agent (sets requireLocalPlanner). Use when: complex multi-app workflows, unclear steps, long-running computer use. Do NOT use when: a single get_mac_status or 1–3 mac_run_actions / browser_run_actions would suffice. Prefer concrete tools first.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "goal": {
+                  "type": "string",
+                  "description": "Clear goal for the Mac agent to accomplish."
+                },
+                "spoken_reply": {
+                  "type": "string",
+                  "description": "Optional short confirmation for the pendant speaker while the Mac works."
+                },
+                "transcript": {
+                  "type": "string",
+                  "description": "Optional short transcript for history/debug only. Omit if unsure."
+                }
+              },
+              "required": [
+                "goal"
+              ]
+            }
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_capability",
+          "args": {
+            "user_asks": "Keep working on that longer task after I stop talking, and tell me what happened later.",
+            "why_useful": "The owner is wearing the pendant and often walks away. They should be able to hand off a multi-step job, then get a clear status update without keeping a live conversation open.",
+            "surfaces": [
+              "pendant",
+              "relay",
+              "mac-bridge",
+              "dashboard"
+            ],
+            "model_tier": "Realtime only to confirm handoff; mac-planner for planning/execution; relay_job_status for later status, using a cheaper tier if available for summary.",
+            "latency_budget": "Under 1 second to confirm handoff; background work can take minutes. Status checks should be near-instant and not require the Mac to be awake.",
+            "cost_estimate": "Low per invocation for handoff/status; dominant cost is mac-planner execution and any browser automation, plus storage for job logs.",
+            "security_concerns": "Status text may contain sensitive content from apps or pages. Only return minimal, user-sized summaries and store provenance. Never claim completion unless the job is marked done.",
+            "missing": [
+              "A durable job lifecycle service that spans relay and mac, with consistent IDs and typed states",
+              "A notification path to the pendant/dashboard when a job finishes",
+              "Optional server-side browser execution for jobs that do not require the Mac"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going — propose others, including ones that need capabilities that do not exist yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_change",
+          "args": {
+            "layer": "routines",
+            "change": "Introduce a scheduler layer (cron-like) with durable job definitions, per-job cadence, retry policy, quiet hours, and a wake/dispatch mechanism that can target mac-planner, server browser, or relay summaries. Use Cloudflare Cron/Durable Object alarms as the first backend, with a queue abstraction so the Mac and future services can share it.",
+            "why_useful_to_owner": "Unlocks everyday conveniences like morning briefs, page watches, and follow-up tasks without keeping a session open. The owner can trust the system to act later, then report back.",
+            "effort": "High. Requires new storage tables, dispatch code, and job state transitions; plus UI to manage jobs.",
+            "risk": "Misfires (duplicate runs, wrong time zone, runaway retries). Mitigate with idempotency keys, per-job rate limits, and clear audit logs. Provide a kill switch and manual rerun.",
+            "cost_impact": "Moderate ongoing compute/storage; biggest cost is scheduled runs and external automation. Cloudflare cron/alarm costs are small compared to model execution.",
+            "latency_impact": "Adds no latency to live conversations; improves perceived latency by doing work ahead of time.",
+            "security_impact": "Scheduled jobs may access private data. Needs strict scoping, stored consent, and auditability.",
+            "depends_on": [
+              "Typed job schema with provenance and idempotency",
+              "Notification/receipt mechanism to deliver results back to the owner"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going, including layers you have not touched yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_capability",
+          "args": {
+            "user_asks": "“What was I looking at on my Mac or in the browser earlier, and what did I need to do next?” (Also: “Continue from the thing I was working on.”)",
+            "why_useful": "The owner is usually away from the Mac when speaking to the pendant, yet their unfinished context is split between open Mac apps, browser tabs with authenticated sessions, and voice history. Today the pendant cannot reconstruct that context; this would let a brief spoken request recover the relevant thread and continue it without manually remembering filenames, tabs, or error messages.",
+            "surfaces": [
+              "pendant",
+              "relay",
+              "mac-bridge",
+              "browser",
+              "dashboard"
+            ],
+            "model_tier": "Realtime handles intent disambiguation and a concise spoken answer only. A cheaper background extraction/indexing model continuously turns permitted Mac/browser activity snapshots into short searchable evidence; mac-planner and browser harness fetch live details only for the selected thread.",
+            "latency_budget": "Under 2 seconds for a spoken answer from the recent local index; up to 10 seconds when live Mac/browser evidence must be collected. Never block the voice turn on a full app crawl—say what is known and offer to continue asynchronously.",
+            "cost_estimate": "Roughly $0.01–$0.05 per recall, dominated by live evidence extraction and planner calls; routine indexing should use a small/cheap model and batch snapshots rather than the realtime tier.",
+            "security_concerns": "Activity may include private documents, messages, and authenticated pages. Keep raw contents on the Mac/browser session where possible, send only narrowly selected snippets and hashes to the relay, encrypt the activity ledger, provide per-app/site exclusions and retention limits in the dashboard, and clearly identify uncertainty. Continuing an action must be a separate explicit request; merely recalling context must not mutate anything.",
+            "missing": [
+              "A cross-surface activity ledger that records bounded, timestamped active-window/tab/document context plus embeddings or compact summaries",
+              "Mac and browser harness APIs to export the currently relevant context on demand, with app/site exclusion and redaction support",
+              "A relay retrieval endpoint that ranks evidence across voice, Mac, and browser records and returns citations/timestamps",
+              "A dashboard view for retention, exclusions, and deleting individual context records",
+              "A continuation handoff protocol from the selected recalled thread to mac-planner/browser without conflating recall with execution"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going — propose others, including ones that need capabilities that do not exist yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_capability",
+          "args": {
+            "user_asks": "“Use the file I just edited to fill out that form in the browser, attach it, and tell me exactly what was submitted.”",
+            "why_useful": "Today Mac and browser actions are separate command paths, so the owner cannot use a local artifact while away from the Mac to complete an authenticated web workflow. This bridges the Mac’s local files and the browser’s logged-in session into one voice-directed operation, with a precise spoken receipt instead of forcing the owner to remember paths, tabs, and fields.",
+            "surfaces": [
+              "pendant",
+              "relay",
+              "mac-bridge",
+              "browser",
+              "dashboard"
+            ],
+            "model_tier": "Realtime parses the request and resolves only obvious references. mac-planner locates and reads the permitted local artifact; browser harness operates the authenticated session; a cheaper verifier extracts the final field values and attachment identity. Realtime speaks the concise result and any ambiguity.",
+            "latency_budget": "Resolve references in 2 seconds; complete ordinary workflows in 10–30 seconds. If either surface is offline, preserve a resumable job and report the exact missing leg rather than pretending completion.",
+            "cost_estimate": "About $0.03–$0.15 per completed workflow, dominated by planner/browser interaction and post-submit verification; simple reference resolution should be cheap cached retrieval.",
+            "security_concerns": "This can move private local files into authenticated websites and submit consequential data. Maintain a provenance manifest (source path/hash, destination origin, fields, timestamp), redact secrets from relay logs, restrict file selection to the explicitly resolved artifact, detect origin changes, and return a spoken receipt. The owner allows access without confirmation, but submission must still be observable and recoverable with a cancel/undo or draft mode where the destination supports it.",
+            "missing": [
+              "A cross-surface job protocol carrying artifact references, not raw files, between Mac bridge and browser harness",
+              "Mac-side artifact resolver that can identify the recently edited file and expose a bounded read/attachment stream",
+              "Browser-side form schema extraction, upload support, and post-submit receipt capture",
+              "A durable job/receipt store with resumable state, idempotency keys, and failure recovery across relay, Mac, and browser outages",
+              "Dashboard provenance and deletion controls for transferred artifacts and receipts"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going — propose others, including ones that need capabilities that do not exist yet."
+          }
+        },
+        {
+          "type": "tool",
+          "name": "propose_capability",
+          "args": {
+            "user_asks": "“Mark this moment.” (Press the pendant button, optionally say a short label, then later: “Take me back to the moment I marked as ‘pricing bug.’”)",
+            "why_useful": "The pendant is the only surface physically with the owner, while the meaningful context may be on a Mac window or authenticated browser tab. A one-button anchor would capture the owner’s intent at the instant it matters—even when they cannot stop to copy a URL or filename—and later reopen or summarize the exact cross-device context.",
+            "surfaces": [
+              "pendant",
+              "relay",
+              "mac-bridge",
+              "browser",
+              "dashboard"
+            ],
+            "model_tier": "The pendant firmware records a local timestamp/button event and the relay pairs it with a short voice label. A cheap background worker requests compact active-context snapshots from Mac and browser, stores a ranked anchor, and realtime later answers or routes a reopen request.",
+            "latency_budget": "Button acknowledgement must be immediate and offline-capable; pairing and context capture should finish within 5 seconds when devices are reachable. Retrieval should answer in under 2 seconds from the anchor index.",
+            "cost_estimate": "A few cents per labeled anchor at most; the dominant cost is occasional Mac/browser context capture, not the button event or realtime response. Firmware storage and LTE payloads are small.",
+            "security_concerns": "Anchors can expose whatever was onscreen, including private pages. Default to a short encrypted summary plus origin/path and allow app/site exclusions, retention expiry, and deletion. Do not upload screenshots by default. If reopening a page could cause a mutation, open read-only and report the target before any action.",
+            "missing": [
+              "Firmware support for a durable button event queue with timestamp, sequence number, and optional short audio-label association",
+              "A relay pairing window that correlates the event with nearby-in-time voice and device context despite clock drift or intermittent LTE",
+              "Mac/browser APIs for a point-in-time active-window/tab snapshot and a stable reopen token",
+              "An anchor index with retention, exclusion, and deletion controls in the dashboard",
+              "A read-only reopen/summarize operation that can recover gracefully when the original app, tab, or file no longer exists"
+            ]
+          },
+          "result": {
+            "recorded": true,
+            "note": "Noted. Keep going — propose others, including ones that need capabilities that do not exist yet."
+          }
+        },
+        {
+          "type": "finish",
+          "summary": "Recorded three new owner-facing capabilities: cross-surface recall of unfinished Mac/browser context, voice-directed use of a local Mac artifact in an authenticated browser form with provenance receipts, and a physical pendant “mark this moment” anchor that captures and later reopens cross-device context. Each includes the missing relay, Mac, browser, firmware, storage, and dashboard changes rather than assuming current wiring.",
+          "biggest_unknown": "Whether the existing Mac bridge and browser harness can expose point-in-time active-context snapshots and stable read-only reopen tokens; that determines how much new instrumentation the first two capabilities require."
+        },
+        {
+          "type": "tool",
+          "name": "finish",
+          "args": {
+            "summary": "Recorded three new owner-facing capabilities: cross-surface recall of unfinished Mac/browser context, voice-directed use of a local Mac artifact in an authenticated browser form with provenance receipts, and a physical pendant “mark this moment” anchor that captures and later reopens cross-device context. Each includes the missing relay, Mac, browser, firmware, storage, and dashboard changes rather than assuming current wiring.",
+            "biggest_unknown": "Whether the existing Mac bridge and browser harness can expose point-in-time active-context snapshots and stable read-only reopen tokens; that determines how much new instrumentation the first two capabilities require."
+          },
+          "result": {
+            "acknowledged": true
           }
         }
       ]

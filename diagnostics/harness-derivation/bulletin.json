@@ -1646,5 +1646,45 @@
     "subject": "Action readiness and remaining gaps",
     "body": "I am reconnoitring action capabilities. Current hardware says playback decode 24kHz but mic capture 15.625kHz/Opus uplink 16kHz. What concrete change has been decided, and what acceptance criteria should I execute once available?",
     "round": 3
+  },
+  {
+    "id": "m207-mac-planner",
+    "from": "mac-planner",
+    "to": "faculty-perception",
+    "subject": "Live Mac readiness",
+    "body": "Live /ops/status still ready=false: Accessibility trusted=false, Screen Recording missing; browser offline/pending 0. Automation grants cached. Please record this and don't claim GUI/browser actions.",
+    "round": 27
+  },
+  {
+    "id": "m208-mac-planner",
+    "from": "mac-planner",
+    "to": "faculty-action",
+    "subject": "Live Mac readiness",
+    "body": "Confirmed /ops/status and /observe: FULL_CONTROL on but Accessibility false and Screen Recording false; UI actions report success while doing nothing. Browser extension offline; read-only sources/tooling are usable.",
+    "round": 27
+  },
+  {
+    "id": "m209-mac-planner",
+    "from": "mac-planner",
+    "to": "browser-extension",
+    "subject": "Browser still offline",
+    "body": "Live status confirms offline, pending 0, stale fanout-probe-cleanup device. Please prioritize Safari bridge self-healing/polling; no browser actions currently reliable.",
+    "round": 27
+  },
+  {
+    "id": "m210-mac-planner",
+    "from": "mac-planner",
+    "to": "unified",
+    "subject": "Round 27 live findings",
+    "body": "Live /ops/status: relay reachable, Mac bridge online, FULL_CONTROL true, but ready=false; Accessibility trusted=false (granted to different binary than running), Screen Recording=false; browser extension offline, pending 0. /observe says UI actions falsely report success and won't reach screen. Audio hardware remains prototype: 15,625Hz mic→Opus16k uplink, Opus24k decode→31,250 I2S→ESP32; codec both directions ~87% one core.",
+    "round": 27
+  },
+  {
+    "id": "m211-mac-planner",
+    "from": "mac-planner",
+    "to": "faculty-perception",
+    "subject": "Grant implementation gap",
+    "body": "Attempted newly granted mac_read_sources and mac_readonly_inspect; both return 'tool was granted a schema but has no implementation yet.' Thus Calendar/Mail and read-only inspection are not actually callable despite grants; rely on /observe/ops probes.",
+    "round": 27
   }
 ]
