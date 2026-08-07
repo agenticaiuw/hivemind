@@ -1,0 +1,8 @@
+=== dual-chip auto-capture 20260803T053439Z ===
+run_dir=/Users/evanliu/agentic-gadget/diagnostics/dual-capture-20260803T053439Z
+nrf_port=/dev/cu.usbmodem0009600365811
+esp_port=/dev/cu.usbserial-0287A9CA
+started=2026-08-03T05:34:39Z
+Do the full pendant routine (record → stop → wait for ready LED → press play).
+nRF markers: Live PCM stream, LAT, Agent reply, Played, I2S
+ESP markers: bridge/connected, i2s, a2dp, discovery, provide frames

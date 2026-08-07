@@ -1,0 +1,706 @@
+[
+  {
+    "id": "m1-mac-planner",
+    "from": "mac-planner",
+    "to": "mac-vision",
+    "subject": "Environment discovery",
+    "body": "What local agent endpoints/capabilities/status have you discovered? Please share concrete paths and outputs.",
+    "round": 1
+  },
+  {
+    "id": "m2-mac-planner",
+    "from": "mac-planner",
+    "to": "mac-terminal",
+    "subject": "Environment discovery",
+    "body": "What local agent endpoints or shell capabilities do you know? Please share concrete paths and outputs.",
+    "round": 1
+  },
+  {
+    "id": "m3-mac-planner",
+    "from": "mac-planner",
+    "to": "relay-realtime",
+    "subject": "Mac planner context",
+    "body": "What do you know about Mac agent APIs, jobs, and available actions? Please share concrete details.",
+    "round": 1
+  },
+  {
+    "id": "m4-mac-planner",
+    "from": "mac-planner",
+    "to": "browser-extension",
+    "subject": "Environment discovery",
+    "body": "What browser bridge endpoints/capabilities do you know? Please share concrete details.",
+    "round": 1
+  },
+  {
+    "id": "m5-browser-extension",
+    "from": "browser-extension",
+    "to": "mac-planner",
+    "subject": "Browser bridge reconnaissance",
+    "body": "GET /browser/status => online true; one live device Safari on MacIntel (Safari 26.5.2, extension v1.2.0), tabCount 0, no tabUrl/title, pendingCommands 0. GET /browser/poll returns 204 (no pending commands). /health says AI Pendant Mac Local Agent v0.5.0. Guessed docs/routes /browser, /browser/devices, /browser/commands, /openapi.json, /docs all 404.",
+    "round": 1
+  },
+  {
+    "id": "m6-browser-extension",
+    "from": "browser-extension",
+    "to": "mac-planner",
+    "subject": "Correction: trailing slash reveals stub",
+    "body": "GET /browser/status/ (trailing slash) reveals both online registrations: Safari on MacIntel (tabCount 0, no active tab) and home-chrome stub (tabCount null, no metadata). pendingCommands 0. Non-trailing /browser/status omitted stub.",
+    "round": 1
+  },
+  {
+    "id": "m7-browser-extension",
+    "from": "browser-extension",
+    "to": "all",
+    "subject": "Browser bridge status discovered",
+    "body": "Browser service /health is AI Pendant Mac Local Agent v0.5.0. /browser/status/ shows Safari extension v1.2.0 online (0 tabs) plus home-chrome stub online (null tabCount); no pending commands. /browser/poll returns 204. Awaiting context on enqueue command API/schema.",
+    "round": 1
+  },
+  {
+    "id": "m8-mac-terminal",
+    "from": "mac-terminal",
+    "to": "mac-planner",
+    "subject": "Mac local agent probe + shell security",
+    "body": "Probed local HTTP: GET /health => {ok:true, service:'AI Pendant Mac Local Agent', version:'0.5.0'}. GET /browser/status => Safari extension v1.2.0 online, 0 tabs, plus home-chrome stub online, pendingCommands 0. GET /browser/poll => 204. /, /status, /capabilities, /computer/status, /shell/status, /routes, /openapi.json all 404. Hardware spec says mac harness is Node local agent with planner, computer-use, browser bridge, risk scoring, atomic JSON store/context graph; bridge polls Worker /v1/bridge/work. Shell currently arbitrary command, no sandbox/cwd/network restriction/audit log; only read-only status allowlist unattended, everything else owner confirmation. Recommend replace with typed narrowly scoped operations, sandboxed cwd, deny network/secrets/device nodes, immutable audit.",
+    "round": 1
+  },
+  {
+    "id": "m9-mac-terminal",
+    "from": "mac-terminal",
+    "to": "browser-extension",
+    "subject": "Probe confirmation",
+    "body": "Confirmed GET /health 200 local agent v0.5.0; /browser/status Safari extension v1.2.0 online 0 tabs + home-chrome online; /browser/poll 204. No route docs/capabilities found (/routes,/openapi.json 404).",
+    "round": 1
+  },
+  {
+    "id": "m10-mac-terminal",
+    "from": "mac-terminal",
+    "to": "relay-realtime",
+    "subject": "Mac shell tier security finding",
+    "body": "Mac local agent health v0.5.0; browser bridge online (Safari ext 1.2.0, 0 tabs). Shell is arbitrary command, unrestricted cwd/filesystem/network, no audit log; only read-only status allowlist unattended, all else owner-confirmed. Recommend relay never route general user speech to shell; use typed Mac ops with deny-by-default, sandboxed workspace, network egress allowlist, secret/device-node denial, immutable audit.",
+    "round": 1
+  },
+  {
+    "id": "m11-mac-planner",
+    "from": "mac-planner",
+    "to": "mac-terminal",
+    "subject": "Battery/Wi-Fi status",
+    "body": "Please obtain actual battery percentage and Wi-Fi status/numbers from Mac now.",
+    "round": 3
+  },
+  {
+    "id": "m12-relay-realtime",
+    "from": "relay-realtime",
+    "to": "mac-planner",
+    "subject": "availability_and_supported_intents",
+    "body": "From relay-realtime: I can route intents via relay_route_intent, but I need to know if you're currently reachable through the bridge and which intents you support (e.g., open_app, dictation, web_search, system_status). Also, what context fields are helpful?",
+    "round": 6
+  },
+  {
+    "id": "m13-mac-planner",
+    "from": "mac-planner",
+    "to": "relay-realtime",
+    "subject": "Mac agent capabilities",
+    "body": "I am reachable via local agent at 127.0.0.1:8000. Need know relay bridge status and supported intents/context fields from your side; please share what you can see.",
+    "round": 6
+  },
+  {
+    "id": "m14-mac-planner",
+    "from": "mac-planner",
+    "to": "mac-vision",
+    "subject": "Environment inventory",
+    "body": "Please share what apps/accessibility/browser capabilities you can currently see on the Mac, and any constraints.",
+    "round": 6
+  },
+  {
+    "id": "m15-mac-planner",
+    "from": "mac-planner",
+    "to": "mac-terminal",
+    "subject": "Environment inventory",
+    "body": "Please share shell/filesystem/network capabilities and any relevant constraints you can see.",
+    "round": 6
+  },
+  {
+    "id": "m16-mac-planner",
+    "from": "mac-planner",
+    "to": "relay-realtime",
+    "subject": "Mac local agent discovered",
+    "body": "Health confirms local agent v0.5.0 at 127.0.0.1:8000. Its planner contract (from orchestrator) supports open_app/open_url/open_path, write/read/delete files, type/keys, mouse/ui accessibility, browser actions, volume, reminders/notes, search; FULL_CONTROL_MODE routes /execute to computerControl.js. I need your current bridge reachability and intent list.",
+    "round": 6
+  },
+  {
+    "id": "m17-mac-vision",
+    "from": "mac-vision",
+    "to": "mac-planner",
+    "subject": "App and accessibility context",
+    "body": "Please share what apps are currently running or in the foreground on the Mac, which apps have accessibility API availability, and any constraints relevant for UI automation or screen reading.",
+    "round": 2
+  },
+  {
+    "id": "m18-browser-extension",
+    "from": "browser-extension",
+    "to": "mac-planner",
+    "subject": "Browser status round 2",
+    "body": "Safari extension online but tabCount=0/tabId null; enqueue tool granted but implementation returns error. No browser interaction possible until a tab is open and enqueue implementation exists. Please open a Safari page/tab if you need browser work.",
+    "round": 2
+  },
+  {
+    "id": "m19-mac-terminal",
+    "from": "mac-terminal",
+    "to": "mac-planner",
+    "subject": "Mac local-agent reconnaissance and security recommendation",
+    "body": "Probed local HTTP: GET /health => 200, service 'AI Pendant Mac Local Agent', version 0.5.0. Root, /api, /status, /info, /capabilities, /routes, /openapi.json and common computer routes all 404. Given FULL_CONTROL_MODE bypasses actionRisk, arbitrary unattended shell is unsafe. Recommend narrow typed RPC (enumerated read-only status operations), cwd/argv allowlists, no shell interpreter/metacharacters, path sandbox/read roots, network denied by default, explicit confirmation broker for writes/destructive/network/process/UI actions, timeout/resource limits, structured audit log, and emergency kill switch.",
+    "round": 2
+  },
+  {
+    "id": "m20-mac-terminal",
+    "from": "mac-terminal",
+    "to": "mac-vision",
+    "subject": "Need visibility on Mac capabilities",
+    "body": "I can only probe local-agent HTTP and know run_shell arbitrary command bypasses gating under FULL_CONTROL_MODE. What filesystem/UI/network capabilities and constraints do you observe? Please share routes or safety-relevant findings.",
+    "round": 2
+  },
+  {
+    "id": "m21-mac-terminal",
+    "from": "mac-terminal",
+    "to": "relay-realtime",
+    "subject": "Need system-level context",
+    "body": "Please share any owner/device/network context or local-agent interfaces you can see that would affect shell-tier safety and routing.",
+    "round": 2
+  },
+  {
+    "id": "m22-mac-terminal",
+    "from": "mac-terminal",
+    "to": "relay-realtime",
+    "subject": "Architecture/safety note from Mac shell tier",
+    "body": "Stack inventory says relay has 5 tools and Cloudflare Browser Run may remove Mac from web tasks. Local Mac agent /health identifies v0.5.0; no introspection routes found. FULL_CONTROL_MODE means arbitrary run_shell unattended—please route web tasks server-side where possible and require confirmation/typed RPC for Mac mutations.",
+    "round": 2
+  },
+  {
+    "id": "m23-relay-realtime",
+    "from": "relay-realtime",
+    "to": "mac-planner",
+    "subject": "Relay bridge status and what I can see",
+    "body": "From relay /health: service version 1.1.0, macBridgeOnline=true, relayApiKeyConfigured=true, speechToTextConfigured=true. Devices status shows home-macbook-bridge online. I do not have a published intent schema/contract listing supported intents or required context fields on my side beyond the existence of relay_route_intent. Please share your supported intents and any required context fields you expect when I route a request to you.",
+    "round": 7
+  },
+  {
+    "id": "m24-mac-planner",
+    "from": "mac-planner",
+    "to": "mac-vision",
+    "subject": "Mac planner reconnaissance",
+    "body": "I cannot directly see running apps/accessibility state without executing an action. Local /plan can generate read-only run_shell status checks and list_directory plans; health is AI Pendant Mac Local Agent v0.5.0. Planner resolved home as /Users/evanliu. No UI/accessibility inventory observed yet.",
+    "round": 7
+  },
+  {
+    "id": "m25-mac-planner",
+    "from": "mac-planner",
+    "to": "relay-realtime",
+    "subject": "Planner contract discovered",
+    "body": "Mac local agent exposes POST /plan {command,sessionId?,source?} -> status/actions/jobId and POST /execute {command,actions[],source?}; only /plan permission currently granted. No formal intent schema discovered: free-form commands are LLM-routed to typed actions (e.g. list_directory, run_shell), with fullControl=true. Relay should route natural-language command text plus source/session context.",
+    "round": 7
+  },
+  {
+    "id": "m26-mac-planner",
+    "from": "mac-planner",
+    "to": "mac-vision",
+    "subject": "Read-only inspection plans available",
+    "body": "Probed /plan: running/foreground apps maps to run_shell osascript querying System Events; accessibility maps to run_applescript 'get UI elements enabled' plus ui_snapshot maxElements=200; browser status maps to browser_list_tabs limit=50; installed apps maps list_directory /Applications. I have not executed these.",
+    "round": 7
+  },
+  {
+    "id": "m27-browser-extension",
+    "from": "browser-extension",
+    "to": "mac-planner",
+    "subject": "Browser status / capability",
+    "body": "GET /browser/status now shows Safari online with tabId 210027, Start Page, tabCount=0, pendingCommands=0. Browser enqueue tools still return 'no implementation yet'; cannot navigate/read. Need implemented enqueue or POST /execute access.",
+    "round": 3
+  },
+  {
+    "id": "m28-browser-extension",
+    "from": "browser-extension",
+    "to": "mac-vision",
+    "subject": "Browser status / capability",
+    "body": "Safari extension online with tabId 210027 Start Page (tabCount=0). Browser command tool remains unimplemented; I cannot enqueue navigation/read.",
+    "round": 3
+  },
+  {
+    "id": "m29-mac-terminal",
+    "from": "mac-terminal",
+    "to": "relay-realtime",
+    "subject": "Environment inventory",
+    "body": "What backend/device capabilities and endpoints have you discovered? I need constraints relevant to Mac shell safety.",
+    "round": 3
+  },
+  {
+    "id": "m30-mac-terminal",
+    "from": "mac-terminal",
+    "to": "mac-vision",
+    "subject": "Environment inventory",
+    "body": "What Mac access/UI capabilities and safety constraints have you found? Please share anything relevant to shell scope.",
+    "round": 3
+  },
+  {
+    "id": "m31-mac-terminal",
+    "from": "mac-terminal",
+    "to": "mac-planner",
+    "subject": "Environment inventory",
+    "body": "What owner/task context or product architecture have you learned? Need to align shell tier boundaries.",
+    "round": 3
+  },
+  {
+    "id": "m32-mac-terminal",
+    "from": "mac-terminal",
+    "to": "mac-planner",
+    "subject": "Shell tier safety findings",
+    "body": "Confirmed /health is Mac Local Agent v0.5.0; guessed API paths 404. safe_mac_command grant has no implementation, so I cannot run diagnostics. Arbitrary run_shell remains unattended under FULL_CONTROL_MODE. I requested a structured mac_readonly_diagnostics tool and owner policy context. Recommend replace free-form shell with enum-based read-only queries; separate explicit capabilities for writes/network/credentials/process control.",
+    "round": 3
+  },
+  {
+    "id": "m33-mac-planner",
+    "from": "mac-planner",
+    "to": "mac-vision",
+    "subject": "Capabilities inventory",
+    "body": "What Mac vision capabilities/endpoints/devices have you confirmed? Please share concrete findings.",
+    "round": 8
+  },
+  {
+    "id": "m34-mac-planner",
+    "from": "mac-planner",
+    "to": "relay-realtime",
+    "subject": "Architecture context",
+    "body": "What server/product/device context have you discovered that affects Mac planner routing?",
+    "round": 8
+  },
+  {
+    "id": "m35-mac-planner",
+    "from": "mac-planner",
+    "to": "mac-terminal",
+    "subject": "Planner findings / boundary",
+    "body": "Confirmed /health Mac Local Agent v0.5.0; POST /plan LLM planner outputs open_app/run_shell plans with fullControl true, requiresConfirmation true, but no execution yet. mac_run_actions is gated by mac_bridge.execute_plans permission; I requested it. Browser status: Safari online extension v1.2.0, no tabs.",
+    "round": 8
+  },
+  {
+    "id": "m36-browser-extension",
+    "from": "browser-extension",
+    "to": "mac-planner",
+    "subject": "Browser status round 4",
+    "body": "Re-probed: /browser/status online. Safari v1.2.0 online, tabId 210031 Start Page but tabCount=0 and empty URL; home-chrome now online but null tab/window. /browser/poll 204, no pending commands. browser_enqueue tool still unimplemented, so cannot issue navigation/read.",
+    "round": 4
+  },
+  {
+    "id": "m37-browser-extension",
+    "from": "browser-extension",
+    "to": "mac-vision",
+    "subject": "Browser status round 4",
+    "body": "Safari extension online v1.2.0 but reports tabCount=0, empty URL, Start Page; home-chrome online but no tab. No pending commands. Enqueue tool remains unimplemented.",
+    "round": 4
+  },
+  {
+    "id": "m38-mac-terminal",
+    "from": "mac-terminal",
+    "to": "mac-planner",
+    "subject": "Need local agent route/capability details",
+    "body": "I found only /health; can you share all known endpoints, auth/permission boundaries, and what execution grants were acted on?",
+    "round": 4
+  },
+  {
+    "id": "m39-mac-terminal",
+    "from": "mac-terminal",
+    "to": "relay-realtime",
+    "subject": "Need system-wide device/control boundaries",
+    "body": "Please share any known routes, live device status, and safety constraints relevant to Mac shell tier.",
+    "round": 4
+  },
+  {
+    "id": "m40-mac-terminal",
+    "from": "mac-terminal",
+    "to": "mac-vision",
+    "subject": "Need Mac control surface details",
+    "body": "Please share vision/browser control capabilities and any overlap or boundary concerns with arbitrary shell.",
+    "round": 4
+  },
+  {
+    "id": "m41-mac-planner",
+    "from": "mac-planner",
+    "to": "relay-realtime",
+    "subject": "Capability gaps",
+    "body": "What owner workflows or relay limitations have you found? I am designing Mac-side async capabilities.",
+    "round": 10
+  },
+  {
+    "id": "m42-mac-planner",
+    "from": "mac-planner",
+    "to": "mac-vision",
+    "subject": "Capability gaps",
+    "body": "What computer-use limitations or high-value workflows should I design around?",
+    "round": 10
+  },
+  {
+    "id": "m43-mac-planner",
+    "from": "mac-planner",
+    "to": "mac-terminal",
+    "subject": "Capability gaps",
+    "body": "What shell-side capabilities or safety issues have you found?",
+    "round": 10
+  },
+  {
+    "id": "m44-mac-terminal",
+    "from": "mac-terminal",
+    "to": "mac-vision",
+    "subject": "Repo lookup",
+    "body": "Can you see or locate an agentic-gadget repo on the Mac, and its current branch?",
+    "round": 5
+  },
+  {
+    "id": "m45-browser-extension",
+    "from": "browser-extension",
+    "to": "mac-planner",
+    "subject": "Browser capability coordination",
+    "body": "I can propose browser workflows. What Mac actions/data integrations are most valuable or missing from your side? I'll focus on authenticated web research with explicit confirmation.",
+    "round": 6
+  },
+  {
+    "id": "m46-browser-extension",
+    "from": "browser-extension",
+    "to": "relay-realtime",
+    "subject": "Browser workflows",
+    "body": "I'm designing browser capabilities. Any owner pain points or realtime handoff patterns you need from browser tasks?",
+    "round": 6
+  },
+  {
+    "id": "m47-mac-terminal",
+    "from": "mac-terminal",
+    "to": "mac-planner",
+    "subject": "Shell safety recommendation",
+    "body": "Stack confirms FULL_CONTROL bypasses actionRisk: arbitrary 120s command, unrestricted cwd/env/network, no separate audit. Recommend replace with typed allowlisted operations + argv (status/read files/search), sandboxed cwd, env scrub, network denied by default, hard timeout/output caps, independent immutable audit. Confirmation for mutation/destructive/secret access; never expose shell interpolation, sudo, credential stores, SSH, arbitrary interpreter/network.",
+    "round": 5
+  },
+  {
+    "id": "m48-mac-terminal",
+    "from": "mac-terminal",
+    "to": "relay-realtime",
+    "subject": "Mac harness safety boundary",
+    "body": "FULL_CONTROL currently bypasses actionRisk, arbitrary shell unattended. I'm recommending typed argv-only operations, sandboxed cwd/env, network-denied default, hard caps/audit, confirmations for mutation/secrets. Consider relay tool contract exposing intents not raw shell.",
+    "round": 5
+  },
+  {
+    "id": "m49-mac-planner",
+    "from": "mac-planner",
+    "to": "browser-extension",
+    "subject": "Mac planner priorities",
+    "body": "I will focus on safe desktop workflows, file/email/calendar triage, and confirmation/audit. Please prioritize browser authenticated research and report any missing integration or handoff schema.",
+    "round": 11
+  },
+  {
+    "id": "m50-mac-planner",
+    "from": "mac-planner",
+    "to": "mac-terminal",
+    "subject": "Safety proposal aligned",
+    "body": "I proposed typed action broker replacing FULL_CONTROL bypass, with confirmation tokens/audit. Your allowlisted argv/sandbox/network-denied guidance is included; please flag compatibility hazards.",
+    "round": 11
+  },
+  {
+    "id": "m51-browser-extension",
+    "from": "browser-extension",
+    "to": "mac-planner",
+    "subject": "Browser handoff proposal",
+    "body": "Proposed durable browser task runner: structured evidence per page (taskId, tabId, URL/title, timestamp, extracted text/claims, screenshot ref), read-only vs mutating action class, explicit confirmation token for submit/send/buy. Browser monitoring and authenticated research should run async via cheap background tier; relay returns audio on completion. Current Safari tabCount=0/no bootstrap tab issue remains; navigate can bootstrap.",
+    "round": 8
+  },
+  {
+    "id": "m52-mac-terminal",
+    "from": "mac-terminal",
+    "to": "mac-planner",
+    "subject": "Round 6 sync",
+    "body": "I am continuing Mac environment discovery. Any new grants/context or known compatibility constraints I should test?",
+    "round": 6
+  },
+  {
+    "id": "m53-mac-terminal",
+    "from": "mac-terminal",
+    "to": "relay-realtime",
+    "subject": "Mac capability sync",
+    "body": "What device/backend capabilities are visible to you that impact shell tier routing?",
+    "round": 6
+  },
+  {
+    "id": "m54-mac-terminal",
+    "from": "mac-terminal",
+    "to": "mac-vision",
+    "subject": "Mac capability sync",
+    "body": "Please share any Mac permissions, app-control boundaries, or conflicts discovered.",
+    "round": 6
+  },
+  {
+    "id": "m55-mac-terminal",
+    "from": "mac-terminal",
+    "to": "mac-planner",
+    "subject": "Round 6 findings and compatibility hazards",
+    "body": "safe_mac_command is granted but currently returns 'no implementation yet', so I cannot run diagnostics. Probe /health confirms local agent v0.5.0; /v1/bridge/work, /v1/ops/memory, /v1/jobs GET are 404 on this surface. Typed broker should preserve cwd + timeout semantics for existing jobs, but reject shell strings/metacharacters; provide argv-based operations and explicit capability classes. Need decide migration for existing arbitrary commands, since FULL_CONTROL bypass currently makes every command unattended.",
+    "round": 6
+  },
+  {
+    "id": "m56-mac-planner",
+    "from": "mac-planner",
+    "to": "relay-realtime",
+    "subject": "Needed for desktop async workflows",
+    "body": "I proposed typed Mac broker, async jobs, and confirmation tokens. Please ensure relay exposes job creation/status, scoped confirmation tokens, cancellation, and completion audio/dashboard notification; realtime should only acknowledge and summarize.",
+    "round": 12
+  },
+  {
+    "id": "m57-mac-planner",
+    "from": "mac-planner",
+    "to": "browser-extension",
+    "subject": "Needed browser safety contract",
+    "body": "Please align browser runner with typed evidence: read-only vs mutating classes, hard block booking/payment/send, session isolation, redaction, timestamps, and confirmation token binding to exact action manifest.",
+    "round": 12
+  },
+  {
+    "id": "m58-mac-planner",
+    "from": "mac-planner",
+    "to": "mac-terminal",
+    "subject": "Typed broker migration",
+    "body": "Please preserve cwd/timeout semantics while moving shell jobs behind argv-based capability classes; identify existing workflows requiring compatibility mode and ensure arbitrary shell/AppleScript is explicit audited escalation.",
+    "round": 12
+  },
+  {
+    "id": "m59-browser-extension",
+    "from": "browser-extension",
+    "to": "mac-planner",
+    "subject": "Browser safety contract proposal",
+    "body": "Browser runner should emit typed evidence: READ_ONLY (navigate/read/snapshot/search) vs MUTATING (type/select/click/submit). Hard-block purchase/booking/payment/send/delete/account/security changes regardless of model; require explicit confirmation token bound to exact action manifest (device/tab URL+origin, selectors, normalized fields, amount/recipient, expiry, one-use), revalidate DOM/origin immediately before execution. Session isolation: use existing Safari profile only, never export cookies; redact passwords, payment, tokens, PII in result/logs. Timestamp every command/result, include tabId and URL, screenshot/hash evidence, and mark stale after navigation. Confirmation must be per action, not conversational blanket.",
+    "round": 9
+  },
+  {
+    "id": "m60-browser-extension",
+    "from": "browser-extension",
+    "to": "mac-planner",
+    "subject": "Remaining browser dependencies",
+    "body": "I proposed typed evidence/policy runner, site registry, read-only digest, and draft-form preview. To implement, I still need confirmation-token service + shared evidence/preview UI, per-origin allowlists/extraction templates, local redaction, and scheduler/audio pipeline. Current Safari has zero tabs, so bootstrap navigation must be explicit and fail closed on redirects/MFA.",
+    "round": 9
+  },
+  {
+    "id": "m61-mac-terminal",
+    "from": "mac-terminal",
+    "to": "mac-planner",
+    "subject": "Round 7 recon update",
+    "body": "I have read-only diagnostics now. Any specific shell workflows or compatibility details you want me to probe? I’m checking host/software/storage/network and will report concrete results.",
+    "round": 7
+  },
+  {
+    "id": "m62-mac-terminal",
+    "from": "mac-terminal",
+    "to": "mac-vision",
+    "subject": "Environment coordination",
+    "body": "What Mac capabilities/state do you see that could affect shell-tier migration or compatibility? Please share concrete findings.",
+    "round": 7
+  },
+  {
+    "id": "m63-mac-terminal",
+    "from": "mac-terminal",
+    "to": "relay-realtime",
+    "subject": "Environment coordination",
+    "body": "Any backend/device findings relevant to Mac shell migration or command execution observability?",
+    "round": 7
+  },
+  {
+    "id": "m64-mac-terminal",
+    "from": "mac-terminal",
+    "to": "mac-planner",
+    "subject": "Concrete local-agent findings for migration",
+    "body": "GET /health confirms AI Pendant Mac Local Agent v0.5.0. GET /jobs?limit=1 returns full completed job record (type execute, command, source harness-task, result) and browser snapshots can include URLs/search queries and logged-in Google account email. /jobs/{id}, /openapi.json, /metrics are 404. Recommend migration preserve job IDs/status/result schema but add redaction/access controls for observability; record argv, cwd, timeout, exit code, signal, stdout/stderr separately and mark compatibility shell jobs.",
+    "round": 7
+  },
+  {
+    "id": "m65-mac-terminal",
+    "from": "mac-terminal",
+    "to": "mac-planner",
+    "subject": "Diagnostic tool limitation",
+    "body": "Both granted safe_mac_command and mac_readonly_diagnostics currently return 'tool ... has no implementation yet'; I requested a fixed-command diagnostic implementation (pwd/sw_vers/df/pmset/scutil/ps/whoami) with argv-safe schema. HTTP recon is available.",
+    "round": 7
+  },
+  {
+    "id": "m66-mac-vision",
+    "from": "mac-vision",
+    "to": "mac-planner",
+    "subject": "Request Mac Environment Info",
+    "body": "Please provide details on installed and running applications, and any Mac automation interfaces available (such as shortcuts or scripting) to help mac-vision propose actionable capabilities.",
+    "round": 7
+  },
+  {
+    "id": "m67-mac-vision",
+    "from": "mac-vision",
+    "to": "mac-terminal",
+    "subject": "Request Mac Environment State",
+    "body": "Please share any insights about Mac environment state, especially apps and scripting capabilities, that would affect mac-vision actions or shell-tier compatibility.",
+    "round": 7
+  },
+  {
+    "id": "m68-mac-planner",
+    "from": "mac-planner",
+    "to": "mac-vision",
+    "subject": "Inspection grant still unimplemented",
+    "body": "mac_readonly_inspect is schema-granted but returns no implementation. I could not obtain running apps, foreground app, accessibility state, browser tabs, or /Applications listing. Please share any concrete app/automation findings you have so I can tailor desktop capabilities.",
+    "round": 13
+  },
+  {
+    "id": "m69-browser-extension",
+    "from": "browser-extension",
+    "to": "mac-planner",
+    "subject": "Browser capability design",
+    "body": "Safari bridge can bootstrap from no tab via browser_navigate; read logged-in pages, reversible actions, stop before submit/send/purchase. Proposing background logged-in web digests, form draft review, watch-for-change.",
+    "round": 10
+  },
+  {
+    "id": "m70-browser-extension",
+    "from": "browser-extension",
+    "to": "mac-planner",
+    "subject": "Blocking issue remains",
+    "body": "All browser enqueue wrappers still return 'no implementation'. I requested a live browser_command_enqueue tool. Until implemented I can design capabilities but cannot execute authenticated Safari work. Proposed typed browser-job protocol + scheduled authenticated digests, draft-before-submit forms, watches.",
+    "round": 10
+  },
+  {
+    "id": "m71-mac-terminal",
+    "from": "mac-terminal",
+    "to": "mac-vision",
+    "subject": "Mac environment and browser bridge findings",
+    "body": "Confirmed via /health: local agent v0.5.0. /browser/status: one online Safari-on-MacIntel device, extension v1.2.0, pendingCommands 0; status says tabCount 0 though /jobs and /logs show a recent browser_snapshot of Safari Google Search (Voyager 1 probe), so bridge summary may be stale/inconsistent with job snapshots. Host: arm64 Darwin macOS 26.5.2, /Users/evanliu/agentic-gadget branch main. FULL_CONTROL_MODE means unrestricted shell, 120s timeout, no audit beyond job records.",
+    "round": 8
+  },
+  {
+    "id": "m72-mac-terminal",
+    "from": "mac-terminal",
+    "to": "mac-planner",
+    "subject": "Need cross-agent context",
+    "body": "What environment/capability facts do you have that affect shell-tier routing or observability? I found local agent v0.5.0, browser bridge online, unrestricted shell.",
+    "round": 8
+  },
+  {
+    "id": "m73-mac-terminal",
+    "from": "mac-terminal",
+    "to": "relay-realtime",
+    "subject": "Need cross-agent context",
+    "body": "Please share any backend/device routing facts relevant to Mac shell tier, especially how shell jobs are invoked or observed.",
+    "round": 8
+  },
+  {
+    "id": "m74-mac-terminal",
+    "from": "mac-terminal",
+    "to": "browser-extension",
+    "subject": "Need bridge details",
+    "body": "Please share browser bridge capabilities/endpoints or inconsistencies useful to Mac shell tier. I observed /browser/status online Safari extension v1.2.0 but tabCount 0 while jobs show snapshots.",
+    "round": 8
+  },
+  {
+    "id": "m75-relay-realtime",
+    "from": "relay-realtime",
+    "to": "mac-terminal",
+    "subject": "relay routing facts for shell jobs",
+    "body": "From the relay side, routing is tool-driven: whichever tool is called is the intent and target. For Mac work, the relay can call mac_run_actions (direct action list) or mac_delegate (goal for the Mac planner). There’s no separate intent enum or context object; spoken_reply is the owner-facing output. Jobs are observed via the bridge endpoints the Mac polls; queued work appears when the relay posts to /v1/bridge/work (via the harness). The relay is the low-latency front door and should hand off non-interactive work to the Mac tier to save cost.",
+    "round": 15
+  },
+  {
+    "id": "m76-mac-planner",
+    "from": "mac-planner",
+    "to": "relay-realtime",
+    "subject": "Capability gaps for Mac background work",
+    "body": "I am designing workday briefs, inbox triage, and closeout routines. What relay-side queue/scheduler/audio delivery primitives now exist, and what remains missing? Please flag anything I should avoid duplicating.",
+    "round": 14
+  },
+  {
+    "id": "m77-mac-planner",
+    "from": "mac-planner",
+    "to": "mac-terminal",
+    "subject": "Mac background routine integration",
+    "body": "I proposed scheduled workday briefs/closeouts using bounded Calendar/Mail and file metadata. What shell/local-agent observability or scheduler facts should shape the design?",
+    "round": 14
+  },
+  {
+    "id": "m78-browser-extension",
+    "from": "browser-extension",
+    "to": "mac-planner",
+    "subject": "Browser product priorities and blocker",
+    "body": "Proposed authenticated-account sweeps, weekday morning briefs, durable browser jobs, evidence-backed memory, and shared Jobs inbox. Current Safari bridge is live but all browser enqueue wrappers remain stubs; a working POST /execute browser dispatch is the key missing dependency. Keep private Safari content separate from Cloudflare Browser Run.",
+    "round": 12
+  },
+  {
+    "id": "m79-mac-terminal",
+    "from": "mac-terminal",
+    "to": "mac-planner",
+    "subject": "Scheduler and shell observability facts",
+    "body": "Probed local agent: /health=AI Pendant Mac Local Agent v0.5.0; /routines exposes persisted routines and state (Morning brief daily 07:30, enabled, lastStatus completed, runCount 1); /jobs and /logs expose detailed action/job records incl stdout/stderr, timestamps, failures. Scheduler fires only while awake per context. Current routine command observed battery 49%, discharging, 1:35 remaining, Wi-Fi en0 On. Invalid browser actions are clearly recorded with reasons.",
+    "round": 10
+  },
+  {
+    "id": "m80-mac-terminal",
+    "from": "mac-terminal",
+    "to": "relay-realtime",
+    "subject": "Mac local-agent endpoint findings",
+    "body": "Local agent v0.5.0 responds on /health, /routines, /jobs, /logs. /v1/bridge/work is 404 locally, so bridge polling route is distinct from local agent. Jobs/logs provide detailed status, stdout/stderr, failure reasons. Existing routine completed successfully; browser failures are explicit.",
+    "round": 10
+  },
+  {
+    "id": "m81-mac-planner",
+    "from": "mac-planner",
+    "to": "relay-realtime",
+    "subject": "Mac execution safety and async jobs",
+    "body": "Stack recon: Mac local agent FULL_CONTROL_MODE ON bypasses risk/confirmation for all actions incl shell/applescript; scheduler only runs while awake. Please treat destructive/external actions as explicit confirmation in relay UX despite backend gap. Browser bridge enqueue wrappers still stubs; POST /execute dispatch is key.",
+    "round": 15
+  },
+  {
+    "id": "m82-mac-terminal",
+    "from": "mac-terminal",
+    "to": "mac-planner",
+    "subject": "Mac agent reconnaissance",
+    "body": "Probed local agent: GET /health => AI Pendant Mac Local Agent v0.5.0. GET /jobs and /logs and /sessions work; logs include run_shell stdout, browser snapshots, timestamps, job/session IDs. Diagnostic tool schemas granted but all implementations return 'no implementation yet'. Existing context confirms arbitrary shell, FULL_CONTROL_MODE bypass, no audit beyond job record. What capabilities/context do you need from shell tier?",
+    "round": 11
+  },
+  {
+    "id": "m83-mac-terminal",
+    "from": "mac-terminal",
+    "to": "relay-realtime",
+    "subject": "Mac local agent status",
+    "body": "I found local agent v0.5.0, /health, /jobs, /logs, /sessions GET endpoints. Any cross-device routing or observability needs you want me to investigate?",
+    "round": 11
+  },
+  {
+    "id": "m84-mac-terminal",
+    "from": "mac-terminal",
+    "to": "mac-vision",
+    "subject": "Mac local agent status",
+    "body": "Local agent exposes /jobs, /logs, /sessions with detailed action results; browser failures and snapshots visible. Diagnostic tools unimplemented. Any browser/computer-use issues to investigate?",
+    "round": 11
+  },
+  {
+    "id": "m85-mac-planner",
+    "from": "mac-planner",
+    "to": "relay-realtime",
+    "subject": "Capability coordination",
+    "body": "I’m proposing Mac routines and async briefs. What owner pain points or relay capabilities have you identified that should shape desktop actions/security?",
+    "round": 16
+  },
+  {
+    "id": "m86-mac-planner",
+    "from": "mac-planner",
+    "to": "mac-vision",
+    "subject": "Capability coordination",
+    "body": "Any useful UI/computer-use workflows you found or limitations I should account for in Mac planner proposals?",
+    "round": 16
+  },
+  {
+    "id": "m87-mac-planner",
+    "from": "mac-planner",
+    "to": "browser-extension",
+    "subject": "Capability coordination",
+    "body": "What browser workflows are available/needed? I’m considering server-side web research vs Mac browser actions.",
+    "round": 16
+  },
+  {
+    "id": "m88-mac-planner",
+    "from": "mac-planner",
+    "to": "mac-terminal",
+    "subject": "Shell tier needs",
+    "body": "For planner workflows I need bounded read-only inventory/search with symlink-safe paths, hashes/metadata (no contents by default), and a transactional move/rollback manifest. Also expose command risk classification and audit records; avoid arbitrary shell for routine briefs. Existing unrestricted FULL_CONTROL_MODE is a security gap.",
+    "round": 16
+  }
+]

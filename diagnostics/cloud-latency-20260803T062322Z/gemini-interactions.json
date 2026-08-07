@@ -1,0 +1,42 @@
+{
+  "id": "v1_Chczek53YXBuaUN0MmJfdU1QX0pTWjhRVRIXM3pOd2FwbmlDdDJiX3VNUF9KU1o4UVU",
+  "status": "completed",
+  "usage": {
+    "total_tokens": 309,
+    "total_input_tokens": 88,
+    "input_tokens_by_modality": [
+      {
+        "modality": "text",
+        "tokens": 58
+      },
+      {
+        "modality": "audio",
+        "tokens": 30
+      }
+    ],
+    "total_cached_tokens": 0,
+    "total_output_tokens": 39,
+    "total_tool_use_tokens": 0,
+    "total_thought_tokens": 182
+  },
+  "created": "2026-08-03T06:23:27Z",
+  "updated": "2026-08-03T06:23:27Z",
+  "service_tier": "standard",
+  "steps": [
+    {
+      "signature": "EvcFCvQFARFNMg82P39il0qlsgoeMASRkeFb0gBtDiZgc393ruMFBTIZsDEFOvjHjM3V2QZbJRu2aeKbuD0/Q2v44Kk0+q6v+fULuSaYtYeq11kWKZuK7r0loLjR2Xc0lCsvC+WhR/TN2lnA5I8p45MZlWLcc1hd93J+1FifQfakPpvXd7ZyUt6fGo4LGzoae8EGKVQYIZH+39ogpBkhH3cxXCNCLXWOsLdTUM5VMUILC5nbL+PuwMh+GsVoNGXdwTSxJgsAwd3/N3K7r8Wy/Sr9Ap5Ah4RKfkupDxUVBT57uGdZQYBx6aNzGLVaBlsGWxL0k30PJZ0J7WsWm5K5ybzUR5zHZ0fPlrL8r+E2DsGgl4SC/9wvPuVpb0H+V9e5U2h7HmVrkVB3YRdb0ySOekdO2STu+NLDAZ4BUwSunKsgEGasyX/7lG+98DH/WIf1JKM4fsjrBP7/hqwi+FzwyyDYuSr/X+o7iDAtlCybxgEmfEPCD7U4bFoY32g3xSi4kq+vV74+ZfylOU+7dP/B46jmWgbOqlKf/ZA02DE7XOHLSakG+WfbDU+BYm1AeU/jCyeE1H/zCFypeTiZmtqO1Iu5R+xOWFZP40DsyywzZcYRKJJlARiCuUmQ/4oGvU4YU53LstS5Eti0cqac5r0QSY/IGPLNPcf6sCp16XnyspDpwWMUNze/gCDDdmH7+HlAfxnDwTQfyOw0hjkrctlm9PtrDquRq4GErsk2ikxJKLgK+7maOQtUpML/fOi9Jf53BDrY1uScuciaBW7/YwC60FLto0jT2b56CmeGc8JMVNs+DqH5HDmk9XnOALvb32tV7+N0jzji76edUEpcw/rDgzU2/eHuGF/AYb2+NWdv//XV+HZvWEY4N/22ZXeFlW1PrqGq2qs6gZz1XwtP+vDYVeHEmVW6fUkIACEh54pKsSFeHYESRMJ7C7N3SxkHuJ+3F6WEFfz5rmc7W5YLBSEhsxaoSDQbZUGqAhXDlpUro8cfannGEkR6Rxv9",
+      "type": "thought"
+    },
+    {
+      "content": [
+        {
+          "text": "```json\n{\"text\":\"open outlook\",\"status\":\"ready\",\"response\":\"ok\",\"actions\":[{\"type\":\"open_app\",\"label\":\"Open Outlook\",\"params\":{\"name\":\"Outlook\"}}]}\n```",
+          "type": "text"
+        }
+      ],
+      "type": "model_output"
+    }
+  ],
+  "object": "interaction",
+  "model": "gemini-3.6-flash"
+}

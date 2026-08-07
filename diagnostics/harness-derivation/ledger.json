@@ -1,0 +1,1463 @@
+{
+  "entries": [
+    {
+      "id": "chg-bc35ae04",
+      "kind": "change",
+      "layer": "browser-harness",
+      "summary": "Add a first-class browser session API: list tabs with stable tab IDs, select a tab explicitly, bootstrap navigation only after confirmation, capture a bounded DOM/text snapshot with URL/title, and return structured redaction metadata. Add extension heartbeats with tab inventory and clear stale-session errors.",
+      "why": "",
+      "proposedBy": [
+        "browser-extension"
+      ],
+      "timesProposed": 6,
+      "round": 6,
+      "status": "implementing",
+      "note": "Subagent building durable browser session API with auto-bootstrap. Classification for observability only, no gates.",
+      "owner": "browser-session"
+    },
+    {
+      "id": "chg-2fffc681",
+      "kind": "change",
+      "layer": "browser-harness",
+      "summary": "Add a durable browser-task runner: bootstrap a tab via navigate, maintain task-scoped tab IDs, execute read/click/type/wait sequences with timeouts, capture URL/title/DOM text and screenshots, and return structured evidence plus an audit log. Separate read-only tasks from mutating actions and gate the latter on explicit confirmation.",
+      "why": "",
+      "proposedBy": [
+        "browser-extension"
+      ],
+      "timesProposed": 6,
+      "round": 8,
+      "status": "implementing",
+      "note": "Subagent building durable browser session API with auto-bootstrap. Classification for observability only, no gates.",
+      "owner": "browser-session"
+    },
+    {
+      "id": "chg-086a6904",
+      "kind": "change",
+      "layer": "browser-harness",
+      "summary": "Replace generic browser action results with a typed, policy-enforcing runner: classify commands as read-only or mutating; enforce origin/path allowlists; capture tabId, URL/origin, DOM evidence hash, timestamps, and normalized action manifests; redact secrets locally; re-check origin and DOM immediately before each action; hard-block submit/send/purchase/booking/delete/account/security operations by default.",
+      "why": "",
+      "proposedBy": [
+        "browser-extension"
+      ],
+      "timesProposed": 6,
+      "round": 9,
+      "status": "implementing",
+      "note": "Subagent building durable browser session API with auto-bootstrap. Classification for observability only, no gates.",
+      "owner": "browser-session"
+    },
+    {
+      "id": "cap-d65785c8",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "“Read the relevant pages in my open browser tabs, compare the options, and give me a short brief with links and any deadlines.”",
+      "why": "",
+      "proposedBy": [
+        "browser-extension"
+      ],
+      "timesProposed": 6,
+      "round": 6,
+      "status": "implementing",
+      "note": "assigned to subagent: research-audio"
+    },
+    {
+      "id": "cap-fc6643a7",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "“Every weekday morning, check my authenticated work portal for new high-priority items and tell me only what needs my attention.”",
+      "why": "",
+      "proposedBy": [
+        "browser-extension"
+      ],
+      "timesProposed": 6,
+      "round": 6,
+      "status": "implementing",
+      "note": "assigned to subagent: briefings"
+    },
+    {
+      "id": "cap-9764ec65",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "“Research this topic across the public web, check the sources, and send me a cited answer later.”",
+      "why": "",
+      "proposedBy": [
+        "browser-extension"
+      ],
+      "timesProposed": 6,
+      "round": 6,
+      "status": "implementing",
+      "note": "assigned to subagent: research-audio"
+    },
+    {
+      "id": "cap-1e04349c",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "“Fill out this web form from the information I give you, stop before submission, and show me exactly what will be sent.”",
+      "why": "",
+      "proposedBy": [
+        "browser-extension"
+      ],
+      "timesProposed": 6,
+      "round": 6,
+      "status": "implementing",
+      "note": "assigned to subagent: watch-and-forms"
+    },
+    {
+      "id": "cap-daaf6d3e",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "Research this topic across my logged-in websites, compare the results, and send me a concise audio brief later.",
+      "why": "",
+      "proposedBy": [
+        "browser-extension"
+      ],
+      "timesProposed": 6,
+      "round": 8,
+      "status": "implementing",
+      "note": "assigned to subagent: research-audio"
+    },
+    {
+      "id": "cap-c18a0fce",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "Watch this logged-in page or price/availability page and tell me only when the specified condition changes.",
+      "why": "",
+      "proposedBy": [
+        "browser-extension"
+      ],
+      "timesProposed": 6,
+      "round": 8,
+      "status": "implementing",
+      "note": "assigned to subagent: watch-and-forms"
+    },
+    {
+      "id": "cap-75ee1730",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "Fill out this online form using the details we discussed, stop before the final submit, and show me exactly what will be sent.",
+      "why": "",
+      "proposedBy": [
+        "browser-extension"
+      ],
+      "timesProposed": 6,
+      "round": 8,
+      "status": "implementing",
+      "note": "assigned to subagent: watch-and-forms"
+    },
+    {
+      "id": "cap-eb3ab088",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "“Check my authenticated work sites and inboxes for anything urgent, summarize it, and leave me a short audio briefing.”",
+      "why": "",
+      "proposedBy": [
+        "browser-extension"
+      ],
+      "timesProposed": 6,
+      "round": 9,
+      "status": "implementing",
+      "note": "assigned to subagent: briefings"
+    },
+    {
+      "id": "cap-28eaa582",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "“Fill out this web form from my notes, but stop before submitting and show me exactly what will be sent.”",
+      "why": "",
+      "proposedBy": [
+        "browser-extension"
+      ],
+      "timesProposed": 6,
+      "round": 9,
+      "status": "implementing",
+      "note": "assigned to subagent: watch-and-forms"
+    },
+    {
+      "id": "cap-ea762950",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "“Watch this authenticated page and tell me when the status, price, or availability changes.”",
+      "why": "",
+      "proposedBy": [
+        "browser-extension"
+      ],
+      "timesProposed": 6,
+      "round": 9,
+      "status": "implementing",
+      "note": "assigned to subagent: watch-and-forms"
+    },
+    {
+      "id": "cap-fb442a50",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "“Every morning, check my calendar, unread email, and today’s files, then give me a short spoken brief with the meetings that need preparation and a proposed priority list.”",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 6,
+      "round": 10,
+      "status": "implementing",
+      "note": "assigned to subagent: briefings"
+    },
+    {
+      "id": "cap-b4dfb9ea",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "“Clean up my Downloads every Friday: group files by project, rename obvious duplicates, and show me a review list before anything is deleted.”",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 6,
+      "round": 10,
+      "status": "implementing",
+      "note": "assigned to subagent: quick-capture"
+    },
+    {
+      "id": "cap-2a60c5ba",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "“Research this topic and leave me a concise source-linked briefing on my Mac, with an audio version I can play later.”",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 6,
+      "round": 10,
+      "status": "implementing",
+      "note": "assigned to subagent: research-audio"
+    },
+    {
+      "id": "cap-c071fa0a",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "“Every morning, give me a concise briefing of today’s calendar, unread priority messages, weather, and the files I need for my first meeting; let me ask follow-ups and open anything I mention.”",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 6,
+      "round": 11,
+      "status": "implementing",
+      "note": "assigned to subagent: briefings"
+    },
+    {
+      "id": "cap-0fee609c",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "“Prepare me for my next meeting: find the agenda and related local documents, summarize the open decisions and prior action items, and put the three most relevant files in a folder I can open.”",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 6,
+      "round": 11,
+      "status": "implementing",
+      "note": "assigned to subagent: quick-capture"
+    },
+    {
+      "id": "cap-70db8ef3",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "“When I say ‘prepare my workday’, check my calendar and inbox, make a concise brief, and put it in a note on my Mac; don't send anything.”",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 6,
+      "round": 12,
+      "status": "implementing",
+      "note": "assigned to subagent: briefings"
+    },
+    {
+      "id": "cap-026858ec",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "“Find the best flight options for next Thursday, compare total price and duration, and leave me a shortlist; do not book.”",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 6,
+      "round": 12,
+      "status": "implementing",
+      "note": "assigned to subagent: quick-capture"
+    },
+    {
+      "id": "cap-0e0b8d35",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "“Clean up my Downloads: group files by type into folders and show me what will be moved before doing it.”",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 6,
+      "round": 12,
+      "status": "implementing",
+      "note": "assigned to subagent: quick-capture"
+    },
+    {
+      "id": "cap-23af3e85",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "“Every weekday at 5 pm, summarize the notes I created today into three next actions and put them in my task app; never send messages.”",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 6,
+      "round": 12,
+      "status": "implementing",
+      "note": "assigned to subagent: briefings"
+    },
+    {
+      "id": "cap-5dbbe6df",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "“Summarize what I missed in my email today.”",
+      "why": "",
+      "proposedBy": [
+        "relay-realtime"
+      ],
+      "timesProposed": 6,
+      "round": 10,
+      "status": "implementing",
+      "note": "assigned to subagent: briefings"
+    },
+    {
+      "id": "cap-0e994cfb",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "“Read my upcoming schedule for the day.”",
+      "why": "",
+      "proposedBy": [
+        "relay-realtime"
+      ],
+      "timesProposed": 6,
+      "round": 10,
+      "status": "implementing",
+      "note": "assigned to subagent: briefings"
+    },
+    {
+      "id": "cap-2d29628a",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "“Save this idea for later.”",
+      "why": "",
+      "proposedBy": [
+        "relay-realtime"
+      ],
+      "timesProposed": 6,
+      "round": 10,
+      "status": "implementing",
+      "note": "assigned to subagent: quick-capture"
+    },
+    {
+      "id": "cap-1634d96f",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "“Plan my day. Pull my calendar, summarize critical tasks and travel time, and give me a 30-second briefing.”",
+      "why": "",
+      "proposedBy": [
+        "relay-realtime"
+      ],
+      "timesProposed": 6,
+      "round": 12,
+      "status": "implementing",
+      "note": "assigned to subagent: quick-capture"
+    },
+    {
+      "id": "cap-f66f7f6e",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "“Read my notifications and tell me only what’s important.”",
+      "why": "",
+      "proposedBy": [
+        "relay-realtime"
+      ],
+      "timesProposed": 6,
+      "round": 12,
+      "status": "implementing",
+      "note": "assigned to subagent: quick-capture"
+    },
+    {
+      "id": "cap-b5796f52",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "“Start a focus session for 25 minutes. Block distractions and let me know when time’s up.”",
+      "why": "",
+      "proposedBy": [
+        "relay-realtime"
+      ],
+      "timesProposed": 6,
+      "round": 12,
+      "status": "implementing",
+      "note": "assigned to subagent: quick-capture"
+    },
+    {
+      "id": "cap-fb73a1d0",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "“Remember this: my bike lock code is 4829.”",
+      "why": "",
+      "proposedBy": [
+        "relay-realtime"
+      ],
+      "timesProposed": 6,
+      "round": 12,
+      "status": "implementing",
+      "note": "assigned to subagent: quick-capture"
+    },
+    {
+      "id": "cap-d9af189b",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "“Summarize the key points from this page and read them to me later.”",
+      "why": "",
+      "proposedBy": [
+        "relay-realtime"
+      ],
+      "timesProposed": 6,
+      "round": 13,
+      "status": "implementing",
+      "note": "assigned to subagent: research-audio"
+    },
+    {
+      "id": "cap-7e779dac",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "\"Summarize this webpage\" or \"Check the price on this product\"",
+      "why": "",
+      "proposedBy": [
+        "relay-realtime"
+      ],
+      "timesProposed": 6,
+      "round": 14,
+      "status": "implementing",
+      "note": "assigned to subagent: research-audio"
+    },
+    {
+      "id": "cap-37804d89",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "\"Remind me to do X at 6 pm\" or \"Every weekday at 9, remind me to stand up\"",
+      "why": "",
+      "proposedBy": [
+        "relay-realtime"
+      ],
+      "timesProposed": 6,
+      "round": 14,
+      "status": "implementing",
+      "note": "assigned to subagent: quick-capture"
+    },
+    {
+      "id": "chg-43804606",
+      "kind": "change",
+      "layer": "dashboard-ux",
+      "summary": "Add a Browser Jobs view shared by web, menubar, and iOS: active/queued/completed jobs, per-site permission scope, source evidence, extracted result, pending confirmation cards, pause/cancel, and retention controls. Make every mutation previewable with destination, fields, and exact confirmation status.",
+      "why": "",
+      "proposedBy": [
+        "browser-extension"
+      ],
+      "timesProposed": 6,
+      "round": 8,
+      "status": "implemented",
+      "note": "Jobs tab shipped in the React ops dashboard (src/ops/OpsApp.jsx JobsView + ops.css). Running/Scheduled/Finished in one rail with source-filter chips; source badge on every row (pendant vs routine vs recon vs harness) plus an 'Asked by' fact explaining the origin; per-action evidence (action type, params, message, stdout/stderr, redacted credential-shaped values) and a Touched summary of apps/URLs/shell/browser use; GET /routines rendered alongside jobs with schedule, next/last run and Run now. Live via the thinking+pipeline SSE streams (coalesced refetch), no refresh needed. Visibility only - no gates or approval prompts. Also fixed Home 'THIS MAC - Unavailable': refreshAll used Promise.all so one failing route discarded status/machine; now allSettled, plus auto re-priming of the loopback dashboard session cookie on 401 so an agent restart no longer freezes an open tab."
+    },
+    {
+      "id": "chg-56aa1998",
+      "kind": "change",
+      "layer": "dashboard-ux",
+      "summary": "Add a unified Jobs and Approvals view shared by web, menubar, and iOS: each job shows purpose, sources accessed, files/apps touched, risk level, estimated cost, progress, result, expiry, and one-tap approve/deny/cancel. Pendant receives only a terse notification and can approve predefined low-risk actions, while detailed evidence remains on screens.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 6,
+      "round": 11,
+      "status": "implemented",
+      "note": "Jobs tab shipped in the React ops dashboard (src/ops/OpsApp.jsx JobsView + ops.css). Running/Scheduled/Finished in one rail with source-filter chips; source badge on every row (pendant vs routine vs recon vs harness) plus an 'Asked by' fact explaining the origin; per-action evidence (action type, params, message, stdout/stderr, redacted credential-shaped values) and a Touched summary of apps/URLs/shell/browser use; GET /routines rendered alongside jobs with schedule, next/last run and Run now. Live via the thinking+pipeline SSE streams (coalesced refetch), no refresh needed. Visibility only - no gates or approval prompts. Also fixed Home 'THIS MAC - Unavailable': refreshAll used Promise.all so one failing route discarded status/machine; now allSettled, plus auto re-priming of the loopback dashboard session cookie on 401 so an agent restart no longer freezes an open tab."
+    },
+    {
+      "id": "chg-12222176",
+      "kind": "change",
+      "layer": "firmware",
+      "summary": "Implement adaptive duplex behavior: when downlink audio is playing, reduce or pause uplink capture/encoding to avoid LTE contention; resume capture after playback. Add LED state to indicate “receiving” vs “recording.”",
+      "why": "",
+      "proposedBy": [
+        "relay-realtime"
+      ],
+      "timesProposed": 6,
+      "round": 14,
+      "status": "implemented",
+      "note": "Adaptive duplex uplink in firmware/nrf9160 (src/main.c + audio_opus.c/h). While downlink audio is playing (dl_jitter_fill>0 plus a 300 ms hangover): DUCK halves the uplink Opus target via new pendant_opus_stream_set_bitrate() (16000 -> 8000 bps), and HOLD stops feeding the encoder once the 7 KiB uplink FIFO passes 60% fill (releases below 40%, or immediately when playback ends), reserving ~2.8 KiB for the user's next question. Chose duck-not-mute because barge-in is server-side: a fully paused uplink would make the agent uninterruptible. New counters duck_ms and uplink_held added to the 'Conversation stats:' printk. RAM before 202676 B (95.78%) / FLASH 382952 B (64.93%); RAM after 202700 B (95.79%) / FLASH 383312 B (64.99%) — +24 B RAM, +360 B flash, 8908 B headroom left. FLASHED to the DK and verified running: 61 s duplex conversation, max_loop_ms=22, tx_starved=0, mic_drops=0, uplink_drops=0, fifo_left=293, new fields print (duck_ms=0 uplink_held=0). NOT YET EXERCISED: that run had decoded_packets=0 (agent never spoke, silent room), so the duck/hold path itself is unverified on hardware — it only proves the adaptation does not engage spuriously. Needs a conversation with real speech to confirm."
+    },
+    {
+      "id": "chg-075869de",
+      "kind": "change",
+      "layer": "integration",
+      "summary": "Make FULL_CONTROL_MODE execute through a capability-scoped confirmation broker instead of bypassing actionRisk. Classify every action (read, reversible local write, destructive local write, external communication, purchase/credential action), require an expiring owner confirmation token for the latter classes, and return a dry-run diff plus job ID before execution. Preserve an emergency owner setting for trusted routines, but never silently treat arbitrary run_shell/run_applescript as safe.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 6,
+      "round": 10,
+      "status": "implemented",
+      "note": "Built as local-agent/routines.js + /routines routes. Deployed and verified live: routine ran, lastStatus=completed, runCount=1."
+    },
+    {
+      "id": "chg-81e5c92d",
+      "kind": "change",
+      "layer": "integration",
+      "summary": "Add a server-side browser harness (Cloudflare Browser Run) so the relay can perform read-only web tasks without requiring the Mac to be online, with strict allowlists and output sanitization.",
+      "why": "",
+      "proposedBy": [
+        "relay-realtime"
+      ],
+      "timesProposed": 6,
+      "round": 12,
+      "status": "implemented",
+      "note": "cloud-relay/serverBrowser.js + serverBrowser.test.js (35 tests, all pass). Cloudflare Browser Run Quick Actions: readPublicPage() prefers the Workers env.BROWSER binding (no token in-Worker, needs compat_date >= 2026-03-24; ours is 2026-07-31) and falls back to REST (CLOUDFLARE_ACCOUNT_ID/CLOUDFLARE_API_TOKEN) for the node relay. wrangler.jsonc now declares the browser binding; dry-run confirms 'env.BROWSER -> Browser Run' and the module bundles for workerd. VERIFIED LIVE against account 137c3d31 with the existing wrangler OAuth token (scope 'browser (write)'): example.com read in 2.25s browser-time, docs page sanitized+truncated, private/loopback URLs refused before any egress. PLAN REALITY (measured, not read): this account is Workers FREE, so Browser Run allows 1 Quick Action per 10s (observed 429 + Retry-After: 10 on a back-to-back call) and 10 browser-minutes/day. Workers Paid lifts that to 10/s and unmetered. No upgrade is required to ship; it only bounds throughput. Read-only public web is a CAPABILITY boundary, not a permission gate: the edge browser holds no owner cookies and is on no owner network, so logins and LAN pages route to browser_run_actions (Mac extension) - the result carries a hint saying exactly that, plus a login-wall heuristic. Output sanitization: front-matter title lifted, zero-width/bidi-override chars stripped (hidden-instruction vector), control chars removed, base64 data: URIs collapsed, 12k char cap, results flagged untrusted:true. NOT WIRED: openaiRealtimeVoice.js/server.js/jobs.js were owned by a concurrent agent. The exact 3-file wiring patch (openaiRealtimeVoice.js import + READ_WEB_PAGE_TOOL as the 6th tool + read_web_page dispatch branch; openaiRealtimeVoice.test.js tool-list assertion; fleetContext.js routing line + capability line) is in the report; verified with git apply --check and by running the full 135-test suite against a wired copy - all pass."
+    },
+    {
+      "id": "chg-5fc73ce3",
+      "kind": "change",
+      "layer": "mac-harness",
+      "summary": "Add transactional desktop jobs: each plan has a preview, stable job/action IDs, preconditions (expected app/path/hash), checkpoints, result receipts, and compensating undo where possible. On retry, skip completed action IDs rather than replaying clicks or shell commands. Prefer accessibility selectors and declarative APIs over coordinates.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 6,
+      "round": 10,
+      "status": "implemented",
+      "note": "Built the receipt/undo half only. NO gates, NO approval prompts, NO preconditions — nothing added here can refuse or skip an action, per owner policy. New local-agent/actionReceipts.js; executor.js now wraps every dispatch: observeBeforeAction(action) runs first (pure observation, swallows all errors, its verdict is never read), then buildActionReceipt() attaches a receipt to every result — successful or failed. Receipt carries: content-addressed actionId (stable across a re-run of the same plan; positional index would not be, because the orchestrator hands the executor one action at a time), unique receiptId, effect read|write, what was touched (paths, urls, apps, shell commands, email recipients, clipboard, settings with before/after), duration, and an honest reversibility verdict with reversedBy or irreversibleReason. Reversibility now lives in ONE place: undo.js imports describeReversibility() so the receipt the owner reads and the decision undo makes cannot disagree; jobs recorded before receipts existed fall back to the raw result fields, so old history stays undoable. COMPENSATING UNDO: observeBeforeAction snapshots any file a write_file/create_note/delete_path/copy_path/move_path is about to clobber into ~/AI-Pendant-Workspace/.undo (bounded at 8 MB; directories and oversize files are recorded as irreversible WITH the reason rather than silently half-copied). This makes delete_path — previously permanent — undoable, and fixes a real data-loss bug: undo used to answer 'yes, reversible' for a write_file that OVERWROTE an existing file and then reverse it by DELETING that file, destroying content the agent never wrote. Now it restores the exact prior bytes. Surfaced at GET /jobs (receipts per job), new GET /jobs/:jobId/receipts (counts + per-step undo verdict + snapshot vault path), and inside GET /ops/snapshot so the dashboard and relay see them too. describeUndoability now returns steps[] and irreversible[] with reasons, so 'why can't I undo this?' has an answer. Verified live end to end: overwrote a hand-written file via POST /execute, receipt showed reversible=true reversedBy='restore snapshot', POST /jobs/:id/undo restored the original content. Tests: actionReceipts.test.js (16); full suite 499/499."
+    },
+    {
+      "id": "chg-71ae0f60",
+      "kind": "change",
+      "layer": "mac-harness",
+      "summary": "Replace FULL_CONTROL_MODE's undifferentiated execution path with a typed action broker: structured read/open/search actions by default, and separate mutation/destructive/secret-access actions carrying an expiring confirmation token. Add immutable local audit records (request, target, result, timestamp), idempotency keys, bounded output, and an undo/rollback plan where possible. Keep accessibility ui_* as the preferred targeting mechanism.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 6,
+      "round": 11,
+      "status": "rejected",
+      "note": "Owner policy: maximum access, no gates. Typed classification for observability is welcome; blocking is not."
+    },
+    {
+      "id": "chg-e0d96401",
+      "kind": "change",
+      "layer": "mac-harness",
+      "summary": "Put a typed capability broker in front of the existing FULL_CONTROL computer loop. Accept structured argv/files/app/UI operations with per-capability scopes, dry-run, idempotency keys, result evidence, and confirmation tokens for irreversible or external actions; keep arbitrary shell/AppleScript behind an explicit owner setting and an audit log.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 6,
+      "round": 12,
+      "status": "rejected",
+      "note": "Owner policy: maximum access, no gates. Typed classification for observability is welcome; blocking is not."
+    },
+    {
+      "id": "chg-5415e046",
+      "kind": "change",
+      "layer": "memory",
+      "summary": "Create a browser-job memory tier separate from conversational context: retain only normalized facts, source URLs, retrieval timestamps, consent scope, and a short owner-approved summary; expire raw page text/screenshots quickly and never inject whole prior pages into every prompt.",
+      "why": "",
+      "proposedBy": [
+        "browser-extension"
+      ],
+      "timesProposed": 6,
+      "round": 6,
+      "status": "implemented",
+      "note": "rememberBrowserFindings() in local-agent/memoryService.js plus POST /memory/browser-findings: a browser job reports normalized claims only, keyed web.<host>.<field>, carrying source url, host, jobId and retrieval timestamp, clipped to 200 chars so raw page text cannot become memory, with a 24h TTL dated from when the page was read. contextProjection.js keeps that tier out of conversational context entirely unless the task matches it, and renders it as claim + host + date, never the page. Consent scope omitted deliberately: owner policy is maximum access, no permission gates."
+    },
+    {
+      "id": "chg-a18cc4f0",
+      "kind": "change",
+      "layer": "memory",
+      "summary": "Add a browser-site capability registry in the knowledge graph: per origin, allowed paths, login/session status (never credentials), extraction recipe, sensitivity class, last successful run, and owner-approved schedules. Inject only the relevant site policy into each browser job instead of the full fleet context.",
+      "why": "",
+      "proposedBy": [
+        "browser-extension"
+      ],
+      "timesProposed": 6,
+      "round": 9,
+      "status": "implemented",
+      "note": "Built as local-agent/routines.js + /routines routes. Deployed and verified live: routine ran, lastStatus=completed, runCount=1."
+    },
+    {
+      "id": "chg-5dced2e2",
+      "kind": "change",
+      "layer": "memory",
+      "summary": "Replace hand-written per-surface fleetContext prompt sections with a shared, typed context service: store facts with source, confidence, sensitivity, expiry, and last-used timestamps; retrieve only task-relevant facts into each job; run periodic contradiction/expiry pruning. Keep raw source data out of the prompt and expose a user-facing memory editor/export/delete view.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 6,
+      "round": 10,
+      "status": "duplicate",
+      "note": "Covered by chg-96771ece (the scoped fact store with source/confidence/sensitivity/expiry/last-used and expiry+idle pruning) together with chg-6360d815 (the projection that retrieves only task-relevant facts). Its remaining distinct ask - a user-facing memory editor/export/delete VIEW - exists as API only (GET/POST/DELETE /memory/facts); the Ops UI surface is unbuilt."
+    },
+    {
+      "id": "chg-96771ece",
+      "kind": "change",
+      "layer": "memory",
+      "summary": "Unify fleetContext and the knowledge graph behind a scoped memory service that stores facts with provenance, sensitivity, confidence, expiry, and last-used timestamps. At request time retrieve only a small task-relevant packet; maintain rolling session summaries instead of replaying full history. Add explicit ‘forget this’ and per-surface visibility controls.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 6,
+      "round": 11,
+      "status": "implemented",
+      "note": "local-agent/memoryService.js: scoped fact store (value, provenance, confidence, sensitivity, expiry, lastUsedAt/useCount) on atomicJsonStore, with same-key contradiction replacement, explicit forget by id or key, per-surface scoping, and syncFactsFromContextGraph() lifting the graph's durable types (skipping the 84 Action/Tool telemetry entities) so the graph stays the event log and this becomes the prompt tier. Routes: GET/POST /memory/facts, DELETE /memory/facts/:idOrKey, POST /memory/prune, POST /memory/sync-graph, GET /memory/projection. 17 node:test cases; verified live on :8000."
+    },
+    {
+      "id": "chg-a05b2515",
+      "kind": "change",
+      "layer": "memory",
+      "summary": "Replace per-surface prompt hand-written fleetContext with a compact, typed context API: stable owner preferences and permissions, task-local facts, and expiring summaries are fetched by need. Add token budgets, provenance, retention/forget controls, and automatic pruning of stale sessions.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 6,
+      "round": 12,
+      "status": "duplicate",
+      "note": "Covered by chg-96771ece + chg-6360d815. Token budgets, provenance, forget and automatic pruning all landed there; 'pruning of stale sessions' is sessionStore's, not this store's."
+    },
+    {
+      "id": "chg-54408a62",
+      "kind": "change",
+      "layer": "model-routing",
+      "summary": "Introduce a browser-specific low-cost pipeline: deterministic command planner for navigation/extraction, small model for selector repair and page summarization, and realtime model only for owner-facing dialogue. Pass compact evidence bundles rather than full page HTML into subsequent turns.",
+      "why": "",
+      "proposedBy": [
+        "browser-extension"
+      ],
+      "timesProposed": 6,
+      "round": 8,
+      "status": "implementing",
+      "note": "assigned to subagent: model-routing"
+    },
+    {
+      "id": "chg-fa7c3587",
+      "kind": "change",
+      "layer": "model-routing",
+      "summary": "Route deterministic Mac requests (open app/URL, list a directory, create a standard reminder, read a known file) through a typed intent parser and local executor; reserve gpt-5.6-luna planning for ambiguous multi-step tasks. Add a small background model only for classification/summarization and enforce token/page budgets.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 6,
+      "round": 10,
+      "status": "implementing",
+      "note": "assigned to subagent: model-routing"
+    },
+    {
+      "id": "chg-cd89301b",
+      "kind": "change",
+      "layer": "model-routing",
+      "summary": "Introduce a policy router that classifies requests into realtime dialogue, deterministic Mac/browser execution, cheap background summarization, or high-reasoning escalation. Cache stable system/integration context, pass only retrieved snippets, and let long jobs return a job ID plus completion notification rather than holding the voice turn open.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 6,
+      "round": 11,
+      "status": "implementing",
+      "note": "assigned to subagent: model-routing"
+    },
+    {
+      "id": "chg-67e2a397",
+      "kind": "change",
+      "layer": "model-routing",
+      "summary": "Introduce an asynchronous job router with cheap background models for extraction, summarization, monitoring, and retries; reserve realtime for short voice turns and final notifications, and use a stronger model only on ambiguity or failed structured validation.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 6,
+      "round": 12,
+      "status": "implementing",
+      "note": "assigned to subagent: model-routing"
+    },
+    {
+      "id": "chg-ea640c81",
+      "kind": "change",
+      "layer": "model-routing",
+      "summary": "Introduce a clear tiering rule: realtime relay model only handles conversational intent capture, clarification, and short confirmations. Any task that can run asynchronously (web search, email, file operations, automation, long summaries, scheduled reminders) should be routed to a cheaper background model via mac-planner or a server-side browser/search worker. Provide a standardized intent envelope and status updates so the relay doesn’t keep long context or poll for completion.",
+      "why": "",
+      "proposedBy": [
+        "relay-realtime"
+      ],
+      "timesProposed": 6,
+      "round": 11,
+      "status": "implemented",
+      "note": "Built as local-agent/routines.js + /routines routes. Deployed and verified live: routine ran, lastStatus=completed, runCount=1."
+    },
+    {
+      "id": "chg-1bd50c67",
+      "kind": "change",
+      "layer": "model-routing",
+      "summary": "Introduce a clear tiering policy: relay-realtime handles only intent capture, brief clarification, and immediate safety checks; everything else becomes a job executed by cheaper background models via the Mac bridge or a server-side browser, with status updates streamed back.",
+      "why": "",
+      "proposedBy": [
+        "relay-realtime"
+      ],
+      "timesProposed": 6,
+      "round": 12,
+      "status": "implementing",
+      "note": "assigned to subagent: model-routing"
+    },
+    {
+      "id": "chg-7f6f0131",
+      "kind": "change",
+      "layer": "model-routing",
+      "summary": "Add explicit, cheap tiers: relay captures intent and hands off to mac_delegate or server_browser_actions. Introduce job creation, status, cancellation, and completion notifications (audio and dashboard) so the relay doesn’t stay in the loop.",
+      "why": "",
+      "proposedBy": [
+        "relay-realtime"
+      ],
+      "timesProposed": 6,
+      "round": 14,
+      "status": "implementing",
+      "note": "assigned to subagent: model-routing"
+    },
+    {
+      "id": "chg-324de76f",
+      "kind": "change",
+      "layer": "stack",
+      "summary": "Align the stack spec and orchestrator tool registry for the realtime agent, and publish a single authoritative capability manifest (tools, endpoints, permissions, and model routing) that both the runtime and documentation derive from. Add a health endpoint that returns the active manifest so agents can reason safely about what exists.",
+      "why": "",
+      "proposedBy": [
+        "relay-realtime"
+      ],
+      "timesProposed": 6,
+      "round": 13,
+      "status": "implemented",
+      "note": "Built GET /capabilities on the Mac agent (local-agent/capabilityManifest.js) and fixed the discovery status contract in local-agent/server.js. The manifest is DERIVED, not hand-written: routes come from the live Express router stack (82 routes today, up from the one — /health — that probing could find), action types are parsed out of computerControl.js's switch at import (SUPPORTED_ACTION_TYPES, 76 types), planner coverage from llmPlanner.isKnownActionType, hands-free status from actionRisk.classifyAction, permissions from macos/permissions. Only the per-group prose is hand-written, and the manifest reports its own rot as http.undocumentedGroups (currently []). It also publishes models (planner gpt-5.6-luna, vision gpt-4.1-mini, voice deferred to the relay), the auth statusContract, and off-box surfaces (relay, Realtime planner, browser extension, firmware) so a caller probing this port does not conclude they do not exist. 404 FIX: the token middleware runs before routing, so every unknown path used to return 401 and read as 'exists but forbidden'. isKnownRoutePath() now matches the request against real route layers only (catch-all middleware and static mounts excluded; served dist files checked by existence, with traversal rejected) and returns 404 first. Verified live: GET /nope -> 404 with and without a token; GET /jobs -> 401 without a token, 200 with. /health now advertises capabilities:'/capabilities' so the manifest is findable without a token. ALIGNMENT: local-agent/stackAlignment.test.js imports cloud-relay/openaiRealtimeVoice.js read-only and asserts every action type the Realtime registry names is dispatchable here and not dropped by the local planner. Real drift the manifest now surfaces (not fixed here — it lives in llmPlanner.js, which this change does not own): check_input_permissions, list_briefings, play_briefing, research_brief, research_topic execute fine over POST /execute but are stripped from LLM-authored plans by llmPlanner.sanitizeActions. Tests: capabilityManifest.test.js (10) + stackAlignment.test.js (5); full suite 499/499."
+    },
+    {
+      "id": "chg-b3826cae",
+      "kind": "change",
+      "layer": "browser-harness",
+      "summary": "Add a typed browser-job protocol with origin allowlists, tab bootstrap via navigate, structured extract selectors, per-action risk labels, screenshot/text evidence, cancellation, and an atomic 'pending irreversible action' state. Return compact structured results instead of full page HTML.",
+      "why": "",
+      "proposedBy": [
+        "browser-extension"
+      ],
+      "timesProposed": 5,
+      "round": 10,
+      "status": "implementing",
+      "note": "assigned to subagent: browser-session"
+    },
+    {
+      "id": "cap-bc260bea",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "Every weekday morning, check my logged-in work dashboard, calendar, and inbox, then give me a short audio briefing with only what needs my attention.",
+      "why": "",
+      "proposedBy": [
+        "browser-extension"
+      ],
+      "timesProposed": 5,
+      "round": 10,
+      "status": "implementing",
+      "note": "assigned to subagent: quick-capture"
+    },
+    {
+      "id": "cap-b15b17f9",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "Open this website, fill out the form with the information we discussed, and show me exactly what is ready before you submit it.",
+      "why": "",
+      "proposedBy": [
+        "browser-extension"
+      ],
+      "timesProposed": 5,
+      "round": 10,
+      "status": "implementing",
+      "note": "assigned to subagent: watch-and-forms"
+    },
+    {
+      "id": "cap-cb69fbe6",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "Watch this logged-in page and tell me when the status changes, but don't click anything or send anything.",
+      "why": "",
+      "proposedBy": [
+        "browser-extension"
+      ],
+      "timesProposed": 5,
+      "round": 10,
+      "status": "implementing",
+      "note": "assigned to subagent: watch-and-forms"
+    },
+    {
+      "id": "cap-2fc364ed",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "“Give me a workday brief at 8:30, and let me play it from the pendant when I’m ready.”",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 5,
+      "round": 13,
+      "status": "implementing",
+      "note": "assigned to subagent: quick-capture"
+    },
+    {
+      "id": "cap-d91c8266",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "“Before my next meeting, prepare me: open the agenda, summarize relevant email, and put a private briefing on the pendant.”",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 5,
+      "round": 13,
+      "status": "implementing",
+      "note": "assigned to subagent: quick-capture"
+    },
+    {
+      "id": "cap-e49fb28e",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "“Research this topic, compare the best options, and leave me a short audio recommendation—don’t buy anything.”",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 5,
+      "round": 13,
+      "status": "implementing",
+      "note": "assigned to subagent: research-audio"
+    },
+    {
+      "id": "cap-52dcc328",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "“Every Friday, tidy my Downloads into dated folders, show me a preview, and only then apply it.”",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 5,
+      "round": 13,
+      "status": "implementing",
+      "note": "assigned to subagent: quick-capture"
+    },
+    {
+      "id": "chg-0aa257d0",
+      "kind": "change",
+      "layer": "dashboard-ux",
+      "summary": "Add a unified Jobs inbox across web, menubar, and iOS showing running/blocked/completed browser and Mac jobs, compact evidence, sensitive-field redactions, and a single prominent 'Approve this exact action' review step. Include pause/revoke, schedule, retention, and per-origin permissions.",
+      "why": "",
+      "proposedBy": [
+        "browser-extension"
+      ],
+      "timesProposed": 5,
+      "round": 10,
+      "status": "implemented",
+      "note": "Jobs tab shipped in the React ops dashboard (src/ops/OpsApp.jsx JobsView + ops.css). Running/Scheduled/Finished in one rail with source-filter chips; source badge on every row (pendant vs routine vs recon vs harness) plus an 'Asked by' fact explaining the origin; per-action evidence (action type, params, message, stdout/stderr, redacted credential-shaped values) and a Touched summary of apps/URLs/shell/browser use; GET /routines rendered alongside jobs with schedule, next/last run and Run now. Live via the thinking+pipeline SSE streams (coalesced refetch), no refresh needed. Visibility only - no gates or approval prompts. Also fixed Home 'THIS MAC - Unavailable': refreshAll used Promise.all so one failing route discarded status/machine; now allSettled, plus auto re-priming of the loopback dashboard session cookie on 401 so an agent restart no longer freezes an open tab."
+    },
+    {
+      "id": "chg-6a6fa4b6",
+      "kind": "change",
+      "layer": "mac-harness",
+      "summary": "Add a typed action policy in front of FULL_CONTROL_MODE: classify every action as read-only, reversible local mutation, or high-impact mutation; require a one-use confirmation token bound to the exact manifest for sending, deleting, purchasing, account/security changes, shell, and AppleScript. Keep automatic execution for opening apps/URLs, reading, drafting, and other reversible actions. Return per-action evidence, result, and undo metadata.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 5,
+      "round": 13,
+      "status": "rejected",
+      "note": "Owner policy: maximum access, no gates. A typed action policy that requires a one-use confirmation for high-impact mutations is exactly the gate that has been rejected twice. The observability half is covered by chg-5fc73ce3 (result receipts)."
+    },
+    {
+      "id": "chg-9206eec2",
+      "kind": "change",
+      "layer": "memory",
+      "summary": "Store browser task definitions as versioned, user-owned recipes (origin, allowed paths, selectors, extracted fields, cadence, privacy/retention, and confirmation policy), while storing only compact redacted results and hashes by default. Prune raw page evidence after review or a short configurable TTL.",
+      "why": "",
+      "proposedBy": [
+        "browser-extension"
+      ],
+      "timesProposed": 5,
+      "round": 10,
+      "status": "duplicate",
+      "note": "Memory half covered by chg-5415e046: browser results are stored as compact normalized facts with provenance and a short TTL, raw page text never persisted. The other half - versioned user-owned browser task recipes (origin, allowed paths, selectors, cadence, confirmation policy) - is browser-job territory (browserBridge.js/routines.js) and was not touched here; it needs a separate entry against that owner."
+    },
+    {
+      "id": "chg-6360d815",
+      "kind": "change",
+      "layer": "memory",
+      "summary": "Replace per-surface hand-written fleetContext sections with a compact, typed context projection: stable preferences and permissions, current tasks, and only relevant recent entities. Prune by TTL and utility, store provenance, and send a small surface-specific summary rather than the full graph on every turn.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 5,
+      "round": 13,
+      "status": "implemented",
+      "note": "local-agent/contextProjection.js: projectContext({surface, task}) emits a compact typed projection - cache-stable ## Owner head (preferences/permissions, sorted, capped at 12), ## Now (open tasks), ## Relevant (task-scored facts only), ## Web (browser tier, on match only) - under an enforced token budget, reporting the fact ids it used so touchFacts() feeds idle pruning. Measured on live memory: the four hand-written blocks it replaces cost 295-370 tokens/turn, the projection 152 (49-59% smaller), of which only 66 tokens are volatile (78-82% less uncached text per turn). Store grown 22x, prompt grows 4.8x and stays under budget: 3400 facts dump to 60,137 tokens, project to 198."
+    },
+    {
+      "id": "chg-e5bfe9ad",
+      "kind": "change",
+      "layer": "model-routing",
+      "summary": "Route all non-conversational work through an asynchronous job planner: realtime handles intent capture and confirmation only; a cheaper background model handles extraction, Mac/browser plans, retries, and summarization; a small verifier checks action manifests and evidence before execution. Return a compact status card rather than keeping the realtime session alive.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 5,
+      "round": 13,
+      "status": "implementing",
+      "note": "assigned to subagent: model-routing"
+    },
+    {
+      "id": "chg-a813b918",
+      "kind": "change",
+      "layer": "relay",
+      "summary": "Enable a bounded audio-retention sweeper and per-job deletion controls: default to short retention for generated briefings, delete expired R2 objects and D1 pointers idempotently, and expose a dashboard ‘delete now’ action. Keep owner-pinned items separate with an explicit expiry.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 5,
+      "round": 13,
+      "status": "proposed",
+      "note": "NOT IMPLEMENTED — cloud-relay/ was owned by another agent during this pass. Read-only gap analysis + patch plan follows. WHAT ALREADY EXISTS: cloud-relay/audioRetention.js has the policy, expiry math, per-item deleteStoredAudio (modes audio|record), and sweepExpiredAudio; routes exist at server.js:1850 DELETE /v1/ops/audio-captures/:captureId/audio, :1974 DELETE /v1/ops/history/:pipelineId/audio, :2105 GET /v1/ops/audio-retention, :2137 POST /v1/ops/audio-retention/sweep; 11 tests in audioRetention.test.js. WHAT IS MISSING, in priority order. (1) THE SWEEP CANNOT CLEAR A BACKLOG — most serious. audioRetention.js:173 clamps store.listJobs to 100 (jobQuery.js:8 JOB_LIST_MAX_LIMIT), making AUDIO_RETENTION_SWEEP_MAX_BATCH=200 unreachable; listJobs sorts created_at DESC (d1Store.js:566), so the sweep scans the NEWEST 100 captures — the ones least likely to be expired — and passes no 'before' cursor even though jobQuery.js:20 supports keyset pagination. Past 100 rows, sweeps report 0 expired forever while the backlog below the window is unreachable. GET /v1/ops/audio-retention (server.js:2111) under-reports for the same reason. FIX: thread a cursor into sweepExpiredAudio, return nextCursor, and add an oldest-first query mode (or loop until drained). Add the test that exposes it: >100 rows through sweepExpiredAudio itself — the existing batch-cap test at audioRetention.test.js:106 calls selectExpiredAudioCaptures directly and bypasses the clamp, which is why the bug is invisible. (2) NO AUTOMATION. sweepExpiredAudio's only caller is the manual POST route (server.js:2146). cloudflare-worker/worker.js:6 exports only fetch — no scheduled(); wrangler.jsonc has no triggers/crons and ships AUDIO_RETENTION_SWEEP_ENABLED:false. FIX: add scheduled() + a crons trigger, keep the opt-in flag as the safety. (3) ONE BAD OBJECT ABORTS THE WHOLE SWEEP. The loop at audioRetention.js:195 has no try/catch, the route has none, and server.js has no Express error middleware — an R2 delete that throws discards the report for every capture already processed. FIX: per-item try/catch, collect failures into a failed[] array. (4) IDEMPOTENCY DEFECTS. A second delete of the same capture still runs updateJob (audioRetention.js:141) and CLOBBERS the original audioDeletedAt/audioDeletedReason; and when deleteAudioCaptureObject returns false (untrusted key, audioStorage.js:130, or unbound bucket) deleteStoredAudio nulls audioRef anyway, orphaning the R2 object forever while reporting ok:true. FIX: skip the update when audioStorage is already 'deleted', and do not null audioRef when the object delete returned false — surface it as orphaned. (5) NO OWNER-PIN. Zero implementation anywhere (the 'pinned' hits in browserSessions.js are browser tabs). createAudioCapture (jobs.js:21) has no retention-override field; expiry is derived purely from createdAt + one global maxAgeMs. Storage is schema-free JSON in relay_jobs.data, so FIX is: add pinned/retainUntil to the capture, honour it in isAudioCaptureExpired, and expose a pin toggle. (6) NO SHORT RETENTION FOR GENERATED AUDIO. 'briefing' appears nowhere in the repo; generated TTS is stored as an audio_capture that differs only by role:'reply' (server.js:1070, pendantConverse.js:400), bolted on outside createAudioCapture, and retention has one global 30-day window (config.js:27). FIX: AUDIO_RETENTION_GENERATED_MAX_AGE_MS + a branch on capture.role. (7) PER-RUN DELETE ORPHANS THE REPLY. DELETE /v1/ops/history/:pipelineId/audio (server.js:1974) deletes only detail.capture — the owner's voice — and never the linked replyCaptureId, unlike the GET route which handles ?voice=reply (server.js:1949). FIX: add the voice param to DELETE. (8) NO DASHBOARD 'DELETE NOW'. Both dashboards are playback-only: the ops SPA (src/ops/OpsApp.jsx:946, api.js has no audio delete and points at the Mac agent, not /v1/ops) and SvelteKit (routes/api/history/[pipelineId]/audio/+server.ts exports GET only). FIX: a DELETE proxy route + client method + button. BLOCKER FOUND: GET /v1/ops/audio-captures (server.js:1818) calls audioCaptureSummary at :1830 but never imports it (exported from history.js:363; the import block at server.js:59 omits it) — that endpoint throws ReferenceError at request time, and it is the natural data source for the dashboard list. It escapes lint because eslint.config.js scopes linting to src/** and local-agent/** only; cloud-relay/** is never linted. Fix that import first."
+    },
+    {
+      "id": "chg-16bc5dee",
+      "kind": "change",
+      "layer": "browser-harness",
+      "summary": "Add a durable browser job runner with two backends: the authenticated Safari bridge for owner-private pages and Cloudflare Browser Run for public pages. Represent each step as navigate/read/extract/click/type, persist evidence (URL, title, timestamp, selected text), retry transient failures, and expose a job result stream to the planner.",
+      "why": "",
+      "proposedBy": [
+        "browser-extension"
+      ],
+      "timesProposed": 4,
+      "round": 12,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "cap-bff5f829",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "Check my logged-in web accounts for anything urgent, summarize it, and draft (but do not send) any replies that need my attention.",
+      "why": "",
+      "proposedBy": [
+        "browser-extension"
+      ],
+      "timesProposed": 4,
+      "round": 12,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "cap-8c36c70a",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "Every weekday morning, check my logged-in calendar, task board, and travel reservations, then tell me the three things I need to know and prepare a suggested plan.",
+      "why": "",
+      "proposedBy": [
+        "browser-extension"
+      ],
+      "timesProposed": 4,
+      "round": 12,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "cap-9a41624d",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "Watch this logged-in page for a meaningful change and tell me when it happens, with the before-and-after evidence.",
+      "why": "",
+      "proposedBy": [
+        "browser-extension"
+      ],
+      "timesProposed": 4,
+      "round": 12,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "cap-dde88711",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "Every weekday at 8:30, prepare a concise workday brief: today's calendar, unread mail grouped by urgency, and the top three actions; save it as an audio briefing I can play later.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 4,
+      "round": 14,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "cap-c5c14868",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "When I say 'triage my inbox', classify unread mail into urgent, reply soon, reference, and noise, draft replies for the first two categories, and show me a reviewable list without sending anything.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 4,
+      "round": 14,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "cap-60031093",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "Keep a daily 'closeout' routine: at 5:30 PM, summarize unfinished calendar items and the notes/files I touched today, then create a short checklist for tomorrow.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 4,
+      "round": 14,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "cap-5bd640c5",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "Watch my chosen logged-in web pages once a day and tell me only what changed; prepare drafts for any follow-up forms, but stop before submitting.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 4,
+      "round": 14,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "cap-2a78a3d7",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "“Check the weather and read the highlights to me.”",
+      "why": "",
+      "proposedBy": [
+        "relay-realtime"
+      ],
+      "timesProposed": 4,
+      "round": 15,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "chg-30c6ee4e",
+      "kind": "change",
+      "layer": "dashboard-ux",
+      "summary": "Add a Jobs inbox shared by web, menubar, and iOS: each job shows status, source links, last update, evidence snippets, sensitivity, proposed actions, and a prominent 'ready to send/submit' preview. Include per-routine pause/run-now/edit controls and a delivery preference for pendant audio.",
+      "why": "",
+      "proposedBy": [
+        "browser-extension"
+      ],
+      "timesProposed": 4,
+      "round": 12,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "chg-b453effa",
+      "kind": "change",
+      "layer": "dashboard-ux",
+      "summary": "Add a unified Jobs inbox shared by web, menubar, and iOS: queued/running/completed/failed jobs, source timestamps, concise result, audio-play button, retry, cancel where safe, and a per-action audit trail. Separate 'draft ready' from 'executed' states.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 4,
+      "round": 14,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "chg-c3788e7b",
+      "kind": "change",
+      "layer": "interaction",
+      "summary": "Make browser work explicitly two-phase: 'inspect' returns a concise result with citations and a proposed action; 'apply' repeats the exact destination, fields/content, and irreversible effect, then waits for owner confirmation. Allow the owner to say 'continue' only for that displayed proposal, while reversible navigation/filling can proceed immediately.",
+      "why": "",
+      "proposedBy": [
+        "browser-extension"
+      ],
+      "timesProposed": 4,
+      "round": 12,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "chg-aace6694",
+      "kind": "change",
+      "layer": "mac-harness",
+      "summary": "Add typed, read-only observability endpoints for job execution: running apps, foreground app, accessibility state, browser tabs, and allowlisted directory listings, plus structured per-action result/error records for existing execution.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 4,
+      "round": 14,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "chg-e4ff3197",
+      "kind": "change",
+      "layer": "memory",
+      "summary": "Replace raw browser-page insertion into context with expiring, source-backed facts: store only normalized facts plus source URL, observedAt, confidence, and sensitivity class; keep full extracts in short-lived encrypted job artifacts and prune them automatically.",
+      "why": "",
+      "proposedBy": [
+        "browser-extension"
+      ],
+      "timesProposed": 4,
+      "round": 12,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "chg-a82e0b13",
+      "kind": "change",
+      "layer": "memory",
+      "summary": "Replace per-surface hand-written fleetContext prompt sections with a compact, typed context service that returns only task-relevant facts, each with source, timestamp, confidence, and expiry; automatically prune stale session detail and raw audio references.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 4,
+      "round": 14,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "chg-e567ac6a",
+      "kind": "change",
+      "layer": "model-routing",
+      "summary": "Add an asynchronous job router: realtime handles only immediate conversational acknowledgement and dispatch; a cheaper background model handles calendar/mail/file summarization, classification, and draft generation; deterministic code performs collection, limits, redaction, and formatting.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 4,
+      "round": 14,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "chg-5b887962",
+      "kind": "change",
+      "layer": "routines",
+      "summary": "Add a Worker-side scheduler using Cron Triggers and Durable Object alarms to run routines even when the Mac is asleep, with a simple queue that delegates to the Mac when it’s online or performs server-side tasks when possible.",
+      "why": "",
+      "proposedBy": [
+        "relay-realtime"
+      ],
+      "timesProposed": 4,
+      "round": 15,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "cap-2fb3dd01",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "Every weekday morning, give me a short audio brief of today's calendar, unread important mail, weather, and any browser jobs that finished overnight.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 3,
+      "round": 15,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "cap-4f5af34d",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "Check my authenticated browser accounts for anything that needs my attention, then put findings in a review queue instead of changing anything.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 3,
+      "round": 15,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "cap-2eef696b",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "When I say 'clean up my desktop', group obvious screenshots and downloads into dated folders, but show me the proposed moves first.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 3,
+      "round": 15,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "cap-d90ef7f1",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "Before my next meeting, prepare a one-page brief from the calendar invite, recent related mail, and approved web sources, save it to my Mac, and tell me where it is.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 3,
+      "round": 15,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "cap-817211fc",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "Every weekday morning, give me a short brief of today's calendar, unread important mail, and the one thing I should prepare for; let me hear it on the pendant and see links on the dashboard.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 3,
+      "round": 16,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "cap-511245d4",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "When I say 'research this' or schedule a topic, investigate the web, summarize the best sources, and leave a cited note and a short audio briefing for later.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 3,
+      "round": 16,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "cap-2b03a27d",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "Clean up my Downloads: identify duplicate, temporary, and likely finished files, show me a proposed plan, then move only the approved items into an archive folder.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 3,
+      "round": 16,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "cap-a5a9a6a9",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "Turn my unread mail into a priority list and draft replies for the top three, but never send anything without showing me the drafts first.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 3,
+      "round": 16,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "cap-64c3562b",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "“When I get back to my desk, summarize what happened while I was away and queue anything urgent.”",
+      "why": "",
+      "proposedBy": [
+        "relay-realtime"
+      ],
+      "timesProposed": 3,
+      "round": 16,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "cap-d5ef6ea9",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "“Remind me every weekday at 5 to shut down and summarize what I did today.”",
+      "why": "",
+      "proposedBy": [
+        "relay-realtime"
+      ],
+      "timesProposed": 3,
+      "round": 16,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "cap-6bbef5ec",
+      "kind": "capability",
+      "layer": "capability",
+      "summary": "“Read me the top three things I should care about right now.”",
+      "why": "",
+      "proposedBy": [
+        "relay-realtime"
+      ],
+      "timesProposed": 3,
+      "round": 16,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "chg-a649e91c",
+      "kind": "change",
+      "layer": "dashboard-ux",
+      "summary": "Ship a unified Jobs inbox across web, menubar, and iOS showing queued/running/completed/failed work, source account, evidence links, data sensitivity, cost estimate, cancellation, and approval requests; add a compact 'pending while Mac asleep' state.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 3,
+      "round": 15,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "chg-05a523e6",
+      "kind": "change",
+      "layer": "interaction",
+      "summary": "Make every Mac plan two-phase by default: first return a concise preview with affected app/files/URLs and expected side effects, then execute only the safe subset automatically; preserve the owner’s current foreground app and use accessibility-targeted actions rather than stealing focus. Add a single spoken 'undo last plan' for supported reversible operations.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 3,
+      "round": 16,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "chg-75156244",
+      "kind": "change",
+      "layer": "mac-harness",
+      "summary": "Add a mandatory server-side confirmation broker around POST /execute: classify each action batch, require a short-lived token for external side effects (send, purchase, delete, overwrite, shell, AppleScript), and support dry-run previews plus idempotency keys. Keep reversible local actions fast, but make FULL_CONTROL_MODE unable to bypass this policy.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 3,
+      "round": 15,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "chg-85f818f7",
+      "kind": "change",
+      "layer": "mac-harness",
+      "summary": "Add a real policy gate around POST /execute even when FULL_CONTROL_MODE is enabled: classify actions into read-only, reversible, and consequential; require a short-lived confirmation token for sending messages, deleting/overwriting files, purchases, credential changes, and external side effects. Keep an owner-configurable allowlist for harmless routines, and write an append-only audit record with before/after and rollback metadata where possible.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 3,
+      "round": 16,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "chg-18a9c60f",
+      "kind": "change",
+      "layer": "memory",
+      "summary": "Replace hand-written per-surface fleetContext prompt sections with a single typed context service that stores compact facts, provenance, sensitivity, TTL, and last-used timestamps; retrieve only task-relevant facts and automatically prune stale/duplicate session text.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 3,
+      "round": 15,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "chg-0096a2b3",
+      "kind": "change",
+      "layer": "memory",
+      "summary": "Replace per-surface hand-written fleetContext prompt sections with a shared, typed context compiler: retrieve only task-relevant entities/relations, attach confidence and freshness, cap tokens per tier, and summarize/archive stale session details. Keep private data scoped by surface and purpose.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 3,
+      "round": 16,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "chg-38c86bb7",
+      "kind": "change",
+      "layer": "model-routing",
+      "summary": "Split work into a cheap asynchronous planner/classifier, deterministic Mac/browser executors, and realtime only for live dialogue and ambiguous confirmation. Add budgets, deadlines, cancellation, and partial-result delivery to every job.",
+      "why": "",
+      "proposedBy": [
+        "mac-planner"
+      ],
+      "timesProposed": 3,
+      "round": 15,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "chg-f79dcdb8",
+      "kind": "change",
+      "layer": "routines",
+      "summary": "Add a first-class scheduler/queue for delayed and recurring work in the relay, backed by Durable Objects (alarms) or Worker Cron. Provide a routine store (D1) and a delivery mechanism that can produce an audio summary stored in R2 and a dashboard notification.",
+      "why": "",
+      "proposedBy": [
+        "relay-realtime"
+      ],
+      "timesProposed": 3,
+      "round": 16,
+      "status": "proposed",
+      "note": ""
+    },
+    {
+      "id": "skill-ba1d5d1a",
+      "kind": "device-skill",
+      "layer": "firmware",
+      "summary": "computer_vision.screenshot",
+      "why": "",
+      "proposedBy": [
+        "mac-vision"
+      ],
+      "timesProposed": 1,
+      "round": 7,
+      "status": "proposed",
+      "note": ""
+    }
+  ]
+}
