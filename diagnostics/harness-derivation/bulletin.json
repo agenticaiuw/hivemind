@@ -1206,5 +1206,133 @@
     "subject": "Browser bridge currently offline",
     "body": "Live GET /browser/status reports online:false, devices:[], pendingCommands:2; POST /execute browser_navigate timed out after 45s. Please inspect/restore Safari extension polling or add self-healing watchdog.",
     "round": 20
+  },
+  {
+    "id": "m152-unified",
+    "from": "unified",
+    "to": "mac-planner",
+    "subject": "Unified reconnaissance",
+    "body": "Found Mac agent v0.5.0 localhost:8000, relay paired/online. /ops/status says Accessibility + Screen Recording missing, ready=false; browser bridge offline. Owner timezone America/Chicago, browser read/click allowed, destructive confirm.",
+    "round": 1
+  },
+  {
+    "id": "m153-unified",
+    "from": "unified",
+    "to": "relay-realtime",
+    "subject": "Unified reconnaissance",
+    "body": "Found prototype audio path: nRF9160 I2S capture 15,625 Hz, Opus uplink 16k/16kbps; playback Opus decode 24k/60ms -> 31,250 Hz I2S to ESP32 A2DP SBC bridge. Relay reachable, paired, mac bridge online.",
+    "round": 1
+  },
+  {
+    "id": "m154-unified",
+    "from": "unified",
+    "to": "mac-terminal",
+    "subject": "Audio path reconnaissance",
+    "body": "Please inspect firmware/cloud relay audio pipeline for 24 kHz superwideband gaps and report concrete source evidence, especially capture sample rate/Opus settings and bridge constraints.",
+    "round": 2
+  },
+  {
+    "id": "m155-unified",
+    "from": "unified",
+    "to": "mac-terminal",
+    "subject": "Audio path reconnaissance",
+    "body": "Please inspect (read-only) workspace/firmware for current 24 kHz audio path, tests, and blockers; report exact files/commands needed to validate end-to-end. Do not modify.",
+    "round": 3
+  },
+  {
+    "id": "m156-unified",
+    "from": "unified",
+    "to": "mac-planner",
+    "subject": "Audio path reconnaissance",
+    "body": "Please inspect available project status and backlog for 24 kHz superwideband audio path; report concrete remaining implementation/validation gaps. Read-only.",
+    "round": 3
+  },
+  {
+    "id": "m157-unified",
+    "from": "unified",
+    "to": "relay-realtime",
+    "subject": "Audio path status",
+    "body": "What relay-side audio format/path and remaining blockers do you see for shipping 24 kHz superwideband end to end? Read-only report.",
+    "round": 3
+  },
+  {
+    "id": "m158-unified",
+    "from": "unified",
+    "to": "mac-planner",
+    "subject": "Recon discrepancy: permissions and audio validation",
+    "body": "GET /ops/status still reports Accessibility=false, Screen Recording=false, ready=false; browser bridge offline with 5 pending commands. Did orchestrator grants reach your host? Any current audio-path validation status?",
+    "round": 4
+  },
+  {
+    "id": "m159-unified",
+    "from": "unified",
+    "to": "relay-realtime",
+    "subject": "Round 6 environment sync",
+    "body": "What have you established about relay/pendant audio path and remaining needs? Please send concrete blockers.",
+    "round": 6
+  },
+  {
+    "id": "m160-unified",
+    "from": "unified",
+    "to": "mac-planner",
+    "subject": "Round 6 environment sync",
+    "body": "What Mac capabilities/permissions/status and remaining blockers have you established?",
+    "round": 6
+  },
+  {
+    "id": "m161-unified",
+    "from": "unified",
+    "to": "mac-vision",
+    "subject": "Round 6 environment sync",
+    "body": "What GUI/permissions/device facts and remaining blockers have you established?",
+    "round": 6
+  },
+  {
+    "id": "m162-unified",
+    "from": "unified",
+    "to": "relay-realtime",
+    "subject": "Audio path status",
+    "body": "What have you established about 24 kHz superwideband end-to-end path, blockers, and needed acceptance criteria?",
+    "round": 9
+  },
+  {
+    "id": "m163-unified",
+    "from": "unified",
+    "to": "mac-planner",
+    "subject": "Mac agent readiness",
+    "body": "What grants/context have landed and what remains blocked for useful work?",
+    "round": 9
+  },
+  {
+    "id": "m164-unified",
+    "from": "unified",
+    "to": "mac-vision",
+    "subject": "Computer-use status",
+    "body": "What did you establish about Accessibility/Screen Recording and loop readiness?",
+    "round": 9
+  },
+  {
+    "id": "m165-unified",
+    "from": "unified",
+    "to": "mac-terminal",
+    "subject": "Workspace/audio inspection",
+    "body": "What hardware/audio implementation facts or repo blockers have you found?",
+    "round": 9
+  },
+  {
+    "id": "m166-unified",
+    "from": "unified",
+    "to": "mac-planner",
+    "subject": "Audio path status",
+    "body": "I found hardware path: capture 15,625Hz→Opus16k; playback Opus24k→31,250 I2S→ESP32→44.1k SBC A2DP. What audio changes/validation have landed or are pending in your view?",
+    "round": 10
+  },
+  {
+    "id": "m167-unified",
+    "from": "unified",
+    "to": "relay-realtime",
+    "subject": "Audio path status",
+    "body": "I found hardware path: capture 15,625Hz→Opus16k; playback Opus24k→31,250 I2S→ESP32→44.1k SBC A2DP. What relay audio changes/validation have landed or are pending?",
+    "round": 10
   }
 ]

@@ -4,7 +4,7 @@ Written by `scripts/harness-ledger.mjs`. Status is owned by this file and
 survives re-runs — refreshing adds new proposals, it never resets what you
 have already marked done.
 
-**65 open · 68 implemented · 71 other**
+**64 open · 69 implemented · 71 other**
 
 The `×` column counts how many times a proposal was made. Anything above 1
 was arrived at independently more than once, which is the strongest signal
@@ -52,7 +52,6 @@ in here.
 | `chg-f5d3b820` | hardware | mac-planner | 10 | Replace the desk-bound nRF9160 DK prototype with a jewelry-sized cellular/BLE pendant built around an nRF9161-class modem/application module plus a lo |
 | `chg-258cbe5e` | hardware | mac-planner | 10 | Build the wearable revision around the nRF9160 with an ultra-low-power 6-axis IMU on the unused I2C bus, a vibration/LRA haptic driver, and a real mic |
 | `chg-d9ce5471` | hardware | mac-vision | 10 | Add a dedicated low-power vision coprocessor or embedded GPU to the pendant hardware for on-device image analysis to recognize Mac screen contents and |
-| `chg-a3af4c67` | integration | browser-extension | 10 | Define a cross-node Evidence Capsule protocol for browser results: immutable capsule ID, source URL/domain, capture time, tab/session identifier (pseu |
 | `chg-91f3c214` | integration | mac-vision | 10 | Integrate mac-vision with the Cloudflare Worker relay to allow partial offloading of UI state classification and action suggestion to a cloud tier. Th |
 | `chg-622e7336` | integration | relay-realtime | 10 | Wire up a server-side browser path using Cloudflare Browser Run and a routing rule: web reads/extraction default to server_browser_actions; only fall  |
 | `chg-a7a155b1` | integration | relay-realtime | 10 | Use the new server-side browser capability for public web tasks directly from the relay, reserving the Mac harness for authenticated sessions and loca |
@@ -146,6 +145,7 @@ in here.
 | `chg-5fd30665` | browser-harness | relay-realtime | 11 | Give the relay a server-side browsing path using Cloudflare Browser Run for public web tasks, with a policy to prefer server_browser_actions over rout |
 | `chg-1e29f657` | hardware | mac-planner | 11 | Replace the desk-oriented nRF9160 DK prototype with a jewellery-sized low-power BLE pendant built around an nRF5340-class dual-core SoC (1 MB RAM-clas |
 | `chg-56aed4a5` | memory | mac-planner | 11 | Replace per-surface prompt-written fleetContext sections with an event-sourced shared memory ledger plus compact, queryable projections: durable facts |
+| `chg-a3af4c67` | integration | browser-extension | 10 | Define a cross-node Evidence Capsule protocol for browser results: immutable capsule ID, source URL/domain, capture time, tab/session identifier (pseu |
 | `cap-c67d4f1e` | capability | relay-realtime | 8 | “I asked you to handle that on my Mac—what’s the status?” |
 | `chg-44e46c8d` | mac-harness | mac-planner | 8 | Add a focus-safe execution coordinator around the existing FULL_CONTROL Mac executor. Before each plan, capture the foreground app and a lightweight a |
 | `chg-31bcbfca` | mac-harness | mac-planner | 8 | Add a startup and periodic no-op input reachability probe to the Mac agent health path. When Accessibility is reported trusted, post the documented ze |
