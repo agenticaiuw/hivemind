@@ -1,0 +1,49 @@
+# Harness derivation — mac-terminal — round 62
+
+Model: `gpt-5.6-luna`  ·  probes against `http://localhost:8000`
+
+## What it established
+
+- **mac-execution-observability** — Live Mac agent health is not execution-ready despite full control: browser extension home-chrome is offline with 4 pending commands; Accessibility and Screen Recording are ungranted; /journal retains only 120 jobs and currently reports 150 actions, 13 failures, 0 undoable, and 113 unattributed tiers.
+  - evidence: GET /ops/status and GET /journal probed successfully at 2026-08-07T11:39:44Z.
+
+## Capabilities it proposed
+
+### "“Just do it wherever you can, and if one part of the Mac or browser is unavailable, keep going with the parts that are possible and tell me exactly what is left.”"
+- **useful because:** Today the system reports a browser that is offline with four pending commands and a Mac agent that is not ready because Accessibility and Screen Recording are missing, yet a planner can still attempt a multi-step request. This capability would make partial completion honest and useful: the pendant hears what finished, the relay keeps the remainder alive, and the owner is not told a task succeeded when only a subset ran.
+- **path:** pendant → relay → mac-planner → browser-extension → faculty-perception → faculty-judgement → faculty-action → dashboard
+- **model tier:** Use faculty-perception plus deterministic health/permission checks for the preflight; use background gpt-4.1-mini only to summarize partial completion. Escalate to the expensive planner only when choosing among materially different fallback plans.
+- **latency:** Preflight under 300 ms from cached heartbeats, with a fresh probe only for stale surfaces. Start reachable work immediately; partial-result speech under 2 seconds after the first completed step. Offline remainder can continue as a durable relay job.
+- **cost:** Usually zero model calls for health checks and routing; about $0.001–$0.01 equivalent for an occasional background partial-completion summary. Dominant cost is context transfer if a long multi-step plan is re-sent; use step IDs and compact state deltas.
+- **security:** The health snapshot must expose permission state and browser session identifiers only to the authenticated owner path. Never copy private page contents into the relay merely to decide availability. Do not attempt to repair macOS permissions or submit browser transactions automatically; report the missing capability and preserve the exact pending step for later.
+- **missing:** A typed, timestamped fleet-health contract covering Mac readiness, Accessibility/Screen Recording permissions, browser heartbeat/session reachability, relay reachability, and pendant link state; Planner support for dependency graphs with independently executable steps and explicit partial-success states; A durable pending-step queue that can resume when the browser extension reconnects without replaying completed mutations; Dashboard and pendant status language for completed / running / blocked / uncertain, with source timestamps; A routing policy that treats unavailable surfaces as plan inputs rather than generic action failures
+
+### "“Watch me do this once, then let me ask you to repeat the whole workflow for me later.”"
+- **useful because:** The owner could teach a genuinely personal workflow by performing it once—such as gathering information from several private browser tabs, transforming it on the Mac, and leaving a result somewhere—then invoke it from the pendant without rebuilding the instructions every time. Today the system can execute individual actions, but it cannot capture the owner's intent, variable fields, cross-surface dependencies, and stopping points as a reusable, reviewable routine.
+- **path:** pendant → mac-planner → mac-vision → browser-extension → relay → faculty-perception → faculty-judgement → faculty-action → dashboard
+- **model tier:** Use deterministic event capture and replay for known actions; use a background model to name steps, identify variables, and summarize changes. Use the expensive planner only when a replay encounters a changed UI or ambiguous intent.
+- **latency:** Capture must be invisible during the demonstration apart from a pendant start/stop signal. A routine invocation should begin within 1 second; deterministic steps run at device speed, with model escalation only on drift. A changed step may take a few seconds to resolve.
+- **cost:** Near-zero cost for capture, storage, and deterministic replay. Typical replays use no model calls; an ambiguous UI recovery costs one background call, with planner escalation rarely. Storage is compact event metadata plus optional redacted screenshots or DOM anchors.
+- **security:** Recording must be explicit and visibly bounded; never capture microphone audio, passwords, tokens, or unrelated windows. Private browser content stays on the Mac unless the owner explicitly includes it. Before saving, show the owner the workflow steps, data fields, destinations, and which actions are mutations. Replays need variable redaction, per-step provenance, and a hard stop when the observed page or target differs materially.
+- **missing:** An explicit pendant-controlled capture mode that records cross-surface action events without microphone access; A normalized workflow format with steps, variables, preconditions, outputs, checkpoints, idempotency, and sensitivity labels; Browser and Mac harness instrumentation that emits semantic events rather than only raw commands or screenshots; A local workflow compiler that turns a demonstration into an editable recipe and detects secrets before persistence; Durable versioning, dry-run/diff preview, pause/resume, and drift recovery for replayed workflows; A dashboard and pendant interaction for naming, editing, testing, and disabling learned routines
+
+
+## Changes it proposed to its own stack
+
+### `integration` — Add a failure-aware execution supervisor around the existing unrestricted FULL_CONTROL shell/action path (no blocking or approval): assign each action an execution fingerprint (surface, argv/command hash, cwd, environment summary, idempotency key), stream start/heartbeat/exit events to the relay, classify failures into transient connection/timeout, missing permission, stale browser target, and deterministic command error, then automatically perform only an explicitly declared recovery recipe (reconnect/refresh/retry with backoff, browser reattach, or resume from the last completed step). Persist the attempt graph beyond the current 120-job journal window and expose a compact receipt linking every retry to the original request, tier, latency, and final state. The pendant should receive one concise spoken status only when recovery is exhausted; routine successes remain silent.
+- **owner gets:** When the owner asks from the pendant and walks away, a failed Mac or browser action will either finish itself or explain exactly what stopped it instead of silently leaving four pending browser commands or an incomplete task. They keep maximum capability and unattended execution, but gain trustworthy 'done / recovered / needs me' outcomes and a history that survives the current rolling log.
+- effort: Medium: typed attempt events and durable storage in local-agent, a small relay job-state consumer, recovery recipes for shell timeout/network, browser reattach, and permission diagnostics, plus pendant summary formatting and tests for duplicate/retry safety.  ·  risk: A retry can duplicate a non-idempotent shell mutation or browser submission. Recovery recipes must be opt-in per action type and default to no automatic retry for unknown commands; record the exact command hash and before/after receipts. If the Mac or relay disappears, the local attempt remains resumable and the pendant reports uncertainty rather than success.
+- cost: Low API cost: deterministic classification and retry orchestration are local; only exhausted failures or a requested spoken explanation use the cheaper background model. Storage is small append-only attempt metadata (roughly 1–3 KB per attempt), with output redaction and retention controls.  ·  latency: Adds near-zero latency to the first execution; transient failures incur bounded backoff (for example 1s/4s/16s). Normal successful jobs do not wait on relay acknowledgement. Spoken escalation is asynchronous.
+- security: No new execution authority and no restriction of the owner's deliberate FULL_CONTROL_MODE. Store hashes and redacted environment summaries by default, never raw secrets; make command/output retention configurable and preserve the existing authenticated local-agent/relay channel.
+- depends on: Durable attempt storage separate from the 120-job rolling journal; Action-type metadata declaring idempotency and safe recovery recipe; Relay event ingestion and pendant notification path; Browser session reattachment status and local permission diagnostics
+
+
+## What it asked for
+
+_Nothing._
+## Its own summary
+
+Discovered and verified a concrete cross-surface gap: /ops/status reports browser offline with 4 pending commands, missing Accessibility and Screen Recording permissions, and agent ready=false; /journal reports a 120-job rolling window with 150 actions, 13 failures, 0 undoable, and 113 unattributed tiers. Proposed (1) a non-blocking failure-aware execution supervisor with durable attempt graphs, safe declared recovery, and concise pendant escalation, and (2) a capability for partial completion with health-aware routing and automatic resume when browser/Mac surfaces return. No approval gates or reduced FULL_CONTROL access were proposed.
+
+**Biggest unknown:** The exact local-agent step/dependency and retry contract is still unknown, and the newly granted mac_read_diagnostics interfaces have no implementation. Building the durable attempt store, fleet-health contract, and resume semantics is the remaining prerequisite.
+

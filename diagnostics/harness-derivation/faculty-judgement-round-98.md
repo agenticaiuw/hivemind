@@ -1,0 +1,56 @@
+# Harness derivation — faculty-judgement — round 98
+
+Model: `gpt-5.6-luna`  ·  probes against `http://localhost:8000`
+
+## What it established
+
+_Nothing recorded._
+
+## Capabilities it proposed
+
+### "When I ask “what did I miss?”, give me a short, chronological account of important things that happened since I last checked—my pendant conversations, Mac/browser work, scheduled routines, and watched pages—with links, unfinished items, and explicit unknowns."
+- **useful because:** Today the system can perform work on several surfaces, but the owner has no dependable way to recover the thread after sleep, a meeting, or a dropped connection. This turns scattered logs and receipts into one truthful re-entry point without pretending a failed or offline action succeeded.
+- **path:** pendant → relay → mac-bridge → browser → dashboard
+- **model tier:** Background aggregation uses a cheap model over structured events; realtime is used only to answer the spoken question and summarize the already-built timeline.
+- **latency:** 30–90 seconds for a 24-hour reconstruction; spoken answer under 15 seconds once the timeline cache exists. On a cold cache, say that it is still compiling and offer the last known checkpoint.
+- **cost:** Low: one background summarization call per requested time window (roughly $0.01–$0.05 depending on event volume), with most cost from compressing raw event text; cache by time range and event revision.
+- **security:** Private calendar/mail/browser-derived content must remain owner-scoped and be redacted from logs and audio cache according to sensitivity. Never infer completion from an enqueue receipt: distinguish observed, acknowledged, failed, expired, and unknown. Require confirmation before turning an unfinished item into an external action.
+- **missing:** A durable cross-surface event index with normalized timestamps, source, sensitivity, job/action IDs, and causal links between voice intent, plan, execution, and receipt.; A timeline compiler that merges /journal, /jobs and receipts, /pipeline events, browser command results/inspections, routine runs, and captured notes while preserving explicit gaps.; A small owner-facing spoken/dashboard view with filters such as since last check, today, or since a named event.
+
+### "What changed in my world since [a time or event]? Compare my calendar, messages, important files, browser accounts, and ongoing work against that exact baseline, and tell me only meaningful changes with evidence."
+- **useful because:** A normal activity log tells the owner what the system did, not what is different in their life. This gives them a reliable before/after view after travel, illness, a workday, or a long meeting—without forcing them to remember which apps or pages mattered.
+- **path:** pendant → relay → mac-bridge → browser → dashboard
+- **model tier:** Use a cheaper background model to create normalized snapshots and calculate candidate deltas; use the realtime tier only to clarify the owner’s reference point and speak the final short answer.
+- **latency:** If a baseline exists, answer in 10–20 seconds. Creating a new multi-surface baseline may take 1–3 minutes and should be labeled as collecting, not silently presented as complete.
+- **cost:** Approximately $0.02–$0.10 per comparison depending on private-page and file volume; storage and extraction dominate more than generation. Cache immutable snapshots and compare only changed sources.
+- **security:** Snapshots can contain highly sensitive mail, calendar, files, and authenticated-page data. Encrypt them per owner, apply field-level sensitivity and short retention, never expose raw secrets in spoken output, and show citations or source labels for every claimed delta. Treat missing/offline sources as unknown rather than unchanged.
+- **missing:** A typed, versioned personal-state snapshot schema covering calendar, messages, files, browser account facts, Mac jobs, and routines.; A baseline/delta engine that distinguishes meaningful changes from volatile fields such as timestamps, unread counters, and rotating page content.; An owner-selected baseline registry (named event, timestamp, or explicit “save this state”) with deletion and privacy controls.; A cross-surface evidence view that lets the owner open the exact source behind each delta.
+
+
+## Changes it proposed to its own stack
+
+### `context` — Create a durable cross-surface event spine and “re-entry timeline” compiler. On ingestion, normalize pendant utterances, relay pipeline events/audio delivery, Mac plans/jobs/receipts, browser command/result/inspection records, routine runs, research briefings, and captures into append-only events keyed by intentId→planId→jobId/actionId→receiptId. Store source, observedAt, happenedAt (if known), sensitivity, status, causal parent, and an explicit gap reason. Materialize a per-owner timeline since the last acknowledged checkpoint; never collapse queued, claimed, executed, verified, failed, expired, or unknown into one success state. Expose a compact spoken summary and a dashboard drill-down with source links and retry/undo affordances.
+- **owner gets:** After an interruption, the owner can ask one question and know what actually happened, what still needs attention, and what the system cannot know—rather than repeating requests or trusting a misleading success receipt.
+- effort: Medium-high: event schema and idempotent ingestion first, then correlators and a background compiler, followed by a small voice/dashboard presentation. Roll out read-only before adding retry controls.  ·  risk: Duplicate or mis-correlated events could create a false narrative. Use immutable raw events, deterministic IDs, confidence on joins, and show unlinked events separately; rebuilding the materialized timeline must be possible. Do not infer external side effects from local completion.
+- cost: Small storage/index cost; one cheap background summarization per changed time window, with debounce and caching. No realtime model required except final spoken response.  ·  latency: Event writes stay synchronous and lightweight. Timeline is usually ready in seconds; cold reconstruction may take up to 90 seconds and must be honestly labeled.
+- security: Sensitive browser/mail/calendar payloads need field-level encryption or redaction, owner-only access, short retention for raw audio/text, and source-aware disclosure before speaking private details aloud.
+- depends on: Define one stable correlation envelope shared by relay, Mac jobs, browser commands, and routines.; Add checkpoint acknowledgment (last checked event watermark) without deleting history.; Implement truthful readiness/status fields so offline or permission-blocked surfaces appear as gaps, not successes.
+
+### `hardware` — Replace the provisional single-button pendant input with two tactile controls: a primary press/hold for talk and a small acknowledge/re-entry button (or a clearly distinct double-click zone) plus a low-power haptic/LED confirmation. The acknowledge control writes a monotonic local checkpoint token to flash even without relay connectivity; when the link returns it uploads only the token and device time, allowing the event spine to advance “last checked” without sending private audio or requiring speech.
+- **owner gets:** After hearing a briefing while walking, the owner can mark it consumed with one reliable physical action. If the connection drops, the system still knows where they stopped, so “what did I miss?” resumes at the right place instead of replaying everything or losing the checkpoint.
+- effort: High for a product revision (industrial design, button debounce, sealed enclosure, firmware input/state machine, BLE/cellular protocol, and event-spine reconciliation); modest prototype effort with an external button and haptic motor.  ·  risk: Accidental presses could skip unread items. Require a deliberate hold or double-click, provide a reversible local undo window, and retain the prior checkpoint until server acknowledgment. Hardware failure falls back to spoken acknowledgment and server-side timestamps.
+- cost: Prototype roughly $5–$15 in parts plus enclosure/PCB work; production likely low single-digit BOM increase. Haptic motor adds brief ~10–30 mA draw only on confirmation; button itself is negligible. No model/API cost.  ·  latency: Immediate local feedback (<100 ms); synchronization waits for network but does not block use.
+- security: Only opaque checkpoint IDs and coarse device time leave the pendant; no transcript or page content. Protect checkpoint tokens against replay and bind them to the owner/device key.
+- depends on: The cross-surface event spine and re-entry timeline must accept device-originated checkpoint tokens.; Firmware needs a small durable checkpoint record and link-retry upload.; Product hardware must move beyond the current prototype single-button enclosure.
+
+### `memory` — Add an immutable, owner-scoped personal-state snapshot and delta layer between existing journal/jobs/browser/research/context routes. A snapshot records normalized claims with source URI or job ID, observed time, sensitivity, volatility class, and a content hash; a comparison emits only semantically meaningful additions, removals, and changes, with per-claim evidence and an explicit unavailable-source state. Let the owner name and pin a baseline (“before my trip”, “Monday 9am”), then expire or delete it independently of operational logs.
+- **owner gets:** The owner can ask what is genuinely different since a meaningful moment and receive an evidence-backed answer instead of an activity dump, stale page comparison, or guess based on unread counts.
+- effort: High: schema and privacy boundaries, source adapters, volatility-aware normalization, baseline lifecycle, semantic diffing, and a small evidence UI. Start with calendar, Mac jobs, captures, and browser inspections before adding mail/files.  ·  risk: A bad normalizer could report noise as change or hide an important change. Preserve raw source references, expose confidence and unavailable sources, require human review of normalization rules, and make every baseline/delta reproducible from stored hashes.
+- cost: Moderate storage for compact claims and hashes; background extraction and diffing costs roughly $0.02–$0.10 per comparison. Avoid storing duplicate raw private content where a source reference and encrypted digest suffice.  ·  latency: Baseline writes are quick; first comparison may take 1–3 minutes across private sources, while cached comparisons should complete in seconds. Never imply completeness while a source is offline.
+- security: Snapshots are more sensitive than ordinary logs because they preserve historical state. Encrypt per owner, minimize raw retention, support immediate deletion, redact secrets from audio/dashboard summaries, and enforce source-specific access at comparison time.
+- depends on: A typed sensitivity and provenance envelope shared by all source adapters.; A durable baseline/checkpoint registry with owner deletion.; Source adapters that return truthful availability and freshness rather than treating missing data as unchanged.; A dashboard/evidence renderer for opening the source behind each reported delta.
+
+
+## What it asked for
+
+_Nothing._

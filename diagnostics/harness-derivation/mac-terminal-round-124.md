@@ -1,0 +1,47 @@
+# Harness derivation — mac-terminal — round 124
+
+Model: `gpt-5.6-luna`  ·  probes against `http://localhost:8000`
+
+## What it established
+
+- **browser_navigation_failure_rate** — Live Mac observability shows browser_navigate idempotency key act_36a2da2b0b8c has 11 runs and 11 failures from 07:21–14:52 UTC, while browser_snapshot (9/9), browser_read_page (5/5), and browser_type/select/click runs succeed. /observe reports browser bridge online, so this is not simply global bridge absence.
+  - evidence: GET /journal returned repeatedActions.browser_navigate: runs 11, failed 11; GET /ops/status and /observe show browserExtension.online=true and pendingCommands=0.
+
+## Capabilities it proposed
+
+### "“Open the page I mentioned, keep trying if my Mac or Safari bridge briefly drops, and tell me only when you have verified the exact page is open—or give me the precise reason it cannot be reached.”"
+- **useful because:** Today a browser navigation can fail repeatedly even while reads and the bridge appear healthy, and the owner must repeat the request or trust an unverified success. This would turn a spoken intent into a resilient, cross-surface handoff: the pendant can stop listening, the relay can retain the job, and the Mac/browser can resume and prove the destination without claiming that merely enqueueing a command succeeded.
+- **path:** pendant → relay → mac-planner → browser-extension → dashboard
+- **model tier:** Use deterministic routing and a cheap background model for heartbeat/error classification and retry scheduling; use the realtime model only for the final spoken status if the owner is actively waiting. Escalate to the planner only when URL ambiguity, authentication state, or recovery choice is genuinely unclear.
+- **latency:** For a healthy bridge, verify within 2–5 seconds. For a transient disconnect, continue for a user-configurable window (for example 10 minutes) while the pendant is free, then speak or queue one concise result. Never wait indefinitely in the realtime turn.
+- **cost:** Near-zero model cost for deterministic heartbeat, URL normalization, idempotency, and post-navigation readback; roughly $0.001–$0.02 for a background classification/recovery decision depending on retries. The dominant cost is Safari/extension round trips and any relay browser-minute usage, not speech.
+- **security:** Private authenticated URLs must remain on the owner's Safari session and never fail over to a public relay backend. Persist URL origin, session/tab binding, heartbeat age, attempt count, and verified title/URL—not page contents by default. A dashboard and spoken response must distinguish queued, attempted, verified, and failed; navigation itself remains within the owner's existing maximum-access policy.
+- **missing:** A durable browser job runner with restart-safe job state and a result stream to the planner; An adaptive browser_navigate recovery/verification layer that records each attempt and requires post-navigation URL/title readback; A relay-to-Mac wake/resume contract for jobs that outlive the active voice turn; A truthful pendant status beacon or queued-result notification for completion after the owner stops listening; A full failed-navigation receipt/error payload surfaced through journal/dashboard for diagnosis
+
+
+## Changes it proposed to its own stack
+
+### `browser-harness` — Add an adaptive, evidence-preserving recovery layer specifically for browser navigation. Before browser_navigate, validate bridge heartbeat, session/tab affinity, and URL normalization; on failure classify the returned error as stale tab, extension transport timeout, blocked/unsupported URL, or page-load timeout. Retry only transient transport/page-load failures with the same idempotency key and bounded backoff, reattach the named session when possible, and use a safe Safari foreground/open-url fallback only for public URLs. Persist each attempt, error class, final URL/title, heartbeat age, and backend choice in the existing job receipt/journal. Never report navigation success from an enqueued command: success requires a post-navigation URL/title/readback, otherwise return a truthful partial failure with the next recovery action.
+- **owner gets:** When the owner says “open this page” or asks the pendant to inspect a logged-in site, it will stop silently burning attempts and give a reliable answer: the page opened and was verified, or exactly why it could not. Transient Safari/extension hiccups recover without another spoken turn, while private authenticated pages are not mistakenly sent to a public relay.
+- effort: Medium: browser bridge command lifecycle and local-agent browserSessions/originFanOut integration, plus receipt schema and tests for stale tabs, timeouts, and private/public routing.  ·  risk: A retry could load a page twice or leave an extra tab; constrain retries by idempotency key and session affinity, and record every attempt. A public fallback must never be used for owner-private URLs. If verification cannot run, report unknown rather than success.
+- cost: Negligible API cost; mostly local bridge requests and a few extra seconds on transient failures. Avoids repeated planner calls and wasted browser-minute budget.  ·  latency: Adds a fast heartbeat/affinity check; successful navigation gains roughly 0.1–0.5s verification, transient failures may take up to two bounded retries.
+- security: Improves security posture without adding approval gates: authenticated sessions remain on Safari, URL origin and backend are recorded, and receipts expose evidence rather than page contents by default.
+- depends on: chg-16bc5dee durable browser job runner (or its existing router); chg-14accc01 request IDs, idempotency keys, and tab/session affinity; Existing GET /browser/status, POST /browser/heartbeat, GET /browser/sessions, GET /journal, and GET /observe observability paths
+
+### `integration` — Add a cross-surface navigation lease protocol between relay, Mac agent, and Safari bridge. A lease contains jobId, idempotency key, private/public origin classification, session/tab binding, expiry, retry budget, and a monotonic attempt number. The relay persists the lease and wakes/reconnects the Mac bridge; the Mac agent renews it while executing; the extension acknowledges each command and returns a post-navigation URL/title proof. On reconnect, the Mac agent resumes the lease rather than replaying the last command, and the relay emits exactly one terminal verified/failed result to the pendant and dashboard.
+- **owner gets:** The owner can ask once and walk away—even through a sleeping Mac, dropped browser heartbeat, or voice disconnect—and later receive a trustworthy result instead of duplicate tabs, lost work, or a false “done.” This is the missing connective behavior between existing browser polling, sessions, jobs, and relay persistence.
+- effort: Medium-high: shared lease schema, D1/local persistence, reconnect handshake, monotonic attempt handling, and terminal-result deduplication across relay/mac/extension.  ·  risk: A stale lease could resume against the wrong tab; bind leases to authenticated session ID, origin, and tab/window identity, and expire them conservatively. If proof is unavailable, mark the job unknown/failed rather than replaying or claiming success.
+- cost: Small D1 and local persistence overhead; no meaningful model cost. Saves planner/realtime calls caused by repeated owner retries and avoids unnecessary public-browser-minute consumption.  ·  latency: Healthy path adds one acknowledgement and readback round trip (typically under 1 second); reconnect recovery is asynchronous and does not hold the realtime conversation open.
+- security: Private authenticated work remains exclusively in the Safari bridge; the relay stores metadata and encrypted/opaque job references, not page contents. Lease origin/session binding prevents accidental cross-account replay.
+- depends on: Existing POST /browser/heartbeat, GET /browser/poll, POST /browser/result/:commandId, GET/POST /browser/sessions; Existing GET/POST /jobs and receipt/journal observability; Durable relay job persistence and a truthful completion notification path to the pendant
+
+
+## What it asked for
+
+_Nothing._
+## Its own summary
+
+Discovered a concrete live defect rather than repeating the backlog: /journal shows browser_navigate at 11/11 failures even though the Safari bridge is online and read/snapshot/type actions work. Recorded this finding and proposed an adaptive navigation recovery layer that validates heartbeat/session affinity, retries only transient failures, preserves attempt evidence, and verifies URL/title before claiming success. Still needed: (1) implement the granted mac_read_diagnostics tool—it currently returns “schema but no implementation”; (2) enable Accessibility for the actual /Users/evanliu/Applications/AI Pendant Agent.app binary (current events are no-ops and UI receipts are untrustworthy); (3) grant Screen Recording and enable computer-use only if vision automation is desired; and (4) finish the durable browser job runner that the recovery layer depends on. No additional execution permission or safety gate is needed—the owner deliberately wants FULL_CONTROL_MODE.
+
+**Biggest unknown:** The precise browser_navigate error payload is not visible in the truncated aggregate journal response; the next useful diagnostic is one full failed navigation job/receipt after the bridge is online, to distinguish URL/session protocol failure from transport or page-load failure.
+

@@ -1,0 +1,55 @@
+# Harness derivation — faculty-judgement — round 103
+
+Model: `gpt-5.6-luna`  ·  probes against `http://localhost:8000`
+
+## What it established
+
+_Nothing recorded._
+
+## Capabilities it proposed
+
+### "“After this conversation, turn the commitments I made into a reviewable action list.”"
+- **useful because:** The pendant is present when commitments are spoken, while the Mac and browser can verify the surrounding meeting, people, documents, and deadlines. Instead of silently creating brittle reminders, it produces a compact escrow: each inferred commitment has the exact spoken evidence, proposed owner/date, related calendar or logged-in page, and a one-tap spoken approve/edit/reject path. This closes the gap between saying “I’ll do that” and actually remembering it without making the system act on a misheard promise.
+- **path:** pendant → relay-realtime → mac-planner → mac-terminal → browser-extension → faculty-perception → faculty-judgement → faculty-action → dashboard-ux
+- **model tier:** Realtime handles the explicit start/stop command and a small local transcript window; a cheaper background model extracts candidate commitments and reconciles them with calendar/mail/docs. Use the expensive realtime tier only to read back the final three-item review packet or answer an edit.
+- **latency:** A spoken stop command should acknowledge in under 1 second. Candidate extraction may take 30–90 seconds after the conversation. The owner should receive a short pendant readback only when the packet is ready, with no more than three candidates per interruption.
+- **cost:** Roughly $0.01–$0.08 per conversation depending on audio duration and background transcript size; model tokens dominate, with browser/Mac reads adding little API cost.
+- **security:** Meeting audio and inferred commitments are sensitive and should remain on-device or in short-retention encrypted storage by default. Never send a message, create an external task, or change a calendar event without explicit approval. Show source snippets and uncertainty; do not infer a commitment from third-party speech unless the owner confirms it.
+- **missing:** A pendant-side bounded transcript/commitment-marker buffer that works through a dropped link; A durable commitment escrow with source timestamps, confidence, proposed due date, and approve/edit/reject state; Calendar/mail/document correlation adapters on the Mac and authenticated browser; A review packet renderer and audio delivery acknowledgement, rather than silently creating reminders
+
+### "“Before I share this, make the safest version for that person and tell me what you removed.”"
+- **useful because:** Today the owner must manually notice secrets, private names, tracking links, hidden document metadata, and unrelated personal details before sharing a file, email, form, or browser page. The Mac can inspect local files, the browser can see the logged-in source, and the pendant can deliver a brief warning while the relay coordinates them. This would produce an audience-specific redacted copy plus a precise before/after disclosure report, without sending anything until the owner approves.
+- **path:** pendant → relay-realtime → mac-planner → mac-vision → mac-terminal → browser-extension → faculty-perception → faculty-judgement → faculty-action → dashboard-ux
+- **model tier:** Use a cheaper background model for classification and redaction suggestions, deterministic scanners for credentials/PII/metadata, and realtime only for the owner's short approval conversation and final spoken summary.
+- **latency:** For a local document or already-open page, show a draft in 5–20 seconds; a multi-file or cross-tab package can take up to two minutes. Never interrupt with more than a short risk summary until the owner asks for detail.
+- **cost:** Approximately $0.01–$0.10 per artifact set; model tokens and OCR dominate, while local deterministic scans are nearly free. Storage cost is small if intermediate copies expire quickly.
+- **security:** The scanner itself handles highly sensitive material, so processing should be local-first and encrypted in transit when browser content must cross the relay. Preserve the original, create a separate redacted derivative, retain an audit manifest rather than raw secrets, and require explicit confirmation before upload, send, or form submission. Treat hidden metadata and URL query tokens as disclosures, not merely text.
+- **missing:** A policy engine that accepts an intended audience and disclosure boundary, rather than one global redaction rule; Local file/PDF/image metadata and OCR inspection with reversible redaction overlays; Browser extraction that includes hidden fields, link destinations, and query parameters without executing a submission; A side-by-side disclosure manifest and durable approval token bound to the exact artifact hash; A post-approval action executor that refuses if the artifact, recipient, tab, or destination changes
+
+
+## Changes it proposed to its own stack
+
+### `integration` — Add a Commitment Escrow interstitial between /capture or /pipeline/audio and /execute. It stores only candidate commitments (source audio timestamp, transcript span hash, confidence, inferred person/date, related calendar/browser evidence, expiry), never executes them. A pendant-friendly review protocol exposes approve, edit, reject, snooze, and “not mine”; only an approved item can compile into /plan and then /execute. Reconciliation must mark browser/Mac evidence unavailable when the bridge has no real tab or when Accessibility/Screen Recording is false, rather than treating stale receipts as confirmation.
+- **owner gets:** After a conversation, the owner gets reliable follow-through without surprise reminders, messages, or calendar edits—and can tell which promises were actually heard versus guessed. It also prevents today’s stale browser/UI state from turning into false confidence.
+- effort: Medium: a small durable schema/state machine, transcript-span references, a readback packet, and adapters for Calendar/Mail/Notes plus browser evidence. Add contract tests for dropped links, duplicate audio, stale tabs, and approval races.  ·  risk: A false commitment could annoy the owner; mitigate with explicit review and short expiry. Audio retention could expose private conversations; retain hashes and short encrypted snippets only, delete after resolution, and support a hard stop latch. If the relay dies, keep the packet pending and replay idempotently.
+- cost: Low storage and API overhead; background extraction is cheaper than realtime. Primary cost is transcription/model tokens for conversations longer than the bounded capture window.  ·  latency: Capture acknowledgement remains sub-second; extraction is asynchronous (30–90 seconds), and review readback is under a few seconds once evidence is available.
+- security: High sensitivity: local-first audio, encrypted relay storage, provenance on every candidate, owner approval before any external side effect, and no secret-bearing snippets in generic logs.
+- depends on: A pendant bounded transcript/commitment-marker buffer; A durable escrow/approval route and audio-delivery acknowledgement; Calendar/Mail/Notes correlation through already-granted AppleScript or authenticated browser reads; Fresh browser and Mac capability signals that distinguish a real tab/UI from stale online status
+
+### `integration` — Create a Disclosure Boundary Compiler and immutable artifact gate between inspection and execution. It accepts audience, purpose, and allowed data classes; scans local files and browser material (including metadata, link targets, hidden fields, and URL tokens); emits a redacted derivative plus a machine-readable manifest of every removed or retained field; hashes that exact derivative and binds approval to recipient, destination, tab/session, and expiry. /execute must reject if any bound value changes or if the evidence source is stale.
+- **owner gets:** The owner can share a clean, audience-appropriate version confidently instead of gambling that a password, private address, tracking token, or irrelevant conversation is hidden in what they send. They see exactly what leaves their control and can recover the untouched original if the redaction was too aggressive.
+- effort: High: local document/PDF/image inspection and reversible rendering, browser hidden-field/link inspection, policy schema, artifact hashing, approval UI/audio flow, and refusal tests for changed destinations and stale sessions.  ·  risk: Over-redaction can make a document unusable; provide field-level undo before approval. Under-redaction is the serious failure, so deterministic secret/PII detectors must supplement the model and ambiguous findings must block sending. Never log raw findings. If a job crashes, preserve only the encrypted derivative and manifest with short TTL.
+- cost: Moderate implementation cost; per-use API cost is low, with OCR and large-document context the main variable. Temporary derivative storage should be encrypted and auto-deleted after approval or expiry.  ·  latency: Local text scans should be near-instant; OCR and multi-tab inspection add seconds. Sending remains blocked until the manifest is rendered and owner approval is received.
+- security: Significantly improves outbound privacy, but introduces a high-value local inspection component. Keep policy and originals local where possible, use least-privilege browser reads, redact secrets from telemetry, and make the approval token single-use.
+- depends on: Local metadata/OCR and reversible redaction primitives; Browser inspection that can read hidden fields and link destinations without submitting; A durable artifact/manifest store with short retention; An approval token and execution precondition check in the action/receipt layer
+
+
+## What it asked for
+
+_Nothing._
+## Its own summary
+
+I discovered the owner context, 64-item backlog, live devices, and shipped tools. The new proposal is a meeting-to-action Commitment Escrow: capture a bounded spoken commitment, correlate it with Calendar/Mail/Notes and authenticated browser evidence, then read back a review packet and require approve/edit/reject before any reminder, message, or calendar change. I also proposed the integration change that is actually missing between existing /capture → /plan → /execute primitives: durable provenance, expiry, review state, and freshness-aware evidence gates. Current live truth still says the Mac bridge is online but the home browser is offline/empty; stale browser and inaccessible UI must never count as confirmation.
+
+**Biggest unknown:** Whether a pendant-side transcript/commitment marker can be implemented within the existing audio firmware and 211,608 B application RAM, and which existing route should own durable escrow plus audio delivery acknowledgement. I still need those implementation primitives, fresh capability/health signals, and owner approval before any inferred commitment can create an external side effect; I do not need another permission request this round.
+

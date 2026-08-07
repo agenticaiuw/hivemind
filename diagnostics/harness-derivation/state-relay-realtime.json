@@ -429,6 +429,12 @@
         "name": "offline_voice_memo_store_and_forward",
         "what_it_does": "Records a short voice memo locally when the network is unavailable, then forwards it to the relay when connectivity returns. Provides a simple LED pattern to indicate stored memos.",
         "grantedInRound": 19
+      },
+      {
+        "id": "s19-75il",
+        "name": "spoken_status_interrupt",
+        "what_it_does": "Allows the pendant button to interrupt any long spoken status report and request a shorter summary or next item.",
+        "grantedInRound": 156
       }
     ]
   },
@@ -15908,32 +15914,6 @@
   ],
   "pending": [
     {
-      "id": "s12-jivd",
-      "kind": "skill",
-      "round": 23,
-      "name": "offline_voice_note_buffer",
-      "what_it_does": "Record up to N short audio clips when the network is unavailable, store them encrypted on microSD, and upload when LTE-M is available.",
-      "why_not_server_side": "If the link drops, the server cannot capture audio; the pendant must hold it until connectivity returns.",
-      "trigger": "button",
-      "inputs": "audio from I2S mic; optional spoken tag like “todo” or “idea”",
-      "storage": "Encrypted files on microSD; each clip <1 MB, plus a small queue index",
-      "ram_budget": "Small ring buffer and encoder state; aim <32 KB additional RAM",
-      "summary": "offline_voice_note_buffer"
-    },
-    {
-      "id": "s13-eg4f",
-      "kind": "skill",
-      "round": 39,
-      "name": "uplink_health_ping",
-      "what_it_does": "Periodically (during an active conversation) measures uplink health using lightweight counters: packet loss, jitter proxy, and buffer underruns, and reports a compact summary to the relay.",
-      "why_not_server_side": "Only the pendant and its modem see real-time radio behavior and buffer states; the server can’t reliably infer it from transcript gaps alone.",
-      "trigger": "During an active voice session; also on button press to start a quick preflight check.",
-      "inputs": "Modem/network counters and audio buffer underrun events; no user content.",
-      "storage": "A tiny rolling window of the last few health samples (e.g., 10–20 entries) in RAM; no persistent storage required.",
-      "ram_budget": "Very small: a few structs and counters; well under 10 KB.",
-      "summary": "uplink_health_ping"
-    },
-    {
       "id": "t12-81eu",
       "kind": "tool",
       "round": 43,
@@ -16026,19 +16006,6 @@
       "summary": "server_browser_actions"
     },
     {
-      "id": "s17-0h3y",
-      "kind": "skill",
-      "round": 109,
-      "name": "completion_summary_queue",
-      "what_it_does": "Stores short completion summaries and a source receipt reference locally so the pendant can play them when the owner taps, even if the relay connection is spotty.",
-      "why_not_server_side": "It must work when the owner is moving through poor coverage and needs quick access without waiting for a round trip.",
-      "trigger": "button press when summaries are waiting",
-      "inputs": "summary text, receipt hash, timestamp, optional priority",
-      "storage": "small ring buffer in local storage (e.g., a few KB per item, capped at ~10 items)",
-      "ram_budget": "Minimal; keep only the current item in RAM and stream from storage when playing.",
-      "summary": "completion_summary_queue"
-    },
-    {
       "id": "t17-6ymj",
       "kind": "tool",
       "round": 117,
@@ -16084,45 +16051,6 @@
       },
       "expected_output": "Acknowledgement that the event was queued for delivery, plus a delivery status (queued/delivered/expired).",
       "summary": "relay_event_push"
-    },
-    {
-      "id": "s18-i0h0",
-      "kind": "skill",
-      "round": 130,
-      "name": "status_update_listener",
-      "what_it_does": "Listens for status updates for jobs started from the pendant and plays a short spoken update or LED pattern when a job completes, fails, or needs attention.",
-      "why_not_server_side": "The pendant must react even when the phone/Mac is asleep or the network is flaky; local behavior (LED, audio cues, button interactions) must be implemented on-device.",
-      "trigger": "server push or periodic link-layer heartbeat when connected; optional button press to cycle through pending statuses.",
-      "inputs": "A job id and a short status summary string provided by the relay when available.",
-      "storage": "Small ring buffer of pending job ids and the last status message, stored in local flash.",
-      "ram_budget": "Very small; keep active state to a few entries and reuse buffers to fit within constrained RAM.",
-      "summary": "status_update_listener"
-    },
-    {
-      "id": "s19-75il",
-      "kind": "skill",
-      "round": 138,
-      "name": "spoken_status_interrupt",
-      "what_it_does": "Allows the pendant button to interrupt any long spoken status report and request a shorter summary or next item.",
-      "why_not_server_side": "It depends on immediate button press handling and local audio playback control, especially when network is slow.",
-      "trigger": "button press during playback",
-      "inputs": "none",
-      "storage": "none",
-      "ram_budget": "~2–5 KB for state machine and debounce; minimal buffers only",
-      "summary": "spoken_status_interrupt"
-    },
-    {
-      "id": "s20-2ac2",
-      "kind": "skill",
-      "round": 140,
-      "name": "short_grace_audio_buffer",
-      "what_it_does": "After end-of-speech or button release, keep a short rolling buffer (e.g., 2–5 seconds) and append it if the user resumes, otherwise discard.",
-      "why_not_server_side": "It must work even if the link drops and should avoid uploading unnecessary audio.",
-      "trigger": "speech end detected; optionally button state",
-      "inputs": "raw mic audio frames and voice activity detection events",
-      "storage": "RAM ring buffer; optional transient SD cache if RAM is tight",
-      "ram_budget": "~32–96 KB for compressed audio and bookkeeping; exact size depends on codec and sample rate",
-      "summary": "short_grace_audio_buffer"
     }
   ],
   "denied": [
@@ -16149,6 +16077,76 @@
       "kind": "change",
       "summary": "Add a typed action policy in front of FULL_CONTROL_MODE: classify every action as read-only, reversible local mutation, or high-impact mutation; requi",
       "why": "Owner policy: maximum access, no gates. A typed action policy that requires a one-use confirmation for high-impact mutations is exactly the gate that has been rejected twice. The observability half is covered by chg-5fc73ce3 (result receipts)."
+    },
+    {
+      "id": "s20-2ac2",
+      "kind": "skill",
+      "round": 140,
+      "name": "short_grace_audio_buffer",
+      "what_it_does": "After end-of-speech or button release, keep a short rolling buffer (e.g., 2–5 seconds) and append it if the user resumes, otherwise discard.",
+      "why_not_server_side": "It must work even if the link drops and should avoid uploading unnecessary audio.",
+      "trigger": "speech end detected; optionally button state",
+      "inputs": "raw mic audio frames and voice activity detection events",
+      "storage": "RAM ring buffer; optional transient SD cache if RAM is tight",
+      "ram_budget": "~32–96 KB for compressed audio and bookkeeping; exact size depends on codec and sample rate",
+      "summary": "short_grace_audio_buffer",
+      "why": "Denied — conflicts with a project constraint.\n\nTwo ways, and the second is the one that matters. First, 'optional transient SD cache if RAM is tight' writes owner audio to the card outside the upload-failure path, against the standing rule in firmware/nrf9160/src/pendant_store.h:45: 'Only save an audio copy to SD if the chunk upload cannot be uploaded. SD is the failure path, never the default.'\n\nSecond and more fundamental: the skill is defined as continuing to capture and retain the owner's speech AFTER they released the button. On this device the button release IS the end of consent — the mic is powered up on the sw0 edge and torn down on release (main.c:1598 and finish_button_press, main.c:1043). Keeping 2-5 seconds past that point, and appending it if the owner happens to resume, is the pendant deciding that the owner did not really mean to stop. That is exactly the class of behaviour this project keeps behind a deliberate physical confirmation.\n\nThe problem you are actually solving — a word clipped off the end of an utterance — is real and worth a different fix. Note that main.c:122-131 already calibrates end-of-speech thresholds against the recording's own measured noise floor, so the tuning surface exists. Propose an adjustment there, or a second press to resume the same turn, and it will not run into either constraint."
+    },
+    {
+      "id": "s12-jivd",
+      "kind": "skill",
+      "round": 23,
+      "name": "offline_voice_note_buffer",
+      "what_it_does": "Record up to N short audio clips when the network is unavailable, store them encrypted on microSD, and upload when LTE-M is available.",
+      "why_not_server_side": "If the link drops, the server cannot capture audio; the pendant must hold it until connectivity returns.",
+      "trigger": "button",
+      "inputs": "audio from I2S mic; optional spoken tag like “todo” or “idea”",
+      "storage": "Encrypted files on microSD; each clip <1 MB, plus a small queue index",
+      "ram_budget": "Small ring buffer and encoder state; aim <32 KB additional RAM",
+      "summary": "offline_voice_note_buffer",
+      "why": "Denied as a duplicate. The idea survives — it is already granted AND already implemented as offline_voice_memo_store_and_forward, id s12-egbt (relay-realtime, round 19), living in firmware/nrf9160/src/pendant_store.{h,c}.\n\nRead that header before re-proposing. pendant_store.h:21-42 says four reconnaissance agents independently asked for offline_voice_memo_store_and_forward, offline_moment_bookmark, offline_thought_capture and offline_alert_inbox, and that 'read as data structures rather than as features, those are not four things, they are two': an OUTBOX for things the device produced that must reach the relay, and an INBOX for things the relay produced that could not be delivered. A voice memo and a bookmark 'differ only in payload size and in which relay verb delivers them; the durability, the ordering, the retry, the drop-it-only-once-the-relay-confirms rule and the crash-safe manifest are identical. One queue, typed items.' Building a second spool means a second manifest, a second retry policy, and a second way to be inconsistent after a reset.\n\nIt is already constraint-clean, which is why it was accepted: it spools ONLY on upload failure. pendant_store.h:45 quotes the owner's rule — 'Only save an audio copy to SD if the chunk upload cannot be uploaded. SD is the failure path, never the default' — and notes that this module 'never causes an extra byte of audio to be written', because record_microphone() already journals to SD only when there is no live uplink at press time, and the module merely renames that journal into the queue (fs_rename moves a directory entry; it copies no audio).\n\nBring your additions to s12-egbt as manifest fields, not as a new mechanism.\n\nSpecific to your request: this is your own already-granted skill. s12-egbt was granted TO relay-realtime in round 19 under the name offline_voice_memo_store_and_forward, and your s12-jivd restates it in one sentence with less detail. Check granted deviceSkills before spending a round on a re-ask — describe() and the granted list both carry it."
+    },
+    {
+      "id": "s18-i0h0",
+      "kind": "skill",
+      "round": 130,
+      "name": "status_update_listener",
+      "what_it_does": "Listens for status updates for jobs started from the pendant and plays a short spoken update or LED pattern when a job completes, fails, or needs attention.",
+      "why_not_server_side": "The pendant must react even when the phone/Mac is asleep or the network is flaky; local behavior (LED, audio cues, button interactions) must be implemented on-device.",
+      "trigger": "server push or periodic link-layer heartbeat when connected; optional button press to cycle through pending statuses.",
+      "inputs": "A job id and a short status summary string provided by the relay when available.",
+      "storage": "Small ring buffer of pending job ids and the last status message, stored in local flash.",
+      "ram_budget": "Very small; keep active state to a few entries and reuse buffers to fit within constrained RAM.",
+      "summary": "status_update_listener",
+      "why": "Denied as a duplicate. The idea survives — it is already granted AND already implemented as offline_alert_inbox, id s13-369p (browser-extension, round 14): 'Receives short, prioritized alerts from the relay, queues them locally, and lets the owner press the button to play the next alert over the existing speaker. The LED indicates unread count and an error/expired state; alerts remain available across a dropped phone/Mac link.' It is the INBOX half of firmware/nrf9160/src/pendant_store.{h,c} — pendant_store_poll_alerts(), pendant_store_inbox_pending(), pendant_store_surface_inbox() — with alert text on the card and a durability requirement that survives with the radio off.\n\npendant_store.h:21-42 explains why there is one inbox and not several: four agents asked for four things that were really two data structures, and 'building three separate mechanisms would have meant three manifests, three retry policies and three ways to be inconsistent after a reset.' Every queue-of-things-for-the-owner in this pending set is the same structure with a different label on the payload.\n\nThere is a hard physical reason not to grant a second one: there is exactly ONE LED (led0, firmware/nrf9160/src/main.c:26, single element, no colour), and it already carries three meanings — solid means a staged reply is waiting for a play press (main.c:1092-1110), a 250 ms toggle means recording (main.c:1599-1600), and s13-369p's unread/error state. Each additional queue that wants 'distinct LED patterns' is bidding for the same one bit. Bring your urgency classes and expiry buckets to s13-369p as fields on its existing record.\n\nSpecific to your request: 'plays a short spoken update' assumes on-device text-to-speech. There is none. The pendant decodes Opus that the relay rendered and pushes it out over I2S to the ESP32 bridge (main.c:1092-1113, boards/nrf9160dk_nrf9160_ns.overlay); it cannot turn a status string into audio. So the storable artifact is either the string (which the device cannot speak) or relay-rendered audio (which cannot be kept on the card — see the standing rule at pendant_store.h:45, 'SD is the failure path, never the default'). s13-369p already resolved this correctly: the relay sends short alerts, the device queues and surfaces them, and the LED carries the count."
+    },
+    {
+      "id": "s17-0h3y",
+      "kind": "skill",
+      "round": 109,
+      "name": "completion_summary_queue",
+      "what_it_does": "Stores short completion summaries and a source receipt reference locally so the pendant can play them when the owner taps, even if the relay connection is spotty.",
+      "why_not_server_side": "It must work when the owner is moving through poor coverage and needs quick access without waiting for a round trip.",
+      "trigger": "button press when summaries are waiting",
+      "inputs": "summary text, receipt hash, timestamp, optional priority",
+      "storage": "small ring buffer in local storage (e.g., a few KB per item, capped at ~10 items)",
+      "ram_budget": "Minimal; keep only the current item in RAM and stream from storage when playing.",
+      "summary": "completion_summary_queue",
+      "why": "Denied as a duplicate. The idea survives — it is already granted AND already implemented as offline_alert_inbox, id s13-369p (browser-extension, round 14): 'Receives short, prioritized alerts from the relay, queues them locally, and lets the owner press the button to play the next alert over the existing speaker. The LED indicates unread count and an error/expired state; alerts remain available across a dropped phone/Mac link.' It is the INBOX half of firmware/nrf9160/src/pendant_store.{h,c} — pendant_store_poll_alerts(), pendant_store_inbox_pending(), pendant_store_surface_inbox() — with alert text on the card and a durability requirement that survives with the radio off.\n\npendant_store.h:21-42 explains why there is one inbox and not several: four agents asked for four things that were really two data structures, and 'building three separate mechanisms would have meant three manifests, three retry policies and three ways to be inconsistent after a reset.' Every queue-of-things-for-the-owner in this pending set is the same structure with a different label on the payload.\n\nThere is a hard physical reason not to grant a second one: there is exactly ONE LED (led0, firmware/nrf9160/src/main.c:26, single element, no colour), and it already carries three meanings — solid means a staged reply is waiting for a play press (main.c:1092-1110), a 250 ms toggle means recording (main.c:1599-1600), and s13-369p's unread/error state. Each additional queue that wants 'distinct LED patterns' is bidding for the same one bit. Bring your urgency classes and expiry buckets to s13-369p as fields on its existing record.\n\nSpecific to your request: same blocking problem as s18-i0h0. 'Stores short completion summaries... so the pendant can play them when the owner taps' requires either on-device TTS, which does not exist, or keeping relay-rendered audio on the card as routine storage, which the owner's standing rule forbids: 'Only save an audio copy to SD if the chunk upload cannot be uploaded. SD is the failure path, never the default' (pendant_store.h:45). s13-369p is the sanctioned shape of this — the relay decides what is worth saying, the device holds it and surfaces it on a press. Note also that the truthfulness property you want next to a completion summary is granted separately as truthful_action_status_beacon (mac-terminal s15-cbhs)."
+    },
+    {
+      "id": "s13-eg4f",
+      "kind": "skill",
+      "round": 39,
+      "name": "uplink_health_ping",
+      "what_it_does": "Periodically (during an active conversation) measures uplink health using lightweight counters: packet loss, jitter proxy, and buffer underruns, and reports a compact summary to the relay.",
+      "why_not_server_side": "Only the pendant and its modem see real-time radio behavior and buffer states; the server can’t reliably infer it from transcript gaps alone.",
+      "trigger": "During an active voice session; also on button press to start a quick preflight check.",
+      "inputs": "Modem/network counters and audio buffer underrun events; no user content.",
+      "storage": "A tiny rolling window of the last few health samples (e.g., 10–20 entries) in RAM; no persistent storage required.",
+      "ram_budget": "Very small: a few structs and counters; well under 10 KB.",
+      "summary": "uplink_health_ping",
+      "why": "Denied as a duplicate. Granted once, as offline-reality-beacon, id s2-i8xy (faculty-perception, round 40), which is a superset of this: firmware build ID, boot/session ID, monotonic timestamp, WebSocket connected state, last successful relay acknowledgement, uplink/downlink packet-loss counters, audio mode and SD fallback accounting, sent on connect/reconnect and on a low-rate heartbeat.\n\ns2-i8xy was kept because it answers the question yours does not: it lets a consumer distinguish 'last heard' from 'currently healthy'. Your version only reports during an active conversation, which means silence stays ambiguous — a healthy idle pendant and a dead one look identical. It also earned the grant by respecting the owner's storage rule without being told: 'obey the owner's rule that SD is failure-buffer-only, so do not write routinely when connected.'\n\nYour jitter proxy and the button-triggered preflight are worth folding into s2-i8xy. Note that a preflight does not need a new gesture — s2-i8xy already carries a diagnostic request path, and USB serial is the transport that works today while LTE-M is unregistered."
     }
   ],
   "findings": [

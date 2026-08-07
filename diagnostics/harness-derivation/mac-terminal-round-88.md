@@ -1,0 +1,50 @@
+# Harness derivation — mac-terminal — round 88
+
+Model: `gpt-5.6-luna`  ·  probes against `http://localhost:8000`
+
+## What it established
+
+- **execution reliability** — The live journal currently contains 120 retained jobs, 146 actions, 16 failures, and 0 undoable actions. The same browser_navigate idempotency key has 6 runs and 6 failures; observed failures include extension offline and Safari not answering in time, each consuming about 45 seconds. /browser/status can report online state and pending commands, but there is no evidence of adaptive preflight/retry or failure fingerprinting.
+  - evidence: GET /journal?limit=5 at 2026-08-07T12:58:10Z; GET /jobs?limit=5 showed repeated browser_navigate failures with 45,041–45,048 ms durations; GET /browser/status returned online=true and pendingCommands=7.
+
+## Capabilities it proposed
+
+### "When something I asked you to do on my Mac or in Safari fails, recover it automatically when it is safe, switch to the other available surface when possible, and tell me exactly what happened without making me repeat the request."
+- **useful because:** Today a browser extension outage or blocked Safari dialog can consume repeated 45-second attempts, while the owner has to diagnose the failure and restate the task. This would make the pendant, relay, Mac agent, and browser bridge behave like one resilient system: preserve the goal, avoid duplicate side effects, and return either a completed result or a precise recovery step.
+- **path:** pendant → relay-realtime → mac-planner → browser-extension → unified → faculty-perception → faculty-judgement → faculty-action
+- **model tier:** Use deterministic/background routing for health checks, failure classification, receipt lookup, and safe retries; invoke the planner only for ambiguous recovery or cross-surface replanning. Realtime is used only to report progress or ask a necessary clarification.
+- **latency:** Health checks and known-failure diagnosis under 1 second; avoid repeating a known 45-second timeout. Permit one bounded retry for explicitly idempotent actions, then report the result promptly.
+- **cost:** Low incremental API cost: most recovery turns are deterministic and reuse existing receipts. Occasional planner escalation costs roughly one normal planner request; storage and health polling are the dominant non-model costs.
+- **security:** Retries must be limited to actions whose receipts prove no effect or that are explicitly idempotent; never blindly repeat a mutation. Keep browser URLs and shell diagnostics authenticated, redact cookies, environment variables, command secrets, and page contents from recovery summaries, and preserve an auditable link between original and retried jobs.
+- **missing:** A shared failure fingerprint schema covering offline surfaces, blocked dialogs, timeouts, invalid targets, and transport errors; A live cross-surface health registry that the executor can consult without planner involvement; Recovery receipts linking original job, health snapshot, retry decision, alternate surface, and final outcome; An idempotency/retry-safety declaration on every action type; A goal-preserving recovery coordinator that can choose Mac, browser bridge, or relay fallback without duplicating writes
+
+### "If my Mac or Safari is unavailable when I ask, remember the exact task on the pendant, tell me it is queued, and resume it automatically when the right surface comes back—without me asking again."
+- **useful because:** Today a dropped Mac link or offline browser bridge turns an otherwise valid request into a failed interaction and loses momentum. The owner should be able to speak once while walking away, receive a truthful queued receipt, and later get the completed result or a precise question only if the task cannot safely resume.
+- **path:** pendant → relay-realtime → relay-job-runner → mac-planner → browser-extension → unified → faculty-perception → faculty-judgement → faculty-action
+- **model tier:** Use a cheap background/deterministic worker to persist, health-check, and resume a structured task. Use the planner only when the resumed environment differs materially or the original goal is ambiguous. Use realtime only for the immediate queued acknowledgement and completion announcement.
+- **latency:** Pendant acknowledgement within 2 seconds, with no need for the Mac to be online. Health checks can be minutes apart or event-driven; resume within one polling interval after the required surface returns.
+- **cost:** Small durable-queue and health-check cost; normally no additional model call. One background planner call may be needed to rehydrate a stale or changed task. Audio completion delivery is the main bandwidth cost.
+- **security:** Persist only the minimum structured intent and references, not page contents or shell secrets. Bind queued work to the owner's authenticated device and surface session, expire tasks with sensitive data, and never replay a mutation unless its original action is marked retry-safe and its preconditions still match. Tell the owner when a task expired or needs clarification.
+- **missing:** An offline-capable pendant task envelope with durable sequence numbers and bounded local storage; A relay durable queue with leases, retry backoff, expiry, and exactly-once intent delivery; Surface-return events or health subscriptions for the Mac agent and browser bridge; Task rehydration that binds the original goal to current session/tab context and revalidates preconditions; A completion/expiry notification path back to the pendant
+
+
+## Changes it proposed to its own stack
+
+### `integration` — Add a non-blocking failure-aware executor recovery loop. Before dispatching a browser or Mac action, consult the live surface-health signal; after the first failure, fingerprint the error (offline, timeout, permission/dialog, invalid target), record it against the idempotency key, and choose a bounded recovery: fast-fail repeated known-offline commands instead of spending another 45 seconds, retry a timeout once with a fresh request ID only when the target is still healthy, and for public URLs offer the relay/public-browser backend. Never block or refuse an action globally: this is an execution optimization and diagnosis layer, with the original unrestricted command path retained. Emit a recovery receipt linking the failed attempt, retry, health snapshot, and final outcome.
+- **owner gets:** A stuck Safari dialog or offline extension currently turns each attempt into an unexplained 45-second wait and repeated failures. The owner gets a quick, truthful diagnosis and either a recovered result or a concrete next step, while successful unrestricted Mac work remains just as capable.
+- effort: Medium: failure classifier and per-surface health cache in the local agent, idempotent retry coordinator, receipt schema/dashboard rendering, and one relay fallback adapter. Test against offline extension, dialog-blocked Safari, timeout, and successful retry.  ·  risk: A retry could duplicate a non-idempotent action if classification is wrong. Restrict automatic retries to actions explicitly marked safe-to-retry or to attempts whose receipt proves no effect; preserve the current no-gate policy and surface ambiguity as a report, not a refusal. Recovery metadata may expose URLs and command error text, so keep it in the authenticated job store.
+- cost: Small background CPU/storage increase; fewer planner turns and fewer 45-second dead waits should reduce model/API spend. Public-browser fallback may incur provider usage only when selected.  ·  latency: Healthy actions gain only a health-cache lookup; known offline failures return in milliseconds instead of ~45 seconds. A single safe retry adds at most one action timeout.
+- security: No new authority beyond existing unrestricted Mac/browser execution. Error receipts must redact environment variables, command secrets, cookies, and page bodies; retain hashes and bounded diagnostic text.
+- depends on: Expose a typed surface-health snapshot from the existing browser status and Mac-agent liveness paths; Add retry-safety/idempotency metadata to action receipts; Preserve existing durable job and receipt records so recovery remains auditable
+
+### `model-routing` — Teach the router a deterministic execution-recovery intent that consumes job/receipt/health data directly. Phrases such as “why did that fail?”, “try it again”, and “is Safari back?” should resolve to a compact diagnostic or safe retry plan without sending the full fleet context to the planner; escalate only when the classifier finds ambiguous side effects or needs a new plan. Attach the failed job ID and recovery fingerprint so the planner does not re-interpret the same 45-second failure from scratch.
+- **owner gets:** After a Mac or browser action fails, the owner can ask a natural follow-up and get an immediate, accurate status or retry instead of paying for a full reasoning turn and waiting for the system to rediscover the same failure.
+- effort: Small to medium: add intent patterns, receipt/health lookup, and escalation rules; add regression tests for offline, timeout, and successful retry conversations.  ·  risk: A terse follow-up like “try again” can refer to an unsafe prior mutation. Default deterministic handling only to read-only or explicitly retry-safe actions; otherwise return the existing receipt and ask the planner to interpret context, without adding a new approval gate.
+- cost: Reduces repeated planner prompts and token cost for routine recovery; negligible storage and compute.  ·  latency: Sub-second for receipt/status responses; safe retries retain the underlying action latency.
+- security: Queries remain authenticated and should return bounded/redacted receipt fields, never raw shell environment or browser session data.
+- depends on: Failure fingerprints and recovery receipts from the integration change; A stable job-id/idempotency-key reference in follow-up utterance context
+
+
+## What it asked for
+
+_Nothing._

@@ -12708,19 +12708,6 @@
       },
       "expected_output": "A correlated command id plus completion result from the Safari extension, including tab id, URL/title, extracted text or action status, and an error/timeout field.",
       "summary": "browser_command_enqueue_live"
-    },
-    {
-      "id": "s13-0xuw",
-      "kind": "skill",
-      "round": 130,
-      "name": "audio_reading_bookmark",
-      "what_it_does": "While a browser page or briefing is being spoken, a short press pauses playback and stores the current document capsule/chunk offset; a double press resumes from that offset, and a long press records a local “ask about this section” marker for the next relay turn.",
-      "why_not_server_side": "Pause/resume and bookmark must work with no LTE or relay round trip, including when the pendant is USB-attached to the Mac and the audio stream briefly drops.",
-      "trigger": "Pendant playback button events and local audio-buffer underrun/resume events.",
-      "inputs": "Current audio stream ID, chunk/document ID, byte or sentence offset, playback state, and up to 32 bytes of locally recognized control metadata.",
-      "storage": "Persist one active bookmark and four recent bookmarks in pendant flash/NVS; approximately 1–2 KB total. Do not persist page text.",
-      "ram_budget": "Approximately 2 KB state plus under 1 KB event buffer, well within the 211,608 B application RAM budget; audio buffers remain owned by the existing playback path.",
-      "summary": "audio_reading_bookmark"
     }
   ],
   "denied": [
@@ -12756,6 +12743,20 @@
       "why": "Declined: this is the owner's personal information (which sites he logs into, his routine, which categories he considers sensitive), and it is not derivable from the codebase. No one is answering for the owner in this derivation loop, and I will not invent his browsing habits — a fabricated site list would be worse than none, because you would build extraction rules against sites he does not use.\n\nWhat to do instead: do not bake a site list or a sensitivity taxonomy into the design as constants. Make both a value the owner supplies later — an explicit, inspectable configuration (per-origin rules: read/extract/redact/never-store; per-category: may_speak / must_not_speak) that ships EMPTY or with a conservative default, and that a proposal can point at. Proposing a sensible default and surfacing it as a decision the owner must confirm is fine and expected. Silently assuming a default and hardcoding it is not.\n\nNote for grounding: local-agent already has per-origin machinery you should build on rather than reinvent — see local-agent/httpPolicy.js, local-agent/originFanOut.js, local-agent/browserSessions.js, and local-agent/redaction.js. Check what taxonomy those already use before defining a new one.\n\nWhat would unblock this: the owner sitting down and listing (a) the first 3-5 authenticated sites he actually wants automated, (b) the categories he never wants read aloud, (c) the categories he never wants persisted. Until that exists, design for it as input, not as a fact.",
       "how_it_changes_my_behavior": "I would propose site-specific extraction/redaction rules and schedules rather than generic browsing, and would exclude categories the owner does not want read aloud or stored.",
       "summary": "owner's first authenticated browser workflows and sensitivity preferences"
+    },
+    {
+      "id": "s13-0xuw",
+      "kind": "skill",
+      "round": 130,
+      "name": "audio_reading_bookmark",
+      "what_it_does": "While a browser page or briefing is being spoken, a short press pauses playback and stores the current document capsule/chunk offset; a double press resumes from that offset, and a long press records a local “ask about this section” marker for the next relay turn.",
+      "why_not_server_side": "Pause/resume and bookmark must work with no LTE or relay round trip, including when the pendant is USB-attached to the Mac and the audio stream briefly drops.",
+      "trigger": "Pendant playback button events and local audio-buffer underrun/resume events.",
+      "inputs": "Current audio stream ID, chunk/document ID, byte or sentence offset, playback state, and up to 32 bytes of locally recognized control metadata.",
+      "storage": "Persist one active bookmark and four recent bookmarks in pendant flash/NVS; approximately 1–2 KB total. Do not persist page text.",
+      "ram_budget": "Approximately 2 KB state plus under 1 KB event buffer, well within the 211,608 B application RAM budget; audio buffers remain owned by the existing playback path.",
+      "summary": "audio_reading_bookmark",
+      "why": "Denied as a duplicate. Granted once, as spoken_status_interrupt, id s19-75il (relay-realtime, round 138): a button press during agent playback stops the current utterance and asks for a shorter summary or the next item. That is the primitive — barge-in — and it is the one piece of playback control the firmware genuinely lacks today. Right now a staged reply waits for a play press and then runs to completion (firmware/nrf9160/src/main.c:1092-1113); there is no way to stop it.\n\nIt also fits the hardware's grain. sw0 is edge-triggered by design and a press during playback is unambiguous with no timing state machine at all, which matters because there is none: sw0 is a bare GPIO edge into a semaphore (main.c:764-771), and main.c:29-38 records the decision never to add gesture recognition to it — 'button 1 acts on the ACTIVE EDGE so the microphone is powering up before the owner's finger has come back off.'\n\nSpecific to your request: yours is the most detailed in the cluster and two parts are worth folding into s19-75il. The playback offset — stream ID, chunk/document ID, byte or sentence offset — is the right payload for a stop event and lets the relay resume exactly where the owner cut in; s19-75il has no payload at all today. And 'do not persist page text' is the correct storage discipline.\n\nWhat does not fit is the gesture budget: short press pauses, double press resumes, long press marks. That is three distinct timings on a button with no timing state machine, during playback, competing with 34 other pending requests that also want a long press. The 'ask about this section' marker is separately already granted and shipped as offline_moment_bookmark (mac-planner s10-l3xe) on its own dedicated button, sw1 (main.c:39)."
     }
   ],
   "findings": [

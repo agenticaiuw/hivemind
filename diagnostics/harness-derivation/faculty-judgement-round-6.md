@@ -1,0 +1,55 @@
+# Harness derivation — faculty-judgement — round 6
+
+Model: `gpt-5.6-luna`  ·  probes against `http://localhost:8000`
+
+## What it established
+
+_Nothing recorded._
+
+## Capabilities it proposed
+
+### "“Save this thought for the next time I’m looking at this project, and bring it back without interrupting me.”"
+- **useful because:** The owner can offload fleeting thoughts from the pendant and recover them at the moment they become relevant, instead of creating a generic reminder they must remember to check. It is a true handoff: the pendant captures context while mobile, the relay persists it while the Mac may sleep, the Mac planner resolves project/app/calendar context, and the browser bridge recognizes the authenticated page where it matters.
+- **path:** pendant → relay → mac-bridge → browser → dashboard
+- **model tier:** Use realtime only for the short capture/acknowledgement. Use a cheap background model to extract the thought, project entities, and a trigger from the current conversation; use the Mac planner/browser extension deterministically to match active app, repository, tab, or meeting. No expensive model is needed for routine matching.
+- **latency:** A spoken acknowledgement in under 1.5 seconds; background filing within 30 seconds. On a trigger, a quiet pendant chime plus one short sentence, or a nonintrusive Mac notification within 5 seconds of page/app recognition.
+- **cost:** Roughly $0.002–$0.02 per capture depending on audio duration and extraction model; routine trigger checks should be <$0.001 each. The dominant cost is transcription/LLM extraction, not deterministic context matching.
+- **security:** Captured speech may contain secrets and authenticated page names. Encrypt the note and provenance, keep only the short audio until transcription is verified, and never send page contents to the relay when a local Safari extraction suffices. Require confirmation before turning a note into an external message or edit; dashboard must show and delete all retained context.
+- **missing:** A durable cross-surface 'situational note' schema with trigger predicates, provenance, confidence, expiry, and sensitivity; Pendant offline capture queue with replay-safe IDs and a clear local-recording indicator; Mac event bridge for active app/repository/meeting changes and browser semantic page identity; Browser extension hook that can surface a matched note without altering the page; A quiet-notification and snooze protocol shared by relay, Mac, and pendant
+
+### "“Keep track of the promises I make, and tell me only when one is at risk of being missed.”"
+- **useful because:** People routinely make commitments in conversation, email, scheduling pages, and work chats, then lose them across systems. The owner would get a private, evidence-linked commitment ledger: who was promised what, by when, what evidence supports it, and whether it is fulfilled—without turning every task into a noisy reminder. This requires the pendant to catch spoken commitments, the browser to inspect authenticated correspondence, the Mac to observe resulting files or calendar events, and the relay to reconcile everything while the other surfaces sleep.
+- **path:** pendant → relay → mac-bridge → browser → dashboard
+- **model tier:** Use the realtime model only to acknowledge a spoken capture and ask one clarification when a deadline or recipient is genuinely ambiguous. Use a cheaper background model for commitment extraction and periodic reconciliation; use deterministic matching for dates, recipients, sent messages, calendar events, and file changes.
+- **latency:** Capture acknowledgement under 1.5 seconds. Commitment extraction within one minute. Risk evaluation hourly or on relevant mail/calendar/file events; alert only when confidence is high and the deadline is approaching.
+- **cost:** Approximately $0.01–$0.05 per day for a normal user, dominated by extracting commitments from new mail and speech. Event-driven filtering should avoid rescanning entire accounts.
+- **security:** Commitments reveal relationships, work plans, and possibly confidential mail. Keep raw audio short-lived, process private page text locally whenever possible, encrypt the ledger, apply per-source sensitivity and retention, and require confirmation before sending a follow-up or changing a calendar/task. The owner must be able to inspect the exact source evidence and delete an item.
+- **missing:** A commitment-specific data model with parties, obligation, due window, evidence, confidence, status, and uncertainty—not merely a reminder or task; Read-only event adapters for pendant speech, authenticated browser correspondence, Mac mail/calendar/files, and outbound-message state; A reconciliation engine that distinguishes fulfilled, superseded, deferred, and merely discussed commitments; A risk policy that accounts for deadline, evidence quality, recipient importance, and the owner’s quiet hours; A private review surface and pendant interaction for confirm, correct, snooze, fulfill, and forget
+
+
+## Changes it proposed to its own stack
+
+### `context` — Add a durable situational-note ledger. Each note has encrypted text, optional short-lived audio URI, capture surface/time, observed context (active app, repo, URL origin/title, calendar event), a user-approved trigger predicate (for example project identity, page origin, or meeting), confidence, sensitivity, expiry, and delivery state. A local Mac watcher and browser bridge emit context transitions; the relay evaluates predicates while the Mac sleeps and queues a notification for the next connected pendant. Matching must be explainable and deduplicated, with one-tap/one-press snooze, dismiss, or mark-done.
+- **owner gets:** A thought captured while walking can reappear exactly when the owner returns to the relevant work, without another inbox or a distracting stream of reminders. It turns the wearable into a context-sensitive external memory while preserving owner control.
+- effort: Medium-high: schema and D1/R2 lifecycle, local event adapters, browser hook, pendant queue/notification protocol, and a small dashboard. Start with deterministic project/page/meeting predicates before semantic matching.  ·  risk: False matches could interrupt the owner or expose a sensitive note on a shared screen. Default to quiet delivery, require high-confidence exact-origin/project matches, show why it matched, expire unmatched notes, and provide global pause plus per-note delete. If the Mac is offline, relay queues rather than guessing.
+- cost: Small D1 writes and notification traffic; background extraction is the main API cost, approximately cents per dozen captures. Audio storage should be short-retention and deleted after verified transcription.  ·  latency: No impact on ordinary voice turns beyond capture acknowledgement; matching is event-driven and normally sub-second locally, with LTE delivery bounded by connectivity.
+- security: Context metadata can itself be sensitive. Keep private page text local, encrypt note payloads at rest/in transit, scope relay visibility to note IDs and trigger metadata where possible, and audit every delivery.
+- depends on: A durable cross-surface job/event persistence primitive; A typed context projection with provenance and TTL; Pendant audio upload/queue reliability and notification framing; Mac Accessibility/Screen Recording and Browser Bridge authorization
+
+### `integration` — Create a commitment ledger and event-reconciliation layer separate from ordinary reminders. Normalize a commitment as an obligation with parties, quoted source evidence, created/updated timestamps, due interval, confidence, sensitivity, and lifecycle states (proposed, accepted, fulfilled, superseded, at-risk, expired). Ingest only deltas from pendant speech, authenticated browser mail/forms, Mac calendar/mail/files, and outbound action receipts. Use deterministic evidence rules first, background extraction second, and expose an explanation whenever an item becomes at-risk. Deliver a private review card or short pendant prompt; never send a follow-up automatically.
+- **owner gets:** The owner would know which promises are genuinely in danger, rather than maintaining another task list or being interrupted for every unfinished thought. Every alert would show why the system believes the promise exists and what evidence says it is still open.
+- effort: High: new schema, source-specific read adapters, identity/entity resolution, event deduplication, lifecycle reconciliation, privacy controls, and a small review UI plus pendant protocol.  ·  risk: The system could misinterpret casual language as a promise or falsely mark one fulfilled. Require confidence thresholds, preserve quoted evidence, allow correction from the pendant, never infer completion from weak signals alone, and make all alerts dismissible and auditable.
+- cost: Moderate background inference and storage cost; event-driven extraction should be much cheaper than repeatedly summarizing entire mailboxes. No realtime calls except ambiguous spoken captures.  ·  latency: Near-real-time ingestion for new events; risk alerts can be delayed by minutes without reducing usefulness. No added latency to ordinary conversations.
+- security: This is sensitive relationship and work metadata. Encrypt at rest, minimize raw-source retention, keep private content on the Mac where feasible, use strict source scopes, and provide complete deletion/export controls.
+- depends on: Durable cross-surface event persistence; Authenticated browser and Mac read adapters; Typed provenance-aware context/memory projection; Reliable pendant offline capture and notification protocol
+
+
+## What it asked for
+
+### `s1-5izj` (skill) — situational_note_capture_queue
+- does: On a long press or a server-issued capture mode, records a short spoken note locally, gives a visible/audible recording indication, writes an encrypted queue record with a monotonic capture ID and timestamp to microSD, and uploads/retries it when LTE returns. It accepts a compact server acknowledgement and can replay or delete records without duplicating them.
+- must be on-device because: The owner needs to capture a thought while away from the Mac or during a dropped LTE link; only the pendant has the microphone, button, and offline continuity. The server can transcribe and classify after upload.
+- trigger: A distinct long press (separate from the existing short press conversation control), or a server push that arms capture for the next button press.
+- storage: Encrypted append-only records on microSD: capture ID, timestamp, codec, byte length, upload state, and short Opus audio. Retain until acknowledged, then delete; budget roughly 64 KB metadata plus up to 10 MB for 10 minutes of queued speech.
+- RAM budget: Target 12–20 KB working RAM using 4–8 KB audio buffers and streaming writes; never buffer a whole recording. Must fit within 211,608 B application RAM, with graceful refusal when the existing conversation/audio path has insufficient headroom.
+

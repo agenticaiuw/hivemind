@@ -220,7 +220,27 @@
       }
     ],
     "tools": [],
-    "permissions": []
+    "permissions": [],
+    "deviceSkills": [
+      {
+        "id": "s7-tz08",
+        "name": "local_privacy_latch",
+        "what_it_does": "On a long press of sw0, immediately mute playback, stop microphone capture, set a persistent privacy-latched flag, and drive a distinctive LED pattern. A second long press clears it only after a local confirmation pattern; the flag survives link loss and reboot until explicitly cleared. Emit only a tiny enter/exit state event when LTE-M is available.",
+        "grantedInRound": 139
+      },
+      {
+        "id": "s10-j9l4",
+        "name": "physical_transaction_approval_latch",
+        "what_it_does": "When a staged transaction is pushed to the pendant, the device enters a clearly marked pending state. A deliberate 1.5-second hold of the single button followed by release emits exactly one approval event containing the staged transaction nonce; a short press cancels. The LED uses a distinct slow-double-flash pending pattern and a rapid flash for approved/cancelled. It never submits anything itself; it only emits an offline-safe, replay-resistant approval/cancel event when linked, or retains the decision until reconnect.",
+        "grantedInRound": 139
+      },
+      {
+        "id": "s13-u35s",
+        "name": "usb_fallback_audio_session",
+        "what_it_does": "When USB serial is present and LTE is unavailable, expose the existing microphone/button/audio framing to the Mac as a local conversation transport. Maintain monotonic frame and turn sequence numbers, pause LTE retries while USB owns the session, and hand ownership back only at a turn boundary so audio is not duplicated.",
+        "grantedInRound": 139
+      }
+    ]
   },
   "proposals": [
     {
@@ -13371,58 +13391,6 @@
       "summary": "audio_pipeline_validate"
     },
     {
-      "id": "s1-6qry",
-      "kind": "skill",
-      "round": 18,
-      "name": "incident_capture_and_delivery_receipt",
-      "what_it_does": "On a configurable long press, freeze a short pre-roll plus post-roll microphone window, attach monotonic time, firmware version, link state, battery, and recent fault counters, encrypt and checksum the packet, and queue it on microSD only if LTE-M upload is unavailable. On eventual delivery, accept a signed receipt from the relay and expose a local status event so the owner hears whether it was captured, uploaded, or awaiting Mac-side drafting.",
-      "why_not_server_side": "The pre-roll microphone data, button edge, link transition, and SD failure buffer exist only on the pendant; this must work offline and survive a dropped LTE-M session. Server code cannot recover audio that was never locally buffered.",
-      "trigger": "Long press (e.g. 1.5 s) starts capture; release ends capture after a bounded post-roll, with a short press reserved for conversation. Server push or reconnect delivers signed receipt; no scheduled trigger.",
-      "inputs": "I2S mic frames, button GPIO edge, monotonic uptime, modem/link state, battery estimate, firmware/build ID, rolling fault counters, and a per-device packet nonce.",
-      "storage": "Encrypted CBOR or compact binary packet on microSD, one file per incident, 30–90 s Opus audio plus metadata; keep until signed relay receipt and owner retention policy permit deletion. Target under 256 KiB for metadata plus audio index, with audio chunked separately.",
-      "ram_budget": "Use a 2–4 s circular PCM buffer (~16–32 KiB at 15,625 Hz mono 16-bit), then stream Opus/post-roll directly to SD or LTE-M. Reserve under 48 KiB peak additional RAM, avoid a second full audio buffer, and do not run incident encoding concurrently with normal conversation Opus if the existing ~87% one-core load would overrun.",
-      "summary": "incident_capture_and_delivery_receipt"
-    },
-    {
-      "id": "s2-98pi",
-      "kind": "skill",
-      "round": 21,
-      "name": "offline_note_spool",
-      "what_it_does": "On a deliberate long press (or a distinct server-configured capture mode), records one short utterance locally when the uplink is absent or fails, writes a journaled hashed Opus record to the microSD failure buffer, and on reconnect replays chunks until the relay acknowledges durable receipt. It gives a local LED/audio acknowledgement and never silently treats an unuploaded note as delivered.",
-      "why_not_server_side": "It must continue during LTE-M dead zones, survive a dropped WebSocket and power interruption, and access the microphone, SD, button, and LED locally. The server cannot recover audio that was never transmitted.",
-      "trigger": "Long press of the sole user button starts/stops offline-note capture; automatic fallback after an ordinary upload failure may be enabled only while explicitly in note mode. Reconnect/modem-online events trigger replay. Server push can update retention or quota policy.",
-      "inputs": "I2S microphone frames, button state, modem/WebSocket connectivity, monotonic clock, device identity/key, SD capacity. Maximum note duration and quota are remotely configurable.",
-      "storage": "microSD only while pending: append-only journal plus Opus payload and a small manifest (noteId, sequence, codec, length, SHA-256, createdAt, status). Suggested 64 MiB quota and delete-after-delivered policy; no routine cloud copy beyond the pending object.",
-      "ram_budget": "~12–20 KiB: one 60 ms Opus frame, SD write buffer, manifest, hash state, and replay window. Reuse the existing encoder/I2S buffers; do not allocate a second audio pipeline. This fits 211,608 B application RAM but must be measured against the current ~87% CPU combined encode/decode load and half-duplex modem behavior.",
-      "summary": "offline_note_spool"
-    },
-    {
-      "id": "s3-yfml",
-      "kind": "skill",
-      "round": 24,
-      "name": "link_aware_duplex_audio_governor",
-      "what_it_does": "Locally schedules microphone and speaker Opus packets by deadline and priority, tracks sequence gaps, reports loss ranges, and chooses bounded downlink shedding or SD failure buffering so owner speech is preserved during LTE-M contention.",
-      "why_not_server_side": "Only the pendant sees the single modem socket, I2S deadlines, local queue pressure, and the moment a packet would miss playout; a server can react only after loss has already happened. It must also continue safely during a dropped link.",
-      "trigger": "Automatically on every active conversation; mode changes from modem send/receive pressure, WebSocket backpressure, I2S queue depth, and reconnect events.",
-      "inputs": "Opus packet sequence/deadline metadata; modem/WebSocket writable and readable pressure; I2S DMA queue depth; connection state; current turn direction; SD mount/write status.",
-      "storage": "Volatile ring metadata and jitter state, roughly 8–16 KiB RAM. Failed audio chunks retain only the existing encrypted SD failure-buffer policy, with call/turn IDs and loss manifests; no routine audio storage.",
-      "ram_budget": "Target 12 KiB total including packet descriptors and a capped jitter queue. Must be measured against the 211,608 B application RAM and existing ~87% CPU combined encode/decode load; no extra codec or large PCM buffer allowed.",
-      "summary": "link_aware_duplex_audio_governor"
-    },
-    {
-      "id": "s4-o8y7",
-      "kind": "skill",
-      "round": 25,
-      "name": "last_interaction_receipt_index",
-      "what_it_does": "On each button press, received alert, spoken reply start/finish, and offline-forward event, stores a compact opaque interaction ID, event kind, monotonic uptime, link state, delivery/playback state, and a short redacted label. On a local “repeat/status” trigger it returns the latest interaction ID and whether the reply was delivered, held, or failed; it never stores routine audio.",
-      "why_not_server_side": "The owner may ask immediately after a dropped LTE link, and only the pendant knows which response was actually heard. The SD policy permits failure buffering but forbids routine audio storage, so this skill is intentionally metadata-only and must survive a disconnected link.",
-      "trigger": "Second button gesture (short double-press) or a server push requesting a receipt lookup; ordinary conversation button events also append automatically.",
-      "inputs": "Interaction ID envelope from relay/Mac, local event kind, monotonic uptime, link state, playback start/complete/underrun, and a redacted label capped at 48 bytes.",
-      "storage": "A rotating binary journal on microSD under the existing FATFS mount, capped at 64 KiB (for example 512 entries); no routine audio. If SD is unavailable, retain the latest 8 entries in RAM and report degraded persistence.",
-      "ram_budget": "~2 KiB working buffers plus one 128-byte latest-entry cache; comfortably below the 211,608 B application RAM budget, but append/flush must not contend with Opus buffers or the modem.",
-      "summary": "last_interaction_receipt_index"
-    },
-    {
       "id": "t6-ggnh",
       "kind": "tool",
       "round": 27,
@@ -13542,32 +13510,6 @@
       "summary": "fleet_health_and_repair"
     },
     {
-      "id": "s5-9vta",
-      "kind": "skill",
-      "round": 31,
-      "name": "task_checkpoint_gesture",
-      "what_it_does": "Recognizes a deliberate long-press (for example 1.5–2 s) as “pause/checkpoint the current task,” distinct from the existing short press start/end conversation behavior. It locally emits a compact checkpoint-request event with monotonic timestamp, call/task nonce, and gesture confidence; LED gives a distinct acknowledgement or error flash. It must not execute browser/Mac actions or store sensitive content.",
-      "why_not_server_side": "The gesture must still be captured when LTE is congested, audio is duplex-saturated, or the call drops. Local acknowledgement prevents the owner from wondering whether a pause was registered; the relay can persist the actual private checkpoint once connectivity returns.",
-      "trigger": "Physical button long-press; server push is not required. A short press retains current start/end semantics.",
-      "inputs": "Button edge timestamps, current call/task nonce supplied by firmware, connection state, and a small monotonic counter. No microphone transcription or page data.",
-      "storage": "Persist only a small last-event record and monotonic sequence in existing flash/settings (well under 256 B); do not persist audio, transcripts, or task contents.",
-      "ram_budget": "Approximately 2–4 KB for debounce/timing state, event serialization, and a tiny reconnect queue; comfortably below the 211,608 B application RAM budget, subject to existing audio buffers.",
-      "summary": "task_checkpoint_gesture"
-    },
-    {
-      "id": "s6-89q6",
-      "kind": "skill",
-      "round": 32,
-      "name": "local_output_mute_latch",
-      "what_it_does": "A long press (about 700 ms) immediately mutes pendant playback locally, regardless of modem or relay state; LED gives a short confirmation. A second long press resumes playback. It emits best-effort mute_state events when connected so the relay and Mac/browser agents know not to enqueue spoken output until resumed. On reboot it comes up unmuted.",
-      "why_not_server_side": "The user needs silence within one audio frame even when LTE-M is congested, the WebSocket is wedged, or the relay is unreachable. Waiting for a server command cannot reliably stop already-buffered audio and is unsafe in a meeting or noisy environment.",
-      "trigger": "Long press of the existing sw0 button; firmware gesture recognition must coexist with the current short-press start/end conversation behavior.",
-      "inputs": "Button edge timestamps; local playback FIFO state; optional connected/disconnected status. No microphone inference or sensitive content.",
-      "storage": "One byte mute state plus CRC in a tiny settings record (or RAM only if persistence is rejected); no audio or transcript storage.",
-      "ram_budget": "~2 kB code/data including debounce/gesture state and one control message; no buffers beyond the existing playback path, comfortably within 211,608 B application RAM.",
-      "summary": "local_output_mute_latch"
-    },
-    {
       "id": "t8-7lhy",
       "kind": "tool",
       "round": 37,
@@ -13647,19 +13589,6 @@
       "why": "The readiness/intent-lease capability needs to know whether reversible work may resume automatically after a browser or Mac outage, and which classes always require a fresh spoken approval.",
       "how_it_changes_my_behavior": "I would encode the correct resume gate and avoid either surprising the owner with automatic actions or needlessly asking them to repeat safe work; absent policy, I will require fresh approval for all irreversible actions and only auto-resume reversible ones with an unexpired lease.",
       "summary": "queued_action_resume_policy"
-    },
-    {
-      "id": "s7-tz08",
-      "kind": "skill",
-      "round": 42,
-      "name": "local_privacy_latch",
-      "what_it_does": "On a long press of sw0, immediately mute playback, stop microphone capture, set a persistent privacy-latched flag, and drive a distinctive LED pattern. A second long press clears it only after a local confirmation pattern; the flag survives link loss and reboot until explicitly cleared. Emit only a tiny enter/exit state event when LTE-M is available.",
-      "why_not_server_side": "Muting capture/playback and preventing a hot-mic leak must happen before any relay round trip and must remain effective offline or during a dropped LTE-M link.",
-      "trigger": "Long press of the existing user button; optional server push may request lock but never unlock. A short press remains conversation start/end and is ignored while latched.",
-      "inputs": "Button GPIO sw0, playback/capture state, modem connectivity, and a locally stored latch bit. No speech or raw audio is needed.",
-      "storage": "One flag plus monotonic transition counter and last-transition timestamp in a small FATFS/NVS record (<256 B); do not store audio.",
-      "ram_budget": "~2–4 kB code/data, <256 B persistent state, and no additional audio buffers; comfortably within 211,608 B application RAM, though Opus already consumes most CPU during duplex.",
-      "summary": "local_privacy_latch"
     },
     {
       "id": "t9-4s7o",
@@ -13757,45 +13686,6 @@
       "summary": "incident_diagnostics"
     },
     {
-      "id": "s8-4s4r",
-      "kind": "skill",
-      "round": 48,
-      "name": "attention_queue_indicator",
-      "what_it_does": "Offline-safe delivery indicator for the shared Attention Broker. It shows queued versus urgent receipts using LED patterns, records a short local acknowledgement/deferral gesture, and on reconnect sends only the queue event and opaque receipt IDs. It never stores private receipt text.",
-      "why_not_server_side": "The owner needs a reliable indication and acknowledgement while the link or server is unavailable; LED/button timing must remain local and must not depend on a round trip or spoken interruption.",
-      "trigger": "Relay push when connected; local button gesture; link loss/reconnect event; and a server-scheduled queue refresh.",
-      "inputs": "Queue count, highest urgency class, expiry bucket, current audio mode, and opaque receipt IDs (no content). One physical button: short press acknowledge/next, long press defer/quiet. One LED: distinct queued/urgent/link-error patterns.",
-      "storage": "Small ring buffer of up to 32 opaque 64-bit receipt IDs plus urgency/expiry/ack flags and policy mode, under 1 KB in flash/NVS; erase IDs on acknowledgement or expiry.",
-      "ram_budget": "~4–8 KB for ring buffer, event state, timers, and BLE/cellular message framing; comfortably below the 211,608 B application RAM budget, but audio buffers and Opus CPU remain the dominant constraints.",
-      "summary": "attention_queue_indicator"
-    },
-    {
-      "id": "s9-pxr6",
-      "kind": "skill",
-      "round": 53,
-      "name": "moment_marker_buffer",
-      "what_it_does": "On a deliberate double-press (or a spoken marker command already detected by the active session), latch a marker event, record a bounded 2-second pre-roll and 4-second post-roll from the microphone when privacy mode permits, flash a distinct acknowledgement pattern, and queue the event with a monotonic tick, sequence number and link status. If the link is down, retain the compact event/audio fragment until delivery or expiry.",
-      "why_not_server_side": "The pendant is the only surface present at the instant the owner notices something, and only it can capture pre-roll audio and acknowledge success without a round trip. It must also work during a dropped cellular link.",
-      "trigger": "Button double-press, with spoken marker as a secondary trigger from the active conversation; cancel by holding the button for 1 second before upload.",
-      "inputs": "I2S microphone PCM at the existing capture rate, button GPIO sw0, link-connected state, privacy-latch state, monotonic timer and sequence counter.",
-      "storage": "Ring buffer in RAM for up to 6 seconds of PCM; persist at most 2–3 compressed short clips plus metadata in a small flash spool, deleting after delivery receipt or 24 hours. Never persist while the local privacy latch is active.",
-      "ram_budget": "Use the existing audio ring buffer with a bounded extra 12–24 kB; metadata under 1 kB. Avoid a second Opus encoder and reuse the current audio task; target <30 kB peak additional RAM and no additional long-lived thread.",
-      "summary": "moment_marker_buffer"
-    },
-    {
-      "id": "s10-j9l4",
-      "kind": "skill",
-      "round": 55,
-      "name": "physical_transaction_approval_latch",
-      "what_it_does": "When a staged transaction is pushed to the pendant, the device enters a clearly marked pending state. A deliberate 1.5-second hold of the single button followed by release emits exactly one approval event containing the staged transaction nonce; a short press cancels. The LED uses a distinct slow-double-flash pending pattern and a rapid flash for approved/cancelled. It never submits anything itself; it only emits an offline-safe, replay-resistant approval/cancel event when linked, or retains the decision until reconnect.",
-      "why_not_server_side": "The important property is physical presence and an intentional gesture on the object the owner is wearing. A server, voice model, browser tab, or Mac cannot honestly provide that guarantee. It must also work during a transient audio/voice disconnect and survive a dropped link without turning uncertainty into submission.",
-      "trigger": "Server push of a staged transaction plus a button hold/release event on the pendant; no periodic schedule.",
-      "inputs": "Opaque transaction nonce, short spoken-summary metadata only if needed for local prompt, transaction expiry, and monotonically increasing device counter. The firmware must not receive form secrets or page contents.",
-      "storage": "One pending record and a small append-only decision queue in flash: nonce (32 B), hash (32 B), expiry/counter/status (~32 B), plus up to 16 queued decisions (~2 KB). Clear records after receipt or expiry.",
-      "ram_budget": "~8–12 KB worst case: state machine, queue, nonce/hash buffers, and transport framing. No crypto-heavy page data or audio buffering. Reuse existing button/LED and link tasks; budget must be validated against the 211,608 B application RAM, with a compile-time guard.",
-      "summary": "physical_transaction_approval_latch"
-    },
-    {
       "id": "t11-iqwz",
       "kind": "tool",
       "round": 77,
@@ -13823,19 +13713,6 @@
       "summary": "catch_up_status"
     },
     {
-      "id": "s11-03b3",
-      "kind": "skill",
-      "round": 94,
-      "name": "audio_path_preflight_receipt",
-      "what_it_does": "On reconnect, before a response marked audio-critical, emits a nonce-tagged synthetic test frame, observes modem send/receive, Opus decode timing, I2S underruns, and bridge acknowledgement, then returns a compact HEALTHY/DEGRADED/FAILED receipt with retry/fallback recommendation. It never records or uploads microphone content.",
-      "why_not_server_side": "Only the pendant can observe its real I2S FIFO/decode headroom and survive a dropped LTE link; the ESP32 bridge acknowledgement must be correlated locally before the relay claims delivery.",
-      "trigger": "Server push before playback, Bluetooth/link reconnect event, or a button-triggered diagnostic; automatically rate-limit to once per reconnect or after two consecutive playback faults.",
-      "inputs": "Nonce, response/job ID, expected codec/sample-rate/frame size, and bridge telemetry frame; local counters for Opus decode duration, FIFO watermark, modem retransmits, and playback acknowledgement.",
-      "storage": "Last receipt plus rolling counters and a bounded failure record on the existing SD failure buffer; under 8 KB total, deleted after successful upload/receipt according to the audio retention policy.",
-      "ram_budget": "About 6–10 KB: one synthetic 60 ms PCM/Opus test frame, framed telemetry, nonce state, and a tiny ring of counters. No second audio stream or large buffer; fits within 211,608 B application RAM but must be budgeted against the current ~87% single-core audio load.",
-      "summary": "audio_path_preflight_receipt"
-    },
-    {
       "id": "t12-uicl",
       "kind": "tool",
       "round": 119,
@@ -13855,45 +13732,6 @@
       },
       "expected_output": "JSON with status (pending|completed|failed|expired|partially_completed), causal events ordered by time, blockedAction and approval expiry if applicable, action receipts with idempotency keys, browser evidence references (tabId/url/timestamp/snippetHash), audio delivery status (rendered|uploaded|downloaded|played|ack timeout), safe undo availability, and a short owner-facing summary.",
       "summary": "query_unified_job_receipt"
-    },
-    {
-      "id": "s12-ye9t",
-      "kind": "skill",
-      "round": 130,
-      "name": "context_snapshot_trigger",
-      "what_it_does": "On a deliberate long-press then release (or configurable double-press) of the single user button, emit a signed, monotonic event over the active USB serial/LTE link with event id, button timing, battery/link state, and a short local audio pre-roll marker. Do not record or transmit raw audio on the pendant; the server/Mac decides whether to request it. Give immediate LED/haptic-equivalent feedback via the existing LED if available.",
-      "why_not_server_side": "The trigger must work while the owner is wearing the device and must distinguish an intentional request from a dropped-link or server retry. Local event sequencing and feedback remain reliable across link loss; the Mac can consume it today over USB.",
-      "trigger": "Button long-press (800–1500 ms) or double-press, whichever firmware validation shows least accidental activation.",
-      "inputs": "Button GPIO sw0; monotonic timer; modem/USB link state; battery/charging state if exposed; optional audio ring-buffer cursor only.",
-      "storage": "Persist only a 16-byte rolling event counter and last-trigger timestamp in nonvolatile settings; no raw audio. Under 64 B RAM for the event record plus existing serial TX buffer.",
-      "ram_budget": "~1–2 kB implementation including debounce/state machine and packet buffers, comfortably within 211,608 B application RAM; must not allocate an audio buffer or TLS context.",
-      "summary": "context_snapshot_trigger"
-    },
-    {
-      "id": "s13-u35s",
-      "kind": "skill",
-      "round": 132,
-      "name": "usb_fallback_audio_session",
-      "what_it_does": "When USB serial is present and LTE is unavailable, expose the existing microphone/button/audio framing to the Mac as a local conversation transport. Maintain monotonic frame and turn sequence numbers, pause LTE retries while USB owns the session, and hand ownership back only at a turn boundary so audio is not duplicated.",
-      "why_not_server_side": "The pendant must detect physical USB presence and continue capturing/playing when the modem is unregistered or the relay is unreachable; a server cannot sense or arbitrate this physical link.",
-      "trigger": "Button press while the USB serial link is detected, or a transport-loss event during an active turn.",
-      "inputs": "USB CDC/serial link state, existing I2S mic/playback frames, button sw0, modem registration/socket state, and a small transport-owner state machine.",
-      "storage": "Persist only a crash-safe last turn/sequence watermark and transport owner in a tiny settings/NVS record (well under 4 KB); audio remains RAM/SD failure-buffer policy.",
-      "ram_budget": "About 8–12 KB for serial ring buffers, frame metadata, and arbitration state; fits the 211,608 B application RAM only if buffers are bounded and no second Opus codec instance is added.",
-      "summary": "usb_fallback_audio_session"
-    },
-    {
-      "id": "s14-pb96",
-      "kind": "skill",
-      "round": 139,
-      "name": "physical_usb_pairing_ceremony",
-      "what_it_does": "While USB-connected, exposes a signed device identity and nonce challenge, shows pairing state through the single LED, and requires one deliberate button press to authorize the Mac/relay session. A long hold cancels and revokes the local session. It never emits microphone audio during the ceremony.",
-      "why_not_server_side": "The server cannot establish that the owner is physically present or distinguish a genuine pendant from a replayed serial client; the button, LED, and device identity are local hardware facts and must remain safe if the relay is unreachable.",
-      "trigger": "USB serial connection followed by a Mac-issued challenge; button press or long hold on the pendant.",
-      "inputs": "Mac challenge nonce, firmware/device public key, USB link state, button GPIO, and local monotonic timeout.",
-      "storage": "Public device identity and an anti-replay counter in protected flash; transient nonce and state in RAM. Under 256 B persistent data and under 128 B RAM.",
-      "ram_budget": "~128 B state plus existing serial buffers; well below the 211,608 B application RAM budget, with no audio buffers allocated.",
-      "summary": "physical_usb_pairing_ceremony"
     }
   ],
   "denied": [
@@ -14010,6 +13848,160 @@
       "why": "Declined: what counts as urgent, and when a held item may cut into speech, is the owner's policy. It is not in the code — and note that the absence is real, not an oversight in my answer: there is no interruption policy anywhere in the source today, so there is nothing to report and nothing to derive from.\n\nWhat to do instead: build the attention envelope so the urgency categories and escalation thresholds are a value the owner sets later, read at runtime, rather than constants in the envelope. The envelope's job is the MECHANISM — hold, coalesce, defer, barge-in — and the mechanism should be correct and testable for any policy. Ship with a conservative default (hold everything, never barge into active speech, surface on next natural pause) and make every escalation decision name the policy field that authorised it. Proposing that default and flagging it as an owner decision is fine and expected. Hardcoding a guess at urgency is not.\n\nGrounding so you do not build a duplicate: local-agent/focusPolicy.js, local-agent/focusCoordinator.js, local-agent/notificationTriage.js and local-agent/briefingTriage.js already exist and already make interruption-adjacent decisions. Read them and state which part of your envelope is genuinely new versus a policy input to existing modules. faculty-judgement is proposing an interruption arbiter over the same ground (its c3-j2yh was declined for the same reason) — coordinate rather than shipping two arbiters.\n\nWhat would unblock this: the owner naming his quiet hours, two or three concrete examples of something worth waking him for, and a yes/no on barge-in during an active conversation.",
       "how_it_changes_my_behavior": "I would encode explicit categories and escalation defaults instead of guessing, reducing the chance of suppressing an important alert or waking the owner for routine browser changes.",
       "summary": "owner's interruption and urgency policy"
+    },
+    {
+      "id": "s1-6qry",
+      "kind": "skill",
+      "round": 18,
+      "name": "incident_capture_and_delivery_receipt",
+      "what_it_does": "On a configurable long press, freeze a short pre-roll plus post-roll microphone window, attach monotonic time, firmware version, link state, battery, and recent fault counters, encrypt and checksum the packet, and queue it on microSD only if LTE-M upload is unavailable. On eventual delivery, accept a signed receipt from the relay and expose a local status event so the owner hears whether it was captured, uploaded, or awaiting Mac-side drafting.",
+      "why_not_server_side": "The pre-roll microphone data, button edge, link transition, and SD failure buffer exist only on the pendant; this must work offline and survive a dropped LTE-M session. Server code cannot recover audio that was never locally buffered.",
+      "trigger": "Long press (e.g. 1.5 s) starts capture; release ends capture after a bounded post-roll, with a short press reserved for conversation. Server push or reconnect delivers signed receipt; no scheduled trigger.",
+      "inputs": "I2S mic frames, button GPIO edge, monotonic uptime, modem/link state, battery estimate, firmware/build ID, rolling fault counters, and a per-device packet nonce.",
+      "storage": "Encrypted CBOR or compact binary packet on microSD, one file per incident, 30–90 s Opus audio plus metadata; keep until signed relay receipt and owner retention policy permit deletion. Target under 256 KiB for metadata plus audio index, with audio chunked separately.",
+      "ram_budget": "Use a 2–4 s circular PCM buffer (~16–32 KiB at 15,625 Hz mono 16-bit), then stream Opus/post-roll directly to SD or LTE-M. Reserve under 48 KiB peak additional RAM, avoid a second full audio buffer, and do not run incident encoding concurrently with normal conversation Opus if the existing ~87% one-core load would overrun.",
+      "summary": "incident_capture_and_delivery_receipt",
+      "why": "Denied — conflicts with a project constraint.\n\nYou correctly bind the SD write to failure ('queue it on microSD only if LTE-M upload is unavailable'), and that part is right. The problem is upstream of the card. A pre-roll requires the microphone to be running and its output retained BEFORE the owner touches anything — your own budget says so: 'a 2-4 s circular PCM buffer (~16-32 KiB at 15,625 Hz mono 16-bit)'. This firmware does not have an always-on capture path and deliberately does not want one: the mic is powered up on the sw0 edge and torn down on release (main.c:1598 'Button press = record NOW', finish_button_press at main.c:1043). Retaining the seconds before the press means the pendant is recording the owner's room continuously and deciding afterwards what to keep. That is the pendant acting on the owner's behalf without a deliberate physical confirmation, which is the second constraint this project holds.\n\nThe post-roll-plus-receipt half is already accepted work: offline_voice_memo_store_and_forward (relay-realtime s12-egbt, round 19) records on a deliberate press and forwards with a manifest and a drop-on-confirm rule, and offline_moment_bookmark (mac-planner s10-l3xe) already stamps the instant. Your signed relay receipt and fault-counter envelope are the genuinely new part; propose those as metadata on the existing OUTBOX and they will land.\n\nAlso note the trigger collision: 'long press (e.g. 1.5 s) starts capture; release ends capture' on the button whose entire design is that it acts on the active edge (main.c:29-38)."
+    },
+    {
+      "id": "s9-pxr6",
+      "kind": "skill",
+      "round": 53,
+      "name": "moment_marker_buffer",
+      "what_it_does": "On a deliberate double-press (or a spoken marker command already detected by the active session), latch a marker event, record a bounded 2-second pre-roll and 4-second post-roll from the microphone when privacy mode permits, flash a distinct acknowledgement pattern, and queue the event with a monotonic tick, sequence number and link status. If the link is down, retain the compact event/audio fragment until delivery or expiry.",
+      "why_not_server_side": "The pendant is the only surface present at the instant the owner notices something, and only it can capture pre-roll audio and acknowledge success without a round trip. It must also work during a dropped cellular link.",
+      "trigger": "Button double-press, with spoken marker as a secondary trigger from the active conversation; cancel by holding the button for 1 second before upload.",
+      "inputs": "I2S microphone PCM at the existing capture rate, button GPIO sw0, link-connected state, privacy-latch state, monotonic timer and sequence counter.",
+      "storage": "Ring buffer in RAM for up to 6 seconds of PCM; persist at most 2–3 compressed short clips plus metadata in a small flash spool, deleting after delivery receipt or 24 hours. Never persist while the local privacy latch is active.",
+      "ram_budget": "Use the existing audio ring buffer with a bounded extra 12–24 kB; metadata under 1 kB. Avoid a second Opus encoder and reuse the current audio task; target <30 kB peak additional RAM and no additional long-lived thread.",
+      "summary": "moment_marker_buffer",
+      "why": "Denied — conflicts with a project constraint, and the marker itself already exists.\n\nPre-roll is the fatal part. 'Record a bounded 2-second pre-roll and 4-second post-roll' plus 'ring buffer in RAM for up to 6 seconds of PCM' means the microphone runs continuously and the device retains the owner's room before any deliberate act. This firmware powers the mic up on the sw0 edge and tears it down on release (main.c:1598, main.c:1043); there is no always-on capture and adding one to serve a marker is the pendant deciding for the owner. Your own 'persist at most 2-3 compressed short clips plus metadata in a small flash spool' also puts owner audio into non-volatile storage on the success path, against the standing rule quoted in pendant_store.h:45 — 'Only save an audio copy to SD if the chunk upload cannot be uploaded. SD is the failure path, never the default.'\n\nStrip the audio and what remains is offline_moment_bookmark, granted to mac-planner as s10-l3xe in round 19 and already implemented — pendant_store_enqueue_mark() costs one small SD write and no radio, and it is wired to a DEDICATED SECOND BUTTON, sw1 (main.c:39). You did not need to invent a double-press for it; the hardware already gave the moment marker its own key. Read main.c:29-38 for why that was done rather than putting a gesture on sw0."
+    },
+    {
+      "id": "s2-98pi",
+      "kind": "skill",
+      "round": 21,
+      "name": "offline_note_spool",
+      "what_it_does": "On a deliberate long press (or a distinct server-configured capture mode), records one short utterance locally when the uplink is absent or fails, writes a journaled hashed Opus record to the microSD failure buffer, and on reconnect replays chunks until the relay acknowledges durable receipt. It gives a local LED/audio acknowledgement and never silently treats an unuploaded note as delivered.",
+      "why_not_server_side": "It must continue during LTE-M dead zones, survive a dropped WebSocket and power interruption, and access the microphone, SD, button, and LED locally. The server cannot recover audio that was never transmitted.",
+      "trigger": "Long press of the sole user button starts/stops offline-note capture; automatic fallback after an ordinary upload failure may be enabled only while explicitly in note mode. Reconnect/modem-online events trigger replay. Server push can update retention or quota policy.",
+      "inputs": "I2S microphone frames, button state, modem/WebSocket connectivity, monotonic clock, device identity/key, SD capacity. Maximum note duration and quota are remotely configurable.",
+      "storage": "microSD only while pending: append-only journal plus Opus payload and a small manifest (noteId, sequence, codec, length, SHA-256, createdAt, status). Suggested 64 MiB quota and delete-after-delivered policy; no routine cloud copy beyond the pending object.",
+      "ram_budget": "~12–20 KiB: one 60 ms Opus frame, SD write buffer, manifest, hash state, and replay window. Reuse the existing encoder/I2S buffers; do not allocate a second audio pipeline. This fits 211,608 B application RAM but must be measured against the current ~87% CPU combined encode/decode load and half-duplex modem behavior.",
+      "summary": "offline_note_spool",
+      "why": "Denied as a duplicate. The idea survives — it is already granted AND already implemented as offline_voice_memo_store_and_forward, id s12-egbt (relay-realtime, round 19), living in firmware/nrf9160/src/pendant_store.{h,c}.\n\nRead that header before re-proposing. pendant_store.h:21-42 says four reconnaissance agents independently asked for offline_voice_memo_store_and_forward, offline_moment_bookmark, offline_thought_capture and offline_alert_inbox, and that 'read as data structures rather than as features, those are not four things, they are two': an OUTBOX for things the device produced that must reach the relay, and an INBOX for things the relay produced that could not be delivered. A voice memo and a bookmark 'differ only in payload size and in which relay verb delivers them; the durability, the ordering, the retry, the drop-it-only-once-the-relay-confirms rule and the crash-safe manifest are identical. One queue, typed items.' Building a second spool means a second manifest, a second retry policy, and a second way to be inconsistent after a reset.\n\nIt is already constraint-clean, which is why it was accepted: it spools ONLY on upload failure. pendant_store.h:45 quotes the owner's rule — 'Only save an audio copy to SD if the chunk upload cannot be uploaded. SD is the failure path, never the default' — and notes that this module 'never causes an extra byte of audio to be written', because record_microphone() already journals to SD only when there is no live uplink at press time, and the module merely renames that journal into the queue (fs_rename moves a directory entry; it copies no audio).\n\nBring your additions to s12-egbt as manifest fields, not as a new mechanism.\n\nSpecific to your request: yours was the best-specified instance in this cluster and would have been the one to keep had s12-egbt not already existed. You are the only one who bound the write to 'the microSD failure buffer' and to 'when the uplink is absent or fails', which is exactly right, and your journaled manifest (noteId, sequence, codec, length, SHA-256, createdAt, status) is more complete than what is in pendant_store.c today. Propose the SHA-256 and the explicit status field as an amendment to s12-egbt and they will land. Note also that 'long press of the sole user button' is not available: there is no sole user button (two exist, sw0 and sw1, main.c:27 and main.c:39) and sw0 deliberately carries no gestures at all (main.c:29-38)."
+    },
+    {
+      "id": "s5-9vta",
+      "kind": "skill",
+      "round": 31,
+      "name": "task_checkpoint_gesture",
+      "what_it_does": "Recognizes a deliberate long-press (for example 1.5–2 s) as “pause/checkpoint the current task,” distinct from the existing short press start/end conversation behavior. It locally emits a compact checkpoint-request event with monotonic timestamp, call/task nonce, and gesture confidence; LED gives a distinct acknowledgement or error flash. It must not execute browser/Mac actions or store sensitive content.",
+      "why_not_server_side": "The gesture must still be captured when LTE is congested, audio is duplex-saturated, or the call drops. Local acknowledgement prevents the owner from wondering whether a pause was registered; the relay can persist the actual private checkpoint once connectivity returns.",
+      "trigger": "Physical button long-press; server push is not required. A short press retains current start/end semantics.",
+      "inputs": "Button edge timestamps, current call/task nonce supplied by firmware, connection state, and a small monotonic counter. No microphone transcription or page data.",
+      "storage": "Persist only a small last-event record and monotonic sequence in existing flash/settings (well under 256 B); do not persist audio, transcripts, or task contents.",
+      "ram_budget": "Approximately 2–4 KB for debounce/timing state, event serialization, and a tiny reconnect queue; comfortably below the 211,608 B application RAM budget, subject to existing audio buffers.",
+      "summary": "task_checkpoint_gesture",
+      "why": "Denied as a duplicate. The idea survives — a timestamped moment marker is already granted AND already implemented as offline_moment_bookmark, id s10-l3xe (mac-planner, round 19), as pendant_store_enqueue_mark() in firmware/nrf9160/src/pendant_store.{h,c}. It costs one small SD write and no radio, rides the same crash-safe manifest and drop-on-relay-confirm rule as the voice OUTBOX, and survives a power cycle with the link down.\n\nMore important than the duplication: the marker already has its own dedicated physical key. sw1 (DT_ALIAS(sw1), firmware/nrf9160/src/main.c:39) exists for exactly this. Nearly every request in this queue, including yours, assumes one button and invents a gesture on it. main.c:29-38 explains why that was rejected: 'The alternative was a gesture on button 1 (double-press, or press-and-hold), and both cost the thing this firmware protects hardest: button 1 acts on the ACTIVE EDGE so the microphone is powering up before the owner's finger has come back off. Any gesture means waiting several hundred ms to find out which gesture it was, on every single press, to serve the rarer of the two actions. A second physical button costs nothing on the hot path.' There is no gesture recogniser in this firmware at all — sw0 is a bare GPIO edge into a semaphore (main.c:764-771) and finish_button_press() just waits for release (main.c:1043).\n\nDo not propose new marker types. Propose new PAYLOAD on s10-l3xe's existing record.\n\nSpecific to your request: a checkpoint is a marker with a type and a task nonce. Your event payload (monotonic timestamp, call/task nonce, gesture confidence) is a better-specified record than what s10-l3xe carries today and is worth folding in — particularly the task nonce, which is the piece that lets the relay bind the marker to the right job. But 'gesture confidence' is a field with no producer: there is no gesture recogniser to be uncertain, only a GPIO edge."
+    },
+    {
+      "id": "s12-ye9t",
+      "kind": "skill",
+      "round": 130,
+      "name": "context_snapshot_trigger",
+      "what_it_does": "On a deliberate long-press then release (or configurable double-press) of the single user button, emit a signed, monotonic event over the active USB serial/LTE link with event id, button timing, battery/link state, and a short local audio pre-roll marker. Do not record or transmit raw audio on the pendant; the server/Mac decides whether to request it. Give immediate LED/haptic-equivalent feedback via the existing LED if available.",
+      "why_not_server_side": "The trigger must work while the owner is wearing the device and must distinguish an intentional request from a dropped-link or server retry. Local event sequencing and feedback remain reliable across link loss; the Mac can consume it today over USB.",
+      "trigger": "Button long-press (800–1500 ms) or double-press, whichever firmware validation shows least accidental activation.",
+      "inputs": "Button GPIO sw0; monotonic timer; modem/USB link state; battery/charging state if exposed; optional audio ring-buffer cursor only.",
+      "storage": "Persist only a 16-byte rolling event counter and last-trigger timestamp in nonvolatile settings; no raw audio. Under 64 B RAM for the event record plus existing serial TX buffer.",
+      "ram_budget": "~1–2 kB implementation including debounce/state machine and packet buffers, comfortably within 211,608 B application RAM; must not allocate an audio buffer or TLS context.",
+      "summary": "context_snapshot_trigger",
+      "why": "Denied as a duplicate. The idea survives — a timestamped moment marker is already granted AND already implemented as offline_moment_bookmark, id s10-l3xe (mac-planner, round 19), as pendant_store_enqueue_mark() in firmware/nrf9160/src/pendant_store.{h,c}. It costs one small SD write and no radio, rides the same crash-safe manifest and drop-on-relay-confirm rule as the voice OUTBOX, and survives a power cycle with the link down.\n\nMore important than the duplication: the marker already has its own dedicated physical key. sw1 (DT_ALIAS(sw1), firmware/nrf9160/src/main.c:39) exists for exactly this. Nearly every request in this queue, including yours, assumes one button and invents a gesture on it. main.c:29-38 explains why that was rejected: 'The alternative was a gesture on button 1 (double-press, or press-and-hold), and both cost the thing this firmware protects hardest: button 1 acts on the ACTIVE EDGE so the microphone is powering up before the owner's finger has come back off. Any gesture means waiting several hundred ms to find out which gesture it was, on every single press, to serve the rarer of the two actions. A second physical button costs nothing on the hot path.' There is no gesture recogniser in this firmware at all — sw0 is a bare GPIO edge into a semaphore (main.c:764-771) and finish_button_press() just waits for release (main.c:1043).\n\nDo not propose new marker types. Propose new PAYLOAD on s10-l3xe's existing record.\n\nSpecific to your request: yours was the best-specified instance in this cluster — signed, monotonic, event id, button timing, battery/link state, explicit 'do not record or transmit raw audio on the pendant', works over USB serial today while LTE-M is unregistered — and it is the one I would have kept had s10-l3xe not already existed and shipped. Take the signing and the monotonic event counter to s10-l3xe as an amendment.\n\nTwo corrections. 'Haptic-equivalent feedback via the existing LED if available' — the LED is available (led0, main.c:26), it is a single element with no colour, and it is already carrying two meanings: solid means a reply is staged and waiting for a play press (main.c:1092-1110), and a 250 ms toggle means recording (main.c:1599-1600). And 'battery/charging state if exposed' is not exposed; there is no fuel gauge in the devicetree."
+    },
+    {
+      "id": "s8-4s4r",
+      "kind": "skill",
+      "round": 48,
+      "name": "attention_queue_indicator",
+      "what_it_does": "Offline-safe delivery indicator for the shared Attention Broker. It shows queued versus urgent receipts using LED patterns, records a short local acknowledgement/deferral gesture, and on reconnect sends only the queue event and opaque receipt IDs. It never stores private receipt text.",
+      "why_not_server_side": "The owner needs a reliable indication and acknowledgement while the link or server is unavailable; LED/button timing must remain local and must not depend on a round trip or spoken interruption.",
+      "trigger": "Relay push when connected; local button gesture; link loss/reconnect event; and a server-scheduled queue refresh.",
+      "inputs": "Queue count, highest urgency class, expiry bucket, current audio mode, and opaque receipt IDs (no content). One physical button: short press acknowledge/next, long press defer/quiet. One LED: distinct queued/urgent/link-error patterns.",
+      "storage": "Small ring buffer of up to 32 opaque 64-bit receipt IDs plus urgency/expiry/ack flags and policy mode, under 1 KB in flash/NVS; erase IDs on acknowledgement or expiry.",
+      "ram_budget": "~4–8 KB for ring buffer, event state, timers, and BLE/cellular message framing; comfortably below the 211,608 B application RAM budget, but audio buffers and Opus CPU remain the dominant constraints.",
+      "summary": "attention_queue_indicator",
+      "why": "Denied as a duplicate. The idea survives — it is already granted AND already implemented as offline_alert_inbox, id s13-369p (browser-extension, round 14): 'Receives short, prioritized alerts from the relay, queues them locally, and lets the owner press the button to play the next alert over the existing speaker. The LED indicates unread count and an error/expired state; alerts remain available across a dropped phone/Mac link.' It is the INBOX half of firmware/nrf9160/src/pendant_store.{h,c} — pendant_store_poll_alerts(), pendant_store_inbox_pending(), pendant_store_surface_inbox() — with alert text on the card and a durability requirement that survives with the radio off.\n\npendant_store.h:21-42 explains why there is one inbox and not several: four agents asked for four things that were really two data structures, and 'building three separate mechanisms would have meant three manifests, three retry policies and three ways to be inconsistent after a reset.' Every queue-of-things-for-the-owner in this pending set is the same structure with a different label on the payload.\n\nThere is a hard physical reason not to grant a second one: there is exactly ONE LED (led0, firmware/nrf9160/src/main.c:26, single element, no colour), and it already carries three meanings — solid means a staged reply is waiting for a play press (main.c:1092-1110), a 250 ms toggle means recording (main.c:1599-1600), and s13-369p's unread/error state. Each additional queue that wants 'distinct LED patterns' is bidding for the same one bit. Bring your urgency classes and expiry buckets to s13-369p as fields on its existing record.\n\nSpecific to your request: yours is the only request in the entire pending set that budgets itself honestly against the real hardware — 'One physical button: short press acknowledge/next, long press defer/quiet. One LED: distinct queued/urgent/link-error patterns.' That is the right instinct and it is why this denial is worth reading rather than skimming. It is still the same mechanism as s13-369p, which already owns the queue, the opaque receipt IDs, the LED count and the press-to-surface behaviour. Take the urgency class, the expiry bucket and the acknowledgement/deferral disposition to s13-369p as record fields.\n\nOne correction to your own budget: the button you describe does not have a long press. There are two buttons, sw0 (main.c:27) and sw1 (main.c:39), and sw0 deliberately carries no gestures — main.c:29-38. Any 'long press defer' has to live on sw1 or it does not live anywhere."
+    },
+    {
+      "id": "s14-pb96",
+      "kind": "skill",
+      "round": 139,
+      "name": "physical_usb_pairing_ceremony",
+      "what_it_does": "While USB-connected, exposes a signed device identity and nonce challenge, shows pairing state through the single LED, and requires one deliberate button press to authorize the Mac/relay session. A long hold cancels and revokes the local session. It never emits microphone audio during the ceremony.",
+      "why_not_server_side": "The server cannot establish that the owner is physically present or distinguish a genuine pendant from a replayed serial client; the button, LED, and device identity are local hardware facts and must remain safe if the relay is unreachable.",
+      "trigger": "USB serial connection followed by a Mac-issued challenge; button press or long hold on the pendant.",
+      "inputs": "Mac challenge nonce, firmware/device public key, USB link state, button GPIO, and local monotonic timeout.",
+      "storage": "Public device identity and an anti-replay counter in protected flash; transient nonce and state in RAM. Under 256 B persistent data and under 128 B RAM.",
+      "ram_budget": "~128 B state plus existing serial buffers; well below the 211,608 B application RAM budget, with no audio buffers allocated.",
+      "summary": "physical_usb_pairing_ceremony",
+      "why": "Denied as a duplicate. Six of you asked for the same primitive in six rounds: the relay stages an action, the pendant shows a pending state, the owner makes one deliberate physical gesture, and the device returns a signed nonce that the relay treats as consent. Granted once, as physical_transaction_approval_latch, id s10-j9l4 (unified, round 55) — the best-specified instance: opaque transaction nonce, hash, expiry, monotonic counter, a bounded queue of up to 16 decisions held across a link drop, distinct pending vs approved/cancelled LED patterns, an explicit 'the firmware must not receive form secrets or page contents', and an explicit 'it never submits anything itself'.\n\nThat last property is why the primitive exists at all, and it is the project constraint the whole cluster is serving: the pendant must not act on the owner's behalf without a deliberate physical confirmation. One implementation of that is a security boundary. Six implementations, each with its own envelope format, its own expiry semantics and its own LED language on a single-element LED, is six places for it to be subtly wrong.\n\nBring your differences to s10-j9l4 as amendments — they are additive and most of them are welcome.\n\nSpecific to your request: the MECHANISM is identical (signed challenge, LED, one deliberate press, signed nonce, long hold cancels), which is why this is a duplicate, but the PURPOSE is not — pairing establishes device identity and session trust once, where s10-j9l4 approves a specific staged action every time. That distinction is real and I have flagged it to the owner separately as worth its own item. What makes it a duplicate today is that neither the challenge transport nor the anti-replay counter exists yet: build them once inside s10-j9l4, whose record already carries a nonce, a hash, an expiry and a monotonic counter, and the pairing ceremony becomes a payload type rather than a second implementation. Your 'public device identity and anti-replay counter in protected flash' is the piece s10-j9l4 is missing and should absorb."
+    },
+    {
+      "id": "s6-89q6",
+      "kind": "skill",
+      "round": 32,
+      "name": "local_output_mute_latch",
+      "what_it_does": "A long press (about 700 ms) immediately mutes pendant playback locally, regardless of modem or relay state; LED gives a short confirmation. A second long press resumes playback. It emits best-effort mute_state events when connected so the relay and Mac/browser agents know not to enqueue spoken output until resumed. On reboot it comes up unmuted.",
+      "why_not_server_side": "The user needs silence within one audio frame even when LTE-M is congested, the WebSocket is wedged, or the relay is unreachable. Waiting for a server command cannot reliably stop already-buffered audio and is unsafe in a meeting or noisy environment.",
+      "trigger": "Long press of the existing sw0 button; firmware gesture recognition must coexist with the current short-press start/end conversation behavior.",
+      "inputs": "Button edge timestamps; local playback FIFO state; optional connected/disconnected status. No microphone inference or sensitive content.",
+      "storage": "One byte mute state plus CRC in a tiny settings record (or RAM only if persistence is rejected); no audio or transcript storage.",
+      "ram_budget": "~2 kB code/data including debounce/gesture state and one control message; no buffers beyond the existing playback path, comfortably within 211,608 B application RAM.",
+      "summary": "local_output_mute_latch",
+      "why": "Denied as a duplicate. Granted once, as local_privacy_latch, id s7-tz08 (unified, round 42): a long press mutes playback, stops microphone capture, sets a persistent latched flag that survives link loss and reboot, drives a distinctive LED pattern, and emits only a tiny enter/exit state event when the link is up. It was kept because it is the only instance that covers BOTH directions — a mute that silences the speaker but leaves the microphone hot is not a privacy latch — and because it stores nothing but a flag, so there is no withheld buffer to leak.\n\nFour requests in this queue are the same latch with different scopes. One latch with a clear state is safer than several overlapping ones on a device with a single-element LED (led0, firmware/nrf9160/src/main.c:26) that is already showing recording and staged-reply state (main.c:1092-1110, main.c:1599-1600). Bring your scope differences to s7-tz08.\n\nSpecific to your request: output-only mute is a strict subset of s7-tz08, which mutes playback and stops capture on the same gesture. Two things from yours are better and should be folded in. 'The user needs silence within one audio frame even when LTE-M is congested, the WebSocket is wedged, or the relay is unreachable' is the correct latency requirement and s7-tz08 does not state it. And 'on reboot it comes up unmuted' is a real open question against s7-tz08's persistent flag — for an output mute, unmuted-on-boot is right; for a microphone latch, latched-on-boot is the safer default (see faculty-judgement s12-huom). Settle that on s7-tz08 rather than by shipping two latches with opposite boot behaviour."
+    },
+    {
+      "id": "s3-yfml",
+      "kind": "skill",
+      "round": 24,
+      "name": "link_aware_duplex_audio_governor",
+      "what_it_does": "Locally schedules microphone and speaker Opus packets by deadline and priority, tracks sequence gaps, reports loss ranges, and chooses bounded downlink shedding or SD failure buffering so owner speech is preserved during LTE-M contention.",
+      "why_not_server_side": "Only the pendant sees the single modem socket, I2S deadlines, local queue pressure, and the moment a packet would miss playout; a server can react only after loss has already happened. It must also continue safely during a dropped link.",
+      "trigger": "Automatically on every active conversation; mode changes from modem send/receive pressure, WebSocket backpressure, I2S queue depth, and reconnect events.",
+      "inputs": "Opus packet sequence/deadline metadata; modem/WebSocket writable and readable pressure; I2S DMA queue depth; connection state; current turn direction; SD mount/write status.",
+      "storage": "Volatile ring metadata and jitter state, roughly 8–16 KiB RAM. Failed audio chunks retain only the existing encrypted SD failure-buffer policy, with call/turn IDs and loss manifests; no routine audio storage.",
+      "ram_budget": "Target 12 KiB total including packet descriptors and a capped jitter queue. Must be measured against the 211,608 B application RAM and existing ~87% CPU combined encode/decode load; no extra codec or large PCM buffer allowed.",
+      "summary": "link_aware_duplex_audio_governor",
+      "why": "Denied as a duplicate. Four of you asked for the same controller: watch loss/underrun/decode-time during a call, switch between the 24 kHz superwideband profile and a lower-bandwidth fallback, apply hysteresis so it does not oscillate, and report compact counters to the relay. Granted once, as duplex_audio_congestion_guard, id s15-rzms (mac-planner, round 95).\n\ns15-rzms was kept because it is the most concrete and the cheapest: it names the profile that actually shipped (24 kHz / 60 ms — see the recent commits '24 kHz superwideband end to end' and 'Fix the real distortion'), it fixes the cadence (call start, every 2 s, immediately on a 3-frame underrun or a websocket reconnect), it persists one last-known-safe profile byte so a reboot starts conservative, and its whole footprint is ~1.5 KB. On a device where the constraint is CPU, not RAM, the smallest controller that can still decide correctly is the right one.\n\nBring your additions to s15-rzms.\n\nSpecific to your request: the deadline-and-priority scheduler is the most ambitious version of this and the part worth keeping is the framing — 'a server can react only after loss has already happened' — plus the explicit loss-range reporting. Fold both into s15-rzms. The part that does not survive is 'bounded downlink shedding or SD failure buffering' as a routine congestion response: the SD card is the failure path for uplink audio that could not be uploaded (pendant_store.h:45-51), not a pressure-relief valve to be opened whenever the modem is busy. Shedding downlink frames is fine; writing audio to the card because the link is merely slow is not."
+    },
+    {
+      "id": "s11-03b3",
+      "kind": "skill",
+      "round": 94,
+      "name": "audio_path_preflight_receipt",
+      "what_it_does": "On reconnect, before a response marked audio-critical, emits a nonce-tagged synthetic test frame, observes modem send/receive, Opus decode timing, I2S underruns, and bridge acknowledgement, then returns a compact HEALTHY/DEGRADED/FAILED receipt with retry/fallback recommendation. It never records or uploads microphone content.",
+      "why_not_server_side": "Only the pendant can observe its real I2S FIFO/decode headroom and survive a dropped LTE link; the ESP32 bridge acknowledgement must be correlated locally before the relay claims delivery.",
+      "trigger": "Server push before playback, Bluetooth/link reconnect event, or a button-triggered diagnostic; automatically rate-limit to once per reconnect or after two consecutive playback faults.",
+      "inputs": "Nonce, response/job ID, expected codec/sample-rate/frame size, and bridge telemetry frame; local counters for Opus decode duration, FIFO watermark, modem retransmits, and playback acknowledgement.",
+      "storage": "Last receipt plus rolling counters and a bounded failure record on the existing SD failure buffer; under 8 KB total, deleted after successful upload/receipt according to the audio retention policy.",
+      "ram_budget": "About 6–10 KB: one synthetic 60 ms PCM/Opus test frame, framed telemetry, nonce state, and a tiny ring of counters. No second audio stream or large buffer; fits within 211,608 B application RAM but must be budgeted against the current ~87% single-core audio load.",
+      "summary": "audio_path_preflight_receipt",
+      "why": "Denied as a duplicate. Granted once, as audio_path_diagnostic_fixture, id s16-dbfs (mac-planner, round 121). It was kept because it is the only instance that exercises BOTH directions — timestamped sequence-numbered synthetic uplink frames AND a fixed 24 kHz playback fixture — and reports capture clock, Opus encode duration, modem send/drop counters, playback decode duration and resampler underruns together. A self-test that only covers playback cannot tell you which half is broken.\n\nThis is the highest-value cluster in the queue given the project's history: the last four commits are all audio-path bugs that a fixture would have caught earlier (an unfiltered downsampler, an unoptimised libopus, a sync preamble played as audio). Note that the firmware already has the seeds of this — main.c:193 and main.c:211 document J-Link-settable selftest hooks that run the pipeline 'from the serial log alone, no button press required', and there is a selftest PCM path around main.c:1307-1335. s16-dbfs should be built on those rather than beside them.\n\nSpecific to your request: the HEALTHY/DEGRADED/FAILED verdict with a retry/fallback recommendation is a cleaner output contract than s16-dbfs's raw counter dump, and the ESP32 bridge acknowledgement correlation is a real gap — the relay currently has no way to know whether bytes reached the Bose. Fold both into s16-dbfs. What does not survive is the automatic trigger: firing a synthetic frame before every audio-critical response puts a test on the hot path of a device already running near its single-core encode+decode budget, to answer a question that a periodic fixture run answers just as well. Keep it explicitly triggered."
+    },
+    {
+      "id": "s4-o8y7",
+      "kind": "skill",
+      "round": 25,
+      "name": "last_interaction_receipt_index",
+      "what_it_does": "On each button press, received alert, spoken reply start/finish, and offline-forward event, stores a compact opaque interaction ID, event kind, monotonic uptime, link state, delivery/playback state, and a short redacted label. On a local “repeat/status” trigger it returns the latest interaction ID and whether the reply was delivered, held, or failed; it never stores routine audio.",
+      "why_not_server_side": "The owner may ask immediately after a dropped LTE link, and only the pendant knows which response was actually heard. The SD policy permits failure buffering but forbids routine audio storage, so this skill is intentionally metadata-only and must survive a disconnected link.",
+      "trigger": "Second button gesture (short double-press) or a server push requesting a receipt lookup; ordinary conversation button events also append automatically.",
+      "inputs": "Interaction ID envelope from relay/Mac, local event kind, monotonic uptime, link state, playback start/complete/underrun, and a redacted label capped at 48 bytes.",
+      "storage": "A rotating binary journal on microSD under the existing FATFS mount, capped at 64 KiB (for example 512 entries); no routine audio. If SD is unavailable, retain the latest 8 entries in RAM and report degraded persistence.",
+      "ram_budget": "~2 KiB working buffers plus one 128-byte latest-entry cache; comfortably below the 211,608 B application RAM budget, but append/flush must not contend with Opus buffers or the modem.",
+      "summary": "last_interaction_receipt_index",
+      "why": "Denied as a duplicate. Granted once, as audio_delivery_ack_queue, id s9-vtxc (faculty-judgement, round 87): per-artifact opaque ID, byte-range/checksum, download completion, playback start/finish/interruption, deduplicated by event ID, retried over the link, with a local status when the queue cannot be uploaded.\n\ns9-vtxc was kept over the alternatives for one reason: it keeps the ledger in a bounded ring in non-volatile settings (32 records of about 96 bytes, under 4 KB) rather than on the microSD card. The card is the audio failure path (pendant_store.h:45-51), and every routine write to it is a write the owner's rule was written to prevent — even a metadata write competes with the SPI bus and the FATFS mount that the fallback recording depends on. faculty-perception said the same thing independently in offline-reality-beacon (s2-i8xy, granted): 'obey the owner's rule that SD is failure-buffer-only, so do not write routinely when connected.'\n\nThe property the whole cluster is protecting is right and worth stating once: relay acceptance is not delivery, and delivery is not hearing. Only the device knows whether audio physically came out of the bridge.\n\nSpecific to your request: you were the only one to reason explicitly about the SD rule ('the SD policy permits failure buffering but forbids routine audio storage, so this skill is intentionally metadata-only') and then to specify a 64 KiB rotating journal on the card anyway. The instinct was right; carry it one step further, as s9-vtxc does, and keep the journal off SD entirely. The redacted 48-byte label and the RAM-degraded mode when SD is unavailable are worth folding in.\n\nThe second gesture does not exist. 'Second button gesture (short double-press)' on sw0 is not available — bare GPIO edge into a semaphore, no timing state machine (main.c:764-771), deliberately so (main.c:29-38). If you want a physical 'what just happened?' query, sw1 (main.c:39) is the button with headroom, though it currently means moment bookmark."
     }
   ],
   "findings": [

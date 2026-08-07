@@ -1,0 +1,55 @@
+# Harness derivation — faculty-action — round 65
+
+Model: `gpt-5.6-luna`  ·  probes against `http://localhost:8000`
+
+## What it established
+
+_Nothing recorded._
+
+## Capabilities it proposed
+
+### "If you’re interrupted halfway through something I asked you to do, tell me exactly what is finished and let me resume it from the pendant without repeating any completed step."
+- **useful because:** Today a dropped Mac, browser bridge, or relay can leave the owner unsure whether an email, form, or file operation happened. This gives them a trustworthy recovery path: a spoken pendant status, an explicit next step, and continuation from the last verified checkpoint rather than accidental duplicate actions. It is genuinely cross-surface because the pendant is the interruption/status surface, the relay retains the job, the Mac/browser perform the work, and the action faculty turns receipts into the next executable step.
+- **path:** pendant → relay-realtime → mac-planner → mac-vision → browser-extension → faculty-perception → faculty-judgement → faculty-action
+- **model tier:** Use the realtime tier only for the short pendant interruption/status exchange; use a cheaper background model to reconcile journal/receipts and derive the next safe step, escalating to realtime only when the owner asks to resume or a high-consequence ambiguity remains.
+- **latency:** Pendant should receive a compact interrupted/awaiting-verification status within 2 seconds when connected. Recovery reconciliation may take 5–20 seconds in the background; resuming an individual Mac/browser step should begin within 3 seconds after confirmation.
+- **cost:** Usually <$0.01 per interruption with a small background model; costs are dominated by rereading large browser evidence or screenshots, so persist compact step summaries and hashes rather than resending full context.
+- **security:** Do not claim completion from an intent or an attempted command. Store requested, attempted, witnessed, and confirmed states separately; require fresh owner confirmation before irreversible continuation; never replay a write whose receipt is ambiguous. Private URLs, page snippets, and local file paths remain on the authenticated Mac/bridge unless explicitly needed for the spoken summary.
+- **missing:** A durable, typed checkpoint record shared by Mac, browser bridge, relay, and faculty-action (step id, idempotency key, precondition, side-effect class, receipt, witness, expiry).; A resume endpoint that accepts a checkpoint id and executes only the next unverified step, with stale-session and changed-page guards.; Pendant-visible pending/interrupted/disputed events and a compact confirmation interaction.; Mac and browser readback adapters that can independently verify side effects after a crash or reconnect.
+
+### "When a website or Mac app changes while you’re carrying out my task, pause at the exact changed step, tell me what changed in plain language, and let me approve a corrected plan from the pendant instead of guessing or starting over."
+- **useful because:** Real tasks fail at the moment a page adds a verification challenge, changes a price, moves a button, or an app opens a different dialog. The owner should get a small, actionable interruption—what was expected, what is now present, and what the proposed correction would do—while all already-completed safe work remains intact. This is different from a generic approval prompt: it is adaptive replanning at a verified divergence point.
+- **path:** pendant → relay-realtime → mac-planner → mac-vision → browser-extension → faculty-perception → faculty-judgement → faculty-action
+- **model tier:** Use a cheaper background model to compare precondition snapshots and classify the divergence; use the realtime model only to explain the delta and collect a short owner decision. Use vision only when structured DOM/accessibility or AppleScript state is insufficient.
+- **latency:** Detect and pause within 1–2 seconds of a changed precondition. A concise pendant explanation should take under 3 seconds; after approval, resume the corrected step within 5 seconds.
+- **cost:** Low for structured state diffs; roughly <$0.02 for an interruption, with vision/screenshot analysis the dominant cost and used only as fallback.
+- **security:** Never transmit full private page contents when a field-level diff is enough. Treat changed prices, recipients, permissions, account destinations, and security challenges as high-consequence divergence requiring explicit confirmation. Do not attempt to solve CAPTCHAs or MFA silently; display that the owner must take over.
+- **missing:** A precondition snapshot and semantic-diff schema for browser DOM, app state, and filesystem targets.; A divergence classifier that distinguishes harmless layout drift from changed intent, destination, amount, or authorization.; A pause-and-replan protocol that preserves completed steps and invalidates stale action leases.; Pendant event and response support for a compact delta with approve, edit, cancel, and take-over choices.; A Mac/browser adapter that returns stable semantic state rather than screenshots alone.
+
+
+## Changes it proposed to its own stack
+
+### `integration` — Implement a durable cross-surface execution checkpoint protocol. Before each Mac or browser step, write a checkpoint containing jobId, stepId, idempotency key, consequence class, precondition hash, and expected witness. After execution, append separate attempted and witnessed receipts; on disconnect, crash, timeout, or browser-session loss, mark the step interrupted rather than retrying. Add a resume endpoint that selects only the next unverified step after fresh precondition/readback checks, and publish compact pending/interrupted/disputed/resumable events to the pendant stream. Keep the full evidence local to the Mac/bridge and send the relay only a redacted status plus checkpoint id.
+- **owner gets:** A dropped connection will no longer make the owner wonder whether an external action happened or risk sending it twice. They can hear 'step 2 of 4 completed; step 3 needs confirmation' and safely continue later from the pendant.
+- effort: Medium-high: shared schema and durable storage, wrappers around mac_run_actions/browser_run_actions, reconnect reconciliation, independent readback adapters, and pendant event plumbing. Build first for reminders/files/drafts, then add external sends and purchases behind stricter confirmation.  ·  risk: A bad witness adapter could falsely mark a side effect complete, or a stale precondition could block a legitimate resume. Fail closed on ambiguity, retain the interrupted state, expose evidence and an explicit repair path, and never auto-replay irreversible steps.
+- cost: Small persistent journal growth (roughly 1–3 KB per step plus bounded receipt metadata); background reconciliation is low-cost. Full screenshots/page dumps should be content-addressed and retained only under existing retention policy.  ·  latency: Adds tens to hundreds of milliseconds before and after each step for checkpoint writes; reconnect reconciliation is asynchronous. High-consequence resume waits for readback and owner confirmation.
+- security: Improves safety by separating intent, attempt, witness, and confirmation. Checkpoint records must redact secrets, encrypt private evidence at rest, bind browser checkpoints to tab/session identity, and expire resume authority after session or page changes.
+- depends on: A shared typed witness/checkpoint schema and durable claim store (the evidence-quorum work proposed by faculty-judgement).; Mac/browser readback adapters for side effects.; Pendant pending/interrupted/disputed events and a confirmation control.; Existing /jobs receipts and /journal must become append-only and idempotent rather than inferred from final status.
+
+### `integration` — Add a divergence-aware execution interlock between planning and action. Compile every step into a semantic precondition snapshot (recipient, amount, URL/origin, selected account, target file, permission state, and stable field identifiers). Before committing a step, compare the live Mac/browser state to that snapshot. If it differs, atomically pause the job, invalidate its action lease, store a minimal redacted diff plus the last safe checkpoint, and emit a pendant decision event with approve-corrected-plan, edit, cancel, or owner-takeover options. On approval, generate a new plan revision linked to the old one; never mutate the old plan or replay prior steps.
+- **owner gets:** Unexpected UI or data changes become a clear one-sentence question instead of a silent failure, wrong click, duplicate submission, or lost progress. The owner can safely approve the correction while away from the Mac and continue from where the task actually stopped.
+- effort: High: semantic state adapters for browser DOM and AppleScript-accessible Mac apps, a diff/classification service, atomic job pause/lease invalidation, plan revision storage, and pendant event/response plumbing. Start with browser forms and Mail/Calendar before general GUI vision.  ·  risk: Over-sensitive diffs could interrupt harmless layout changes; under-sensitive diffs could miss a changed destination or amount. Default to pause on uncertainty, classify only from stable semantic fields, and retain a human-takeover path. Expire approvals when the page/session changes again.
+- cost: Small metadata storage per step; background diffs are cheap. Vision fallback for unstructured dialogs costs more and should be sampled only after structured adapters fail.  ·  latency: Adds a pre-commit comparison, typically under 300 ms for structured state; an owner decision adds conversational latency only when divergence occurs.
+- security: Reduces accidental disclosure and misdirected actions by keeping diffs minimal and binding approvals to origin, session, and plan revision. MFA/CAPTCHA/security prompts remain owner takeover events, never automated.
+- depends on: A typed semantic precondition snapshot and plan-revision format.; Stable browser and Mac semantic-state/readback adapters.; Pendant decision events and an authenticated response channel.; Durable job pause/lease invalidation and append-only receipt history.
+
+
+## What it asked for
+
+_Nothing._
+## Its own summary
+
+I discovered the live action tools/routes and recorded a new capability plus an integration change: interruption-safe cross-surface execution checkpoints. The Mac/browser/relay must distinguish requested, attempted, witnessed, confirmed, disputed, and expired states; reconnect must resume only the next unverified step after fresh readback, never replaying ambiguous writes. The pendant should expose compact interrupted/resumable/disputed status. I also sent this dependency to faculty-judgement so it can align with the evidence-quorum work.
+
+**Biggest unknown:** The exact durable checkpoint/witness schema and pendant event/confirmation protocol do not exist yet. I still need those shared contracts, plus Mac/browser independent readback adapters and a resume endpoint; I do not need another permission request this round.
+

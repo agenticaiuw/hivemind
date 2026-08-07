@@ -1,0 +1,49 @@
+# Harness derivation — mac-terminal — round 82
+
+Model: `gpt-5.6-luna`  ·  probes against `http://localhost:8000`
+
+## What it established
+
+_Nothing recorded._
+
+## Capabilities it proposed
+
+### "“If something can’t run right now, don’t leave me waiting—tell me what is unavailable, use the best safe fallback, and keep the original task ready to resume when the device comes back.”"
+- **useful because:** Today the system can spend 45 seconds waiting on an offline browser bridge, while the Mac snapshot simultaneously reports missing Accessibility/Screen Recording and a disabled vision loop. The owner should receive an immediate, truthful answer instead of a timeout, and public work should continue through the relay/web tools while private work is held for the authenticated browser. This only works across the pendant, always-on relay, Mac observability, and browser session lease—not on one node alone.
+- **path:** pendant → relay → mac-planner → browser-extension → dashboard
+- **model tier:** Deterministic health/preflight and fallback routing first; background model only to summarize a degraded result or explain a recovery plan; realtime model only for the spoken interruption.
+- **latency:** Health check and route decision under 500 ms; fail-fast private-browser requests in under 2 s rather than the current ~45 s poll timeout. Resume automatically on the next heartbeat, without replaying non-idempotent steps.
+- **cost:** Usually zero model calls for health, classification, quarantine, and retry. At most one small background summarization call for a fallback result; realtime speech cost is only the brief status sentence.
+- **security:** Private authenticated content must never fall back to public web search or leave the Mac. Each task must declare public/private data class, permitted surfaces, and idempotency. Keep existing owner policy of no approval gates; instead attach receipts showing why a fallback or defer occurred and require explicit confirmation only where an existing action already requires it.
+- **missing:** A shared capability preflight contract reporting online state, permissions, lease age, queue depth, and supported fallbacks per surface; A durable degraded-task record with original intent, completed steps, quarantined steps, retry policy, and idempotency key; A relay-to-Mac/browser health event stream and resume trigger; current polling only discovers failure after a long wait; A router rule that maps public reads to web_search/read_web_page while preserving authenticated tasks for browser reattachment; A single owner-facing status/receipt view and spoken status event for degraded, deferred, resumed, and permanently failed work
+
+### "“If I lose connection while you’re doing something, pick up the same conversation where we left off—without making me repeat myself or doing an action twice.”"
+- **useful because:** A wearable conversation can drop while the Mac or browser is still working, leaving the owner unsure whether an instruction was heard, completed, or partially applied. Today durable jobs and receipts exist, but they are not a conversational resume protocol: a reconnecting pendant cannot reliably recover the exact turn, pending question, spoken response, and action frontier as one coherent interaction.
+- **path:** pendant → relay → mac-planner → browser-extension → dashboard
+- **model tier:** Deterministic session checkpointing, action idempotency, and receipt reconciliation; use the realtime model only to continue a live spoken turn, and a cheaper background model to summarize completed work after a long disconnect.
+- **latency:** On reconnect, restore the last checkpoint and status in under 1 second; do not replay an action until its prior execution is reconciled. If reconciliation is unavailable, speak a concise “still checking” response and continue in the background.
+- **cost:** Near-zero model cost for checkpoints, hashes, and receipt reconciliation. One short background summary only when the disconnected task completed or needs clarification. Storage is a small append-only record per active conversation.
+- **security:** Persist only encrypted task state and references, not raw microphone audio or secret page contents. Bind checkpoints to the paired pendant and Mac/relay session. Use exactly-once/idempotency keys for mutations, and expose an audit trail when a step is resumed, skipped, or reconciled.
+- **missing:** A durable conversation checkpoint schema containing turn id, spoken-response state, task graph frontier, pending clarification, and last acknowledged receipt; A shared exactly-once action ledger spanning relay, Mac jobs, and browser commands; A reconnect handshake that exchanges checkpoint versions and reconciles divergent outcomes before continuing speech; Pendant-side playback/acknowledgement markers so the owner does not hear a response twice; A user-facing recovery state for ambiguous outcomes such as Mac completed but relay never received the receipt
+
+
+## Changes it proposed to its own stack
+
+### `context` — Add a sensitivity firewall between context retrieval and all planner traces, job receipts, /thinking streams, relay telemetry, and dashboard views. Classify entities/facts into public, personal, sensitive, and secret; pass only a short capability token/reference for sensitive or secret facts to the action executor, never the plaintext. Redact existing trace chunks and logs at serialization time, preserve provenance and a non-secret reason such as “credential-like fact withheld,” and add a per-job retention/deletion hook. The firewall must cover long-term memory, browser page extracts, shell output, and spoken summaries, with an explicit allowlist for a user-requested private task.
+- **owner gets:** A live job trace currently includes unrelated long-term facts such as “bike lock code” alongside project context. Anyone or any surface that can read /jobs, /thinking, relay telemetry, or a dashboard could receive secrets that were not needed for the task. The owner gets the same useful actions and receipts without accidental disclosure through logs, model prompts, or the pendant’s spoken channel.
+- effort: Medium: typed sensitivity metadata in the context graph, a redacting serializer shared by Mac and relay, secret-reference plumbing for executors, migration/redaction of stored traces, and focused tests proving secrets do not appear in planner prompts or receipts.  ·  risk: Over-redaction could make a legitimate private task fail or produce an unhelpful explanation; recover by allowing a narrowly scoped per-job sensitivity grant and recording only its expiry and purpose. Existing stored logs need a one-time scrub, with an audit count but not the recovered plaintext.
+- cost: No recurring model cost; small CPU/storage overhead for classification and redaction. One migration pass over Mac JSON/D1 records.  ·  latency: Typically under 20 ms locally; negligible relay overhead. Secret classification can be deterministic, with background model assistance only for ambiguous new facts.
+- security: Strongly improves containment: plaintext sensitive facts stay in the minimum execution surface, while receipts carry hashes, provenance, and redaction markers. Must ensure capability references cannot be resolved by untrusted dashboard or voice clients.
+- depends on: A typed context projection/selection service (the existing context-compiler backlog work); A shared receipt/log serializer used by /jobs, /thinking, /journal, relay telemetry, and dashboard; Per-fact sensitivity and retention metadata in the context graph; An executor API that accepts scoped secret references without echoing their values
+
+### `relay` — Add a tamper-evident, append-only cross-surface execution ledger. The pendant, relay, Mac agent, and browser bridge each emit signed step events with task id, idempotency key, input hash, result hash, monotonic sequence, and local timestamp; the relay periodically seals a Merkle root and syncs missing segments after reconnection. The dashboard and spoken agent can then distinguish confirmed execution, locally completed-but-unsynced work, duplicate suppression, and genuinely unknown outcomes.
+- **owner gets:** When the Mac, relay, or browser disconnects, the owner should be able to know whether something actually happened rather than receiving a vague success or failure. This gives them a trustworthy answer such as “the reminder was created locally at 9:02; the relay received the receipt at 9:03” and prevents silent duplicate actions after retries.
+- effort: Medium-high: event schema and signing keys per surface, durable local queues, relay sealing and reconciliation, and dashboard/voice rendering. Existing receipts can be migrated as unsigned historical records.  ·  risk: Clock differences, lost local storage, or key rotation could create apparent gaps. Recover with monotonic per-device sequence numbers, explicit unknown intervals, key-version metadata, and never claiming continuity when a segment is missing.
+- cost: Small local storage and relay D1/R2 growth; no routine model cost. Merkle sealing is inexpensive CPU work and can run in the background.  ·  latency: Action execution need not wait for global sealing; local append is synchronous and under a few milliseconds, while cross-device verification happens asynchronously.
+- security: Improves integrity and accountability but introduces signing-key lifecycle and metadata-privacy concerns. Keep payloads as hashes/references, encrypt detailed evidence, and rotate/revoke per-device keys.
+- depends on: A durable conversation checkpoint and exactly-once ledger contract; Persistent local event queues on pendant, Mac agent, and browser bridge; Per-surface signing keys provisioned during pairing; Relay reconciliation and dashboard support for explicit unknown outcomes
+
+
+## What it asked for
+
+_Nothing._

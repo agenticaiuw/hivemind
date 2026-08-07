@@ -1,0 +1,56 @@
+# Harness derivation — mac-terminal — round 39
+
+Model: `gpt-5.6-luna`  ·  probes against `http://localhost:8000`
+
+## What it established
+
+- **mac-agent readiness and observability** — Live /ops/status reports local agent v0.5.0 with FULL_CONTROL_MODE and token configured, but ready=false because Accessibility and Screen Recording permissions are missing. Browser bridge is offline with 3 pending commands. The granted mac_read_diagnostics schema exists but returns 'no implementation yet'. /jobs contains browser failures with receipts and trace IDs, but no shell-specific manifest fields.
+  - evidence: GET /ops/status HTTP 200 and GET /jobs HTTP 200 in round 39
+
+## Capabilities it proposed
+
+### "Run this on my Mac, keep working if it takes a while, and tell me exactly what ran, what failed, and whether you fixed it: <command or goal>."
+- **useful because:** Today shell execution is maximally capable but opaque: a 120-second command can fail, disappear among generic jobs, or leave the owner unsure of cwd, exit status, and partial side effects. This makes the wearable-to-relay-to-Mac path a dependable long-running shell operator without adding gates or reducing access.
+- **path:** pendant → relay → mac-planner → mac-terminal → dashboard
+- **model tier:** Use the realtime model only to capture the spoken request and provide low-latency progress updates; use a cheaper background model for command classification, failure diagnosis, summarization, and retry planning. The Mac executes the owner's trusted arbitrary shell command unchanged.
+- **latency:** Acknowledge on the pendant within 1 second; start the Mac job within 3 seconds. Stream milestone events, not raw stdout, during execution. Background diagnosis/retry may take up to 30 seconds per attempt and continues after the pendant disconnects.
+- **cost:** Low per invocation: one short realtime turn plus roughly 1–3 background-model calls, dominated by diagnosis and final summarization; shell execution itself has no model cost. Keep only bounded stdout/stderr excerpts and hashes to avoid resending large logs.
+- **security:** The command remains unrestricted by owner policy. Shell text, cwd, selected environment metadata, and output may leave the Mac through the relay, so redact secrets and never upload full environment variables or credential files. Require explicit opt-in for remote log sharing; dashboard and pendant should show command, cwd, exit code, files/apps touched when detectable, and whether a retry was automatic. Do not invent success from a partial result.
+- **missing:** Shell-specific durable job schema with argv/command, cwd, timeout, start/end, pid, exit code/signal, bounded stdout/stderr, and resource metrics; Mac executor event stream and heartbeat surviving relay/pendant disconnects; Failure taxonomy plus bounded retry/rollback policy that works alongside existing receipts without pretending arbitrary shell is reversible; Relay API for querying/subscribing to shell-job events and dashboard timeline rendering; Secret redaction and local-vs-relay retention controls for shell output
+
+### "Start this command on my Mac and stay with it. If it asks a question or needs input, tell me what it is and let me answer from the pendant; otherwise keep watching until it finishes and summarize the result."
+- **useful because:** The current shell surface can launch a command, but it cannot safely carry an interactive terminal conversation through a disconnected voice session. Long installs, login prompts, REPLs, and tools that pause for confirmation therefore require the owner to sit at the Mac. A PTY-aware pendant handoff would make the wearable useful when the owner's hands and eyes are unavailable.
+- **path:** pendant → relay → mac-terminal → mac-planner → dashboard
+- **model tier:** Use the realtime tier only for low-latency prompt detection and speaking the current terminal question. Use a cheaper background model to classify terminal output, redact likely secrets, maintain the session summary, and decide whether output is informational or genuinely requires owner input. Never let the model invent input; relay only explicit owner responses.
+- **latency:** Detect a prompt within 1–2 seconds of terminal output and speak it promptly. Deliver a short owner response to the PTY within 2 seconds. Continue unattended for up to the command's declared lifetime, with heartbeat updates rather than streaming all output.
+- **cost:** Low to moderate: realtime audio turns only when a prompt occurs, plus occasional background summarization. Cost is dominated by verbose terminal sessions; send deltas and capped output windows, not the full transcript on every turn.
+- **security:** PTY output can contain passwords, tokens, personal data, or shell commands. Keep the raw transcript on the Mac, redact probable secrets before relay, pause forwarding when a hidden-password prompt is detected, and require the owner to explicitly say or press a response before writing stdin. Display the active command, cwd, and session age on the dashboard; expire abandoned PTYs and provide a local kill action.
+- **missing:** A Mac PTY/session broker rather than one-shot runShell, with nonblocking stdin/stdout/stderr, resize, signal, timeout, and detach/reattach semantics; A relay protocol for ordered terminal output deltas, prompt events, owner-input events, acknowledgements, and reconnect cursors; Pendant interaction for short dictated responses plus a physical confirm/cancel gesture before stdin is written; Prompt/secret detection with conservative redaction and a clear 'I cannot identify this prompt' fallback; Dashboard UI showing active PTYs, transcript tail, command/cwd, reconnect state, and kill/attach controls
+
+
+## Changes it proposed to its own stack
+
+### `mac-harness` — Add a shell execution manifest and event journal around the existing unrestricted runShell path, without changing authorization. Before launch record a command fingerprint, explicit/inherited cwd, timeout, start time, and redacted environment names; during execution emit heartbeat, byte counts, and bounded stdout/stderr tails; on completion record exit code, signal, duration, termination reason, output hashes, and a best-effort touched-process/file summary. Persist the manifest locally and attach its jobId/receiptId to relay events. Add a typed failure taxonomy (spawn, timeout, nonzero exit, signal, transport loss) and a resumable cursor so a disconnected client can retrieve the exact final result. Keep raw output local by default and expose a redacted excerpt only when requested.
+- **owner gets:** They can trust what the Mac actually did and recover from a dropped pendant or relay connection, instead of guessing from a generic failed job. It also makes expensive diagnosis target the real failure and makes repeated commands auditable without reducing the owner's maximum-access policy.
+- effort: Medium: wrapper and journal in local-agent, relay event fields, retention/redaction tests, and dashboard detail view.  ·  risk: Manifest overhead and output truncation could hide an important line; preserve a local full log path and hashes, and mark excerpts as incomplete. Process/file summaries are heuristic and must be labeled as such. A crash between spawn and journal flush needs startup reconciliation of child PIDs and orphaned jobs.
+- cost: Negligible model cost; small local JSON/D1 storage per job, bounded by retention. CPU overhead is low except optional process/file sampling.  ·  latency: Sub-millisecond launch bookkeeping; heartbeat sampling can be 1–5 seconds. No meaningful delay for short commands.
+- security: Improves observability while preserving unrestricted execution. Redact values matching token/key/password patterns, never persist full env or stdin by default, and keep raw stdout/stderr on-device unless the owner asks to share it.
+- depends on: Existing action receipts and job IDs; A relay subscription/status endpoint for shell jobs; A real local-agent observability reader (the currently granted diagnostics interfaces have no implementation)
+
+### `integration` — Implement the already-granted bounded Mac diagnostics interface as a real local-agent endpoint/tool, backed by fixed native queries rather than shell strings. Return a stable typed snapshot with timestamp, freshness, permission state, battery, network, audio/displays, disk, process summary, and local-agent health. Add capability/version negotiation so mac-planner can use it for routine status questions and fall back to unrestricted runShell only for unsupported requests. Include a snapshot ID that can be cited in relay answers and correlated with shell-job manifests.
+- **owner gets:** Routine questions like 'is my Mac online?', 'why did that fail?', or 'is the agent ready?' become fast, cheap, and reliable instead of spending a model turn constructing shell commands. The owner gets accurate explanations of missing Accessibility/Screen Recording permissions and offline browser state.
+- effort: Small to medium: implement the fixed-query adapter, schema validation, freshness/error handling, and planner integration tests.  ·  risk: A stale snapshot could be mistaken for current truth; every field needs capturedAt and maxAge, and failures must be explicit. Process summaries can expose sensitive names, so default to counts/status and require an intentional detail level.
+- cost: Usually zero model cost and minimal local CPU; reduces shell and model usage for status requests. Small local/relay storage for recent snapshots.  ·  latency: Typically under 200 ms locally; avoids the current shell round trip and 120-second timeout ceiling.
+- security: Narrow read-only diagnostics reduce accidental secret exposure for routine reads without narrowing or gating arbitrary shell. Keep detailed process/network data local by default and redact identifiers in relay summaries.
+- depends on: Implement the granted mac_read_diagnostics tool (currently no implementation); A typed snapshot schema shared with mac-planner and relay; Permission-aware local-agent health endpoint
+
+
+## What it asked for
+
+_Nothing._
+## Its own summary
+
+Round 39 produced two new, shell-specific improvements: (1) a wearable/relay/Mac capability for durable unrestricted shell work with progress, exact outcome, failure diagnosis, and reconnection-safe status; (2) a Mac-harness shell execution manifest/journal with command fingerprint, cwd, timeout, exit/signal, bounded output, hashes, and failure taxonomy; plus implementation of the already-granted typed diagnostics path for fast routine status. Live checks show the Mac agent is online and FULL_CONTROL_MODE is active, but readiness is false because Accessibility and Screen Recording are missing; the browser bridge is offline with three pending commands. I recorded these facts.
+
+**Biggest unknown:** The granted mac_read_diagnostics interface still has no implementation, and the requested local-agent observability/auth endpoints (shell job lifecycle, logs, journal, routing) remain unavailable to me. I do not need another permission request this round; implementation of those interfaces and a shell-event relay contract are the remaining prerequisites.
+

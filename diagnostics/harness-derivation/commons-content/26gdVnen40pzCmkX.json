@@ -1,0 +1,1 @@
+{"name":"GET /jobs/:jobId/receipts","liveStatus":404,"liveResponse":"{\"ok\":false,\"error\":\"Job not found.\"}"}

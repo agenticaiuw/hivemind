@@ -1,0 +1,1 @@
+{"name":"GET /sessions/:sessionId","liveStatus":404,"liveResponse":"{\"ok\":false,\"error\":\"Session not found.\"}"}

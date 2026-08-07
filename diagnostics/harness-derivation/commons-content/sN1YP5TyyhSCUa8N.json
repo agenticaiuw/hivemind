@@ -1,0 +1,1 @@
+{"ok":true,"status":200,"body":"{\"online\":false,\"devices\":[{\"extensionId\":\"home-chrome\",\"tabId\":null,\"windowId\":null,\"tabUrl\":\"\",\"tabTitle\":\"\",\"tabCount\":null,\"userAgent\":\"\",\"deviceName\":\"\",\"browserName\":\"\",\"extensionVersion\":\"\",\"lastSeenAt\":\"2026-08-07T12:26:24.300Z\",\"online\":false}],\"pendingCommands\":6}"}

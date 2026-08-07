@@ -13541,19 +13541,6 @@
       "summary": "mac_read_build_and_devices"
     },
     {
-      "id": "s1-kdjw",
-      "kind": "skill",
-      "round": 19,
-      "name": "offline_intent_spool",
-      "what_it_does": "When the owner holds the pendant button and speaks a bounded command or confirmation while the relay link is unavailable, capture a short encrypted audio envelope (or already-transcribed compact text if available), assign a monotonic intent ID, expiry, and checksum, show a queued indication, and retry upload after reconnect. On relay acknowledgment, securely delete the local copy. It must never execute actions locally.",
-      "why_not_server_side": "The pendant is the only surface continuously with the owner and can receive an instruction during a network/Mac outage. Local buffering is needed to avoid losing the owner's command and to give immediate truthful feedback offline; execution and interpretation remain server-side.",
-      "trigger": "Button hold + voice capture; reconnect event for retry; long-press cancel before upload. No automatic action trigger on the device.",
-      "inputs": "PCM from the existing microphone path, button events, link state, relay acknowledgment, clock/monotonic counter.",
-      "storage": "Encrypted ring buffer in pendant flash or removable/exFAT-backed storage; maximum 3 records, each up to 8 seconds compressed or bounded raw envelope, roughly 64–128 KB total plus metadata. Purge on ack, expiry, or explicit cancel.",
-      "ram_budget": "Use streaming encode/chunking with no full clip in RAM: 8–16 KB working buffers, about 12 KB peak including metadata and crypto state, well below the 211,608 B application-RAM ceiling. Avoid a second audio pipeline; suspend capture after the bound.",
-      "summary": "offline_intent_spool"
-    },
-    {
       "id": "t21-8d1c",
       "kind": "tool",
       "round": 20,
@@ -13636,32 +13623,6 @@
       },
       "expected_output": "JSON {status:'proven'|'unproven'|'unknown', checks:[{postcondition, observed, match, source:'mac'|'browser', url_or_path, tab_id_or_app, observed_at}], evidence_refs:[], reason?:string}. Read-only; if fresh observation is unavailable or stale, return unknown rather than guessing.",
       "summary": "verify_operation_step"
-    },
-    {
-      "id": "s2-08hj",
-      "kind": "skill",
-      "round": 26,
-      "name": "physical_action_confirmation",
-      "what_it_does": "Receives a signed, human-readable pending-action envelope from the relay, plays a short preview cue/text/audio reference, accepts exactly one deliberate second press as approval, or a long press as cancel. It returns the envelope nonce plus a device-generated confirmation event; it refuses expired, already-consumed, or digest-mismatched envelopes and can hold the event offline until LTE-M returns.",
-      "why_not_server_side": "The approval must be a deliberate physical act by the person wearing the pendant and must remain safe if the link drops between preview and approval. Server-side voice confirmation cannot provide that physical presence or offline persistence.",
-      "trigger": "Server push of a pending envelope, followed by the pendant's second button press; timeout and long-press cancellation are local triggers.",
-      "inputs": "Envelope ID, canonical summary (bounded text or TTS reference), action digest, expiry, risk class, and whether offline approval is permitted. No raw cookies or page bodies.",
-      "storage": "Encrypted microSD append-only queue: envelope digest, nonce, expiry, decision, monotonic counter, and receipt pointer; roughly 1–4 KB per pending action, delete after relay acknowledgment.",
-      "ram_budget": "~12–20 KB RAM for one envelope, button debounce/long-press state, digest verification, and queue buffering; audio preview should reuse the existing playback path rather than buffer a full recording. Fits comfortably within 211,608 B application RAM, subject to current firmware integration.",
-      "summary": "physical_action_confirmation"
-    },
-    {
-      "id": "s3-33pb",
-      "kind": "skill",
-      "round": 33,
-      "name": "action_lease_indicator",
-      "what_it_does": "Stores one redacted pending ActionLease and presents it offline as LED patterns plus short beep/vibration-equivalent audio cue through the existing playback path: pending, confirm-held, cancelled, expired, and result-verified/unknown. A deliberate long press confirms the nonce-bound lease; a short press cancels. It emits an authenticated ack or expiry when LTE returns, and never executes the action locally.",
-      "why_not_server_side": "The owner needs to approve or cancel while away from the Mac or during a transient link drop, and the confirmation must survive a dropped voice session. The pendant is the only surface physically attached to the owner. Server-side execution remains gated until the ack arrives.",
-      "trigger": "Server push of a lease; local button event; timer expiry; reconnect event.",
-      "inputs": "Redacted label, target class (not secret content), risk/reversibility level, lease deadline, confirmation nonce, and result state. No microphone input required.",
-      "storage": "Persist at most one active lease and a small ring of  eight ack/result records on microSD (under 16 KB total), with nonce and expiry; clear sensitive text on completion/expiry.",
-      "ram_budget": "About 8–12 KB for state machine, CBOR/JSON parsing, nonce, LED/audio cue buffers, and retry queue; comfortably below the 211,608 B application RAM budget, though playback buffers must be reused rather than duplicated.",
-      "summary": "action_lease_indicator"
     },
     {
       "id": "t22-oceb",
@@ -13790,19 +13751,6 @@
       },
       "expected_output": "A typed report containing each node’s advertised and measured sample rate, codec/profile, frame duration, packet loss/jitter, round-trip latency where applicable, fallback reason, pass/fail per acceptance criterion, and a receipt ID linked to the conversation. It must not return raw audio unless explicitly requested.",
       "summary": "audio_path_probe"
-    },
-    {
-      "id": "s4-366w",
-      "kind": "skill",
-      "round": 118,
-      "name": "offline_action_cancel_latch",
-      "what_it_does": "When the pendant has displayed or received a pending physical/computer action token, a long press (for example 1.5 seconds) marks that token cancelled locally and transmits the cancellation when connectivity returns. A short press only acknowledges status; it must never approve an irreversible action. LED patterns distinguish pending, cancelled, and unknown/no-token.",
-      "why_not_server_side": "Cancellation must work during a dropped relay/Mac link and must be physically available while the owner is away from the keyboard. Server-side cancellation alone cannot stop a queued retry quickly enough.",
-      "trigger": "A long press of the single user button while a pending action token is locally cached; also a server push may clear the token but cannot approve it.",
-      "inputs": "Signed transaction token, expiry, action class, and current local state; no microphone or raw audio required.",
-      "storage": "One compact record in nonvolatile settings: transaction UUID/hash (32 B), expiry (8 B), state and counter (~16 B), signature/tag (~32 B), plus two rotating records for crash recovery: under 256 B total.",
-      "ram_budget": "~2–4 kB including event queue, debounce/timer state, and crypto verification buffers; leave the audio/Opus buffers untouched within the 211,608 B application RAM budget.",
-      "summary": "offline_action_cancel_latch"
     }
   ],
   "denied": [
@@ -14918,6 +14866,62 @@
       "why": "Declined: which unblock to prioritise, and which action classes the owner wants done proactively versus staged for approval, is the owner's call. It is not in the codebase and I will not invent it — a made-up priority order would send you building the wrong surface first.\n\nWhat to do instead: do not encode the proactive/staged split as a constant. Treat it as a policy value the owner sets later: a table keyed by action class that a policy module reads at runtime, defaulting to the conservative side (stage for approval) when the table has no entry. Proposing a specific default table and explicitly surfacing it as 'owner must confirm this' is fine and useful. Silently assuming it is not.\n\nGrounding you should read before designing, so you do not duplicate what exists: local-agent/actionRisk.js already classifies actions into risk tiers, local-agent/prepareApprove.js and shared/approvalHandoff.js already carry an approve step, local-agent/actionLedger.js records what ran, and local-agent/policyRouter.js is the existing routing seam. Whatever the owner eventually decides should become data those modules read — not a new parallel mechanism.\n\nWhat would unblock this: the owner naming which surface he wants working first (GUI control vs browser execution) and giving a short list of action classes he is happy to have happen without being asked.",
       "how_it_changes_my_behavior": "I would route requests to direct Mac actions, browser staging, or approval checkpoints according to the owner's actual priorities instead of making assumptions.",
       "summary": "owner action priorities and approval policy"
+    },
+    {
+      "id": "s1-kdjw",
+      "kind": "skill",
+      "round": 19,
+      "name": "offline_intent_spool",
+      "what_it_does": "When the owner holds the pendant button and speaks a bounded command or confirmation while the relay link is unavailable, capture a short encrypted audio envelope (or already-transcribed compact text if available), assign a monotonic intent ID, expiry, and checksum, show a queued indication, and retry upload after reconnect. On relay acknowledgment, securely delete the local copy. It must never execute actions locally.",
+      "why_not_server_side": "The pendant is the only surface continuously with the owner and can receive an instruction during a network/Mac outage. Local buffering is needed to avoid losing the owner's command and to give immediate truthful feedback offline; execution and interpretation remain server-side.",
+      "trigger": "Button hold + voice capture; reconnect event for retry; long-press cancel before upload. No automatic action trigger on the device.",
+      "inputs": "PCM from the existing microphone path, button events, link state, relay acknowledgment, clock/monotonic counter.",
+      "storage": "Encrypted ring buffer in pendant flash or removable/exFAT-backed storage; maximum 3 records, each up to 8 seconds compressed or bounded raw envelope, roughly 64–128 KB total plus metadata. Purge on ack, expiry, or explicit cancel.",
+      "ram_budget": "Use streaming encode/chunking with no full clip in RAM: 8–16 KB working buffers, about 12 KB peak including metadata and crypto state, well below the 211,608 B application-RAM ceiling. Avoid a second audio pipeline; suspend capture after the bound.",
+      "summary": "offline_intent_spool",
+      "why": "Denied as a duplicate. The idea survives — it is already granted AND already implemented as offline_voice_memo_store_and_forward, id s12-egbt (relay-realtime, round 19), living in firmware/nrf9160/src/pendant_store.{h,c}.\n\nRead that header before re-proposing. pendant_store.h:21-42 says four reconnaissance agents independently asked for offline_voice_memo_store_and_forward, offline_moment_bookmark, offline_thought_capture and offline_alert_inbox, and that 'read as data structures rather than as features, those are not four things, they are two': an OUTBOX for things the device produced that must reach the relay, and an INBOX for things the relay produced that could not be delivered. A voice memo and a bookmark 'differ only in payload size and in which relay verb delivers them; the durability, the ordering, the retry, the drop-it-only-once-the-relay-confirms rule and the crash-safe manifest are identical. One queue, typed items.' Building a second spool means a second manifest, a second retry policy, and a second way to be inconsistent after a reset.\n\nIt is already constraint-clean, which is why it was accepted: it spools ONLY on upload failure. pendant_store.h:45 quotes the owner's rule — 'Only save an audio copy to SD if the chunk upload cannot be uploaded. SD is the failure path, never the default' — and notes that this module 'never causes an extra byte of audio to be written', because record_microphone() already journals to SD only when there is no live uplink at press time, and the module merely renames that journal into the queue (fs_rename moves a directory entry; it copies no audio).\n\nBring your additions to s12-egbt as manifest fields, not as a new mechanism.\n\nSpecific to your request: the monotonic intent ID, expiry, checksum and 'must never execute actions locally' are good properties and belong on the existing OUTBOX record. Your trigger, 'the owner holds the pendant button and speaks', is the harder problem — sw0 has no hold. main.c:29-38 records that decision and its reason: 'button 1 acts on the ACTIVE EDGE so the microphone is powering up before the owner's finger has come back off. Any gesture means waiting several hundred ms to find out which gesture it was, on every single press, to serve the rarer of the two actions. A second physical button costs nothing on the hot path.' There are two buttons; sw1 (main.c:39) is the one with gesture headroom."
+    },
+    {
+      "id": "s2-08hj",
+      "kind": "skill",
+      "round": 26,
+      "name": "physical_action_confirmation",
+      "what_it_does": "Receives a signed, human-readable pending-action envelope from the relay, plays a short preview cue/text/audio reference, accepts exactly one deliberate second press as approval, or a long press as cancel. It returns the envelope nonce plus a device-generated confirmation event; it refuses expired, already-consumed, or digest-mismatched envelopes and can hold the event offline until LTE-M returns.",
+      "why_not_server_side": "The approval must be a deliberate physical act by the person wearing the pendant and must remain safe if the link drops between preview and approval. Server-side voice confirmation cannot provide that physical presence or offline persistence.",
+      "trigger": "Server push of a pending envelope, followed by the pendant's second button press; timeout and long-press cancellation are local triggers.",
+      "inputs": "Envelope ID, canonical summary (bounded text or TTS reference), action digest, expiry, risk class, and whether offline approval is permitted. No raw cookies or page bodies.",
+      "storage": "Encrypted microSD append-only queue: envelope digest, nonce, expiry, decision, monotonic counter, and receipt pointer; roughly 1–4 KB per pending action, delete after relay acknowledgment.",
+      "ram_budget": "~12–20 KB RAM for one envelope, button debounce/long-press state, digest verification, and queue buffering; audio preview should reuse the existing playback path rather than buffer a full recording. Fits comfortably within 211,608 B application RAM, subject to current firmware integration.",
+      "summary": "physical_action_confirmation",
+      "why": "Denied as a duplicate. Six of you asked for the same primitive in six rounds: the relay stages an action, the pendant shows a pending state, the owner makes one deliberate physical gesture, and the device returns a signed nonce that the relay treats as consent. Granted once, as physical_transaction_approval_latch, id s10-j9l4 (unified, round 55) — the best-specified instance: opaque transaction nonce, hash, expiry, monotonic counter, a bounded queue of up to 16 decisions held across a link drop, distinct pending vs approved/cancelled LED patterns, an explicit 'the firmware must not receive form secrets or page contents', and an explicit 'it never submits anything itself'.\n\nThat last property is why the primitive exists at all, and it is the project constraint the whole cluster is serving: the pendant must not act on the owner's behalf without a deliberate physical confirmation. One implementation of that is a security boundary. Six implementations, each with its own envelope format, its own expiry semantics and its own LED language on a single-element LED, is six places for it to be subtly wrong.\n\nBring your differences to s10-j9l4 as amendments — they are additive and most of them are welcome.\n\nWorth carrying over from yours: the refusal semantics. 'Refuses expired, already-consumed, or digest-mismatched envelopes' is stated more precisely here than in s10-j9l4 and should be written into it verbatim, along with the risk class and the canonical human-readable summary. Your 'exactly one deliberate second press as approval, long press as cancel' is the right shape; note the gesture must land on sw1 (main.c:39) or a two-button chord, because sw0 acts on the active edge and carries no gestures by design (main.c:29-38)."
+    },
+    {
+      "id": "s3-33pb",
+      "kind": "skill",
+      "round": 33,
+      "name": "action_lease_indicator",
+      "what_it_does": "Stores one redacted pending ActionLease and presents it offline as LED patterns plus short beep/vibration-equivalent audio cue through the existing playback path: pending, confirm-held, cancelled, expired, and result-verified/unknown. A deliberate long press confirms the nonce-bound lease; a short press cancels. It emits an authenticated ack or expiry when LTE returns, and never executes the action locally.",
+      "why_not_server_side": "The owner needs to approve or cancel while away from the Mac or during a transient link drop, and the confirmation must survive a dropped voice session. The pendant is the only surface physically attached to the owner. Server-side execution remains gated until the ack arrives.",
+      "trigger": "Server push of a lease; local button event; timer expiry; reconnect event.",
+      "inputs": "Redacted label, target class (not secret content), risk/reversibility level, lease deadline, confirmation nonce, and result state. No microphone input required.",
+      "storage": "Persist at most one active lease and a small ring of  eight ack/result records on microSD (under 16 KB total), with nonce and expiry; clear sensitive text on completion/expiry.",
+      "ram_budget": "About 8–12 KB for state machine, CBOR/JSON parsing, nonce, LED/audio cue buffers, and retry queue; comfortably below the 211,608 B application RAM budget, though playback buffers must be reused rather than duplicated.",
+      "summary": "action_lease_indicator",
+      "why": "Denied as a duplicate. Six of you asked for the same primitive in six rounds: the relay stages an action, the pendant shows a pending state, the owner makes one deliberate physical gesture, and the device returns a signed nonce that the relay treats as consent. Granted once, as physical_transaction_approval_latch, id s10-j9l4 (unified, round 55) — the best-specified instance: opaque transaction nonce, hash, expiry, monotonic counter, a bounded queue of up to 16 decisions held across a link drop, distinct pending vs approved/cancelled LED patterns, an explicit 'the firmware must not receive form secrets or page contents', and an explicit 'it never submits anything itself'.\n\nThat last property is why the primitive exists at all, and it is the project constraint the whole cluster is serving: the pendant must not act on the owner's behalf without a deliberate physical confirmation. One implementation of that is a security boundary. Six implementations, each with its own envelope format, its own expiry semantics and its own LED language on a single-element LED, is six places for it to be subtly wrong.\n\nBring your differences to s10-j9l4 as amendments — they are additive and most of them are welcome.\n\nTwo notes. Your 'beep/vibration-equivalent audio cue through the existing playback path' is the right way to handle the missing haptic — there is no vibration motor on this board, and routing the cue through the I2S path to the ESP32 bridge is the honest substitute rather than pretending the hardware exists. Say it that way in the amendment. Second, the lease framing (deadline, reversibility level, result-verified vs unknown) is a genuinely better vocabulary than s10-j9l4's bare approve/cancel, and 'result-verified/unknown' in particular pairs well with truthful_action_status_beacon (mac-terminal s15-cbhs), which I have just granted."
+    },
+    {
+      "id": "s4-366w",
+      "kind": "skill",
+      "round": 118,
+      "name": "offline_action_cancel_latch",
+      "what_it_does": "When the pendant has displayed or received a pending physical/computer action token, a long press (for example 1.5 seconds) marks that token cancelled locally and transmits the cancellation when connectivity returns. A short press only acknowledges status; it must never approve an irreversible action. LED patterns distinguish pending, cancelled, and unknown/no-token.",
+      "why_not_server_side": "Cancellation must work during a dropped relay/Mac link and must be physically available while the owner is away from the keyboard. Server-side cancellation alone cannot stop a queued retry quickly enough.",
+      "trigger": "A long press of the single user button while a pending action token is locally cached; also a server push may clear the token but cannot approve it.",
+      "inputs": "Signed transaction token, expiry, action class, and current local state; no microphone or raw audio required.",
+      "storage": "One compact record in nonvolatile settings: transaction UUID/hash (32 B), expiry (8 B), state and counter (~16 B), signature/tag (~32 B), plus two rotating records for crash recovery: under 256 B total.",
+      "ram_budget": "~2–4 kB including event queue, debounce/timer state, and crypto verification buffers; leave the audio/Opus buffers untouched within the 211,608 B application RAM budget.",
+      "summary": "offline_action_cancel_latch",
+      "why": "Denied as a duplicate. Six of you asked for the same primitive in six rounds: the relay stages an action, the pendant shows a pending state, the owner makes one deliberate physical gesture, and the device returns a signed nonce that the relay treats as consent. Granted once, as physical_transaction_approval_latch, id s10-j9l4 (unified, round 55) — the best-specified instance: opaque transaction nonce, hash, expiry, monotonic counter, a bounded queue of up to 16 decisions held across a link drop, distinct pending vs approved/cancelled LED patterns, an explicit 'the firmware must not receive form secrets or page contents', and an explicit 'it never submits anything itself'.\n\nThat last property is why the primitive exists at all, and it is the project constraint the whole cluster is serving: the pendant must not act on the owner's behalf without a deliberate physical confirmation. One implementation of that is a security boundary. Six implementations, each with its own envelope format, its own expiry semantics and its own LED language on a single-element LED, is six places for it to be subtly wrong.\n\nBring your differences to s10-j9l4 as amendments — they are additive and most of them are welcome.\n\nSpecific to your request: cancel-only is already inside s10-j9l4 — a short press cancels, and only a deliberate 1.5 s hold plus release approves. Your strongest sentence, 'a short press only acknowledges status; it must never approve an irreversible action', should be lifted into s10-j9l4 as a stated invariant, because it is the asymmetry that makes the latch safe: the cheap gesture must always be the safe one. That is worth more than a separate skill."
     }
   ],
   "findings": [

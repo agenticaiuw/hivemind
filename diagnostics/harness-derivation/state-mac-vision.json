@@ -13622,19 +13622,6 @@
       "why": "To allow Mac-vision to process visual UI data including screenshots to provide better visual assistance and improve action planning, essential for activating its loop.",
       "risk": "Processing visual data may reveal sensitive screen content; privacy controls required.",
       "summary": "visionUploadConsented"
-    },
-    {
-      "id": "s3-tgq8",
-      "kind": "skill",
-      "round": 138,
-      "name": "pendant-mac-vision-triggers",
-      "what_it_does": "Provides physical button trigger input events from the pendant to the Mac-vision agent to enable non-verbal control and confirmation of complex Mac UI tasks.",
-      "why_not_server_side": "Requires local physical button hardware interaction that only the pendant can provide, and immediate low-latency response to owner input.",
-      "trigger": "button press (single, double, long press)",
-      "inputs": "button presses with timing",
-      "storage": "Stores trigger configuration and usage counters on the pendant flash; small (~1 KB)",
-      "ram_budget": "8192 B",
-      "summary": "pendant-mac-vision-triggers"
     }
   ],
   "denied": [
@@ -13778,6 +13765,20 @@
       "why": "Duplicate of p9-8a5t, which stays open as the live ask. visionUploadConsented sends a digest of the owner's on-screen UI state off their machine, so it is theirs to decide and nobody else's. The payload is already computed locally without it — consenting to an invisible payload is not consent — and the relay endpoint does not exist yet, reported as endpointImplemented: false rather than left to 404.",
       "risk": "Uploading images may expose private screen content to external services; requires owner consent.",
       "summary": "visionUploadConsented"
+    },
+    {
+      "id": "s3-tgq8",
+      "kind": "skill",
+      "round": 138,
+      "name": "pendant-mac-vision-triggers",
+      "what_it_does": "Provides physical button trigger input events from the pendant to the Mac-vision agent to enable non-verbal control and confirmation of complex Mac UI tasks.",
+      "why_not_server_side": "Requires local physical button hardware interaction that only the pendant can provide, and immediate low-latency response to owner input.",
+      "trigger": "button press (single, double, long press)",
+      "inputs": "button presses with timing",
+      "storage": "Stores trigger configuration and usage counters on the pendant flash; small (~1 KB)",
+      "ram_budget": "8192 B",
+      "summary": "pendant-mac-vision-triggers",
+      "why": "Denied as a duplicate. The idea survives — a timestamped moment marker is already granted AND already implemented as offline_moment_bookmark, id s10-l3xe (mac-planner, round 19), as pendant_store_enqueue_mark() in firmware/nrf9160/src/pendant_store.{h,c}. It costs one small SD write and no radio, rides the same crash-safe manifest and drop-on-relay-confirm rule as the voice OUTBOX, and survives a power cycle with the link down.\n\nMore important than the duplication: the marker already has its own dedicated physical key. sw1 (DT_ALIAS(sw1), firmware/nrf9160/src/main.c:39) exists for exactly this. Nearly every request in this queue, including yours, assumes one button and invents a gesture on it. main.c:29-38 explains why that was rejected: 'The alternative was a gesture on button 1 (double-press, or press-and-hold), and both cost the thing this firmware protects hardest: button 1 acts on the ACTIVE EDGE so the microphone is powering up before the owner's finger has come back off. Any gesture means waiting several hundred ms to find out which gesture it was, on every single press, to serve the rarer of the two actions. A second physical button costs nothing on the hot path.' There is no gesture recogniser in this firmware at all — sw0 is a bare GPIO edge into a semaphore (main.c:764-771) and finish_button_press() just waits for release (main.c:1043).\n\nDo not propose new marker types. Propose new PAYLOAD on s10-l3xe's existing record.\n\nSpecific to your request: this is the gesture-budget problem in its purest form. It asks for 'button press (single, double, long press)' — the entire physical vocabulary of the device — as a generic trigger channel for one consumer, with no statement of what any of the three would mean. Fifty-five requests are pending against two buttons; a request that claims all three gestures without naming a single behaviour cannot be reconciled with any of the others. The concrete part, a physical moment trigger delivered to a Mac-side consumer, is s10-l3xe. If mac-vision needs a confirmation gesture specifically, that is physical_transaction_approval_latch (unified s10-j9l4), which I have just granted."
     }
   ],
   "findings": [

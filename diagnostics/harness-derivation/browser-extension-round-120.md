@@ -1,0 +1,58 @@
+# Harness derivation — browser-extension — round 120
+
+Model: `gpt-5.6-luna`  ·  probes against `http://localhost:8000`
+
+## What it established
+
+- **browser** — Safari bridge is online with 3 tabs: authenticated Gmail inbox (title Inbox (14,987), tab 901464) plus two example.com tabs; active tab is failed example.com, and there are no pending commands. This confirms private login reach exists but active-tab state is noisy.
+  - evidence: GET /browser/status at 2026-08-07T15:10:14Z and POST /execute browser_list_tabs at 15:10:18Z
+
+## Capabilities it proposed
+
+### "Enroll my logged-in web accounts once, then keep a private attention radar: tell me only when a meaningful, urgent change appears, and leave any suggested replies as drafts for my review."
+- **useful because:** Today the browser can reach an already-authenticated Gmail tab, but the system cannot discover or remember which logged-in origins the owner wants monitored, score urgency from page content, or retain generated drafts. This would turn private browser access into a quiet, owner-controlled workflow rather than repeated ad-hoc inspections. The pendant provides an immediate spoken alert, Safari supplies session-only private access, the Mac keeps a reviewable evidence queue, and the relay runs checks while the Mac sleeps.
+- **path:** browser-extension → mac-planner → relay-realtime → unified
+- **model tier:** Use a cheap background model for scheduled page extraction, normalization, change detection, and urgency scoring; use mac-planner only for cross-origin reconciliation and draft composition; use relay-realtime only when the owner asks follow-up questions or approves/edit drafts by voice.
+- **latency:** Enrollment should finish in under 30 seconds for up to 8 currently logged-in origins. Scheduled checks may take minutes and must be paced to Safari availability. A spoken alert should begin within 5 seconds after a high-confidence urgent result is received; no low-latency model is needed for routine polling.
+- **cost:** Roughly 8 page reads plus extraction per scheduled run; dominated by authenticated browser command time and background-model input tokens, not realtime inference. Keep unchanged pages to a hash/metadata check and invoke the larger planner only for changed or ambiguous items.
+- **security:** Never export cookies, tokens, full page bodies, or unrelated origins. Enrollment must show the origin, account label if available, cadence, and sample fields before saving. Store only redacted normalized facts, evidence snippets/hashes, URL, timestamp, and draft text. Alerts should avoid quoting sensitive content aloud until the owner requests it. Drafts are never submitted or sent automatically; retain an explicit before/after preview and provenance link. Pause a watch when Safari session health or account identity changes.
+- **missing:** A Safari-side authenticated-origin enrollment API that reports origin/account identity without exposing cookie values; A durable registry of enrolled origins with cadence, quiet hours, field selectors, sensitivity class, and session-health status; Urgency scoring over normalized browser page changes (the current triage handles Mail.app envelopes, not web text); A durable drafts store with provenance, expiry, and spoken review/edit support; A scheduled worker and result stream that survive Mac/relay restarts
+
+### "When I leave my Mac, let me continue the exact private web task I was doing from the pendant later—remember the page, the relevant selection, what has already been filled in, and the next safe step, without exposing my login or sending anything."
+- **useful because:** A browser task currently dies as soon as the owner walks away or the Mac changes state. This would make the pendant a true continuity surface: it could resume an in-progress logged-in task rather than asking the owner to re-explain the page and risk losing unsent work. It is not a page watch or a durable job runner: the distinctive unit is a short-lived, encrypted handoff of the owner's live task state between Safari, the relay, the Mac planner, and spoken pendant interaction.
+- **path:** browser-extension → mac-planner → relay-realtime → unified
+- **model tier:** Use a cheap background model to compress the page selection and task state into a structured handoff card; use mac-planner to validate the card against the still-open Safari tab when the owner resumes; use realtime only for the pendant's immediate clarification and spoken confirmation. Never send page contents to realtime unless the owner asks for them.
+- **latency:** Capture should complete in under 2 seconds after the owner says 'pause this'. Resume should provide a spoken state summary in under 5 seconds when Safari is reachable; otherwise report that the private session is unavailable rather than substituting a public page.
+- **cost:** Usually one compact extraction and one validation read per handoff/resume, dominated by browser round trips. Keep cards under a few thousand tokens and expire them after 24 hours; background compression is inexpensive and avoids resending the full page on every voice turn.
+- **security:** The handoff must contain no cookies, tokens, passwords, hidden form fields, or unrestricted page dump. Capture only URL origin, tab/session binding, selected text or DOM locator, redacted form-field names and values explicitly marked safe, scroll/step state, and a short owner-visible summary. Encrypt at rest, bind to the owner's device identity, expire and wipe on logout/session mismatch, and require the owner to approve any resumed mutation. Before an irreversible submit/send, show the exact payload and stop.
+- **missing:** A first-class short-lived browser task-handoff schema distinct from jobs and watches; Safari extension support for redacted selection/form-state capture and restoration verification; Relay storage and delivery for encrypted handoff cards while the Mac sleeps; A resume validator that detects stale DOM, changed account, navigation, or login wall and refuses to act on stale state; Pendant affordances for listing, pausing, expiring, and resuming handoffs
+
+### "Read the private page I'm looking at out loud, but automatically hide passwords, account numbers, personal messages, and anything I marked private; let me reveal one specific field only when I ask."
+- **useful because:** The owner can reach private pages today, but a spoken assistant risks repeating sensitive content into the room, transcript, logs, or relay. This would make authenticated browser use safe in ordinary life: the browser performs local semantic redaction before content leaves Safari, while the pendant provides selective, conversational reveal without dumping the whole page.
+- **path:** browser-extension → relay-realtime → mac-planner → unified
+- **model tier:** Run a small local extension-side classifier/DOM rule engine for first-pass redaction; use a cheaper background model on redacted text for summarization; use realtime only to answer the owner's immediate spoken question. Never use the expensive model on raw page text by default.
+- **latency:** Redaction and extraction under 300 ms for a normal page; spoken summary under 3 seconds. A selective reveal may take one browser round trip, but must state that it is about to speak a sensitive field.
+- **cost:** Near-zero API cost for local rules/classification; background summarization costs only for the already-redacted text. Cost scales with changed visible regions, not full page size.
+- **security:** Raw DOM and form values must stay in Safari memory and never enter relay logs, job receipts, or model prompts unless the owner explicitly requests a named field. Use field-type detection plus owner-defined selectors, redact screenshots as well as text, prevent transcript persistence for reveals, and expire reveal permissions after one response. A classifier miss is possible, so default to masking uncertain fields and provide a visible redaction count.
+- **missing:** Extension-local semantic redaction for DOM text, accessibility trees, screenshots, and form values; An end-to-end 'sensitive reveal' token scoped to one named field and one spoken response; Relay/pipeline metadata that marks content as non-persistent and excludes it from logs and memory; Pendant UI/voice protocol for defining private regions and confirming one-field reveal
+
+
+## Changes it proposed to its own stack
+
+### `browser-harness` — Add an authenticated-origin enrollment and privacy manifest to the Safari bridge. On explicit enrollment, the extension returns only origin, visible account label, tab/session identifier, login/session health, and a user-selected allowlist of semantic regions; it never returns cookie/local-storage values. Persist the manifest and a salted account fingerprint in browserSessions, expose GET/PATCH/DELETE /browser/origins, and make /origins/read reject un-enrolled origins. Emit session-change and login-wall events so scheduled jobs pause instead of silently reading the wrong account.
+- **owner gets:** The owner can say “watch this account” once and know exactly which private account is being watched. It prevents the current ambiguity where an authenticated Gmail tab exists but the active Safari tab is an unrelated failed page, and it avoids silently switching accounts after a login expires or profile changes.
+- effort: Medium: Safari extension UI/message handler plus local-agent registry, schema migration, enrollment endpoints, and session-health event wiring; add tests for account-switch, logout, and tab closure.  ·  risk: A stale manifest could pause useful checks or identify an account incorrectly. Recover by requiring a fresh visible-tab enrollment when identity or origin changes, retaining the last good evidence, and offering one-command re-enrollment. Do not auto-fallback to another tab/account.
+- cost: Negligible API cost; small local JSON/SQLite record (manifest and hashes, not page contents).  ·  latency: Adds one short enrollment handshake; normal reads gain a local manifest lookup under 10 ms. Session-health checks may add one browser metadata action per run.
+- security: Improves privacy by default-denying un-enrolled origins and preventing credential material from crossing the bridge; account fingerprints remain sensitive and need local-only storage and redaction from logs.
+- depends on: A durable authenticated page-watch/job runner (chg-16bc5dee remains incomplete); A drafts store and web-content urgency scorer; Safari extension support for an explicit enrollment prompt and account-label extraction
+
+
+## What it asked for
+
+_Nothing._
+## Its own summary
+
+Freshly verified Safari is online with three tabs, including an authenticated Gmail inbox (14,987 messages) and two failed example.com tabs; the active tab is the unrelated failed page, so account/session identity must not be inferred from active-tab state. I recorded that contradiction, notified faculty-perception, and proposed a new cross-surface capability: one-time private-origin enrollment feeding a quiet urgency radar, pendant alerts, Mac review queue, and never-sent drafts. I also proposed the concrete browser-harness change to add an enrollment manifest, account/session health, origin allowlisting, and login-wall events.
+
+**Biggest unknown:** The browser bridge still lacks the verified enrollment API and durable scheduled job/draft infrastructure. I also still need the owner's explicit list of accounts/origins and sensitivity/quiet-hour preferences; the previously queued request for first authenticated workflows and sensitivity preferences remains unanswered. I do not need another browser enqueue grant this round—the live POST /execute path works.
+

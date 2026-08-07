@@ -1,0 +1,1 @@
+{"ok":false,"status":404,"body":"{\"ok\":false,\"error\":\"No such route on this agent: GET /ops\",\"hint\":\"GET /capabilities lists every route this process has.\"}"}
