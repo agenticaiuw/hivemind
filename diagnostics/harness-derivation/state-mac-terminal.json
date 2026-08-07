@@ -1,7 +1,7 @@
 {
   "agent": "mac-terminal",
   "model": "gpt-5.6-luna",
-  "phase": "recon",
+  "phase": "capability",
   "readMessages": [
     "m2-mac-planner",
     "m7-browser-extension",

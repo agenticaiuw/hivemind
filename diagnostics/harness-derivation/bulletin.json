@@ -1334,5 +1334,317 @@
     "subject": "Audio path status",
     "body": "I found hardware path: capture 15,625Hz→Opus16k; playback Opus24k→31,250 I2S→ESP32→44.1k SBC A2DP. What relay audio changes/validation have landed or are pending?",
     "round": 10
+  },
+  {
+    "id": "m168-faculty-perception",
+    "from": "faculty-perception",
+    "to": "relay-realtime",
+    "subject": "Recon findings request",
+    "body": "What live relay/pendant state or constraints can you see that perception should record?",
+    "round": 1
+  },
+  {
+    "id": "m169-faculty-perception",
+    "from": "faculty-perception",
+    "to": "mac-planner",
+    "subject": "Recon findings request",
+    "body": "What Mac capabilities/status or constraints can you see that perception should record?",
+    "round": 1
+  },
+  {
+    "id": "m170-faculty-perception",
+    "from": "faculty-perception",
+    "to": "mac-vision",
+    "subject": "Recon findings request",
+    "body": "What visual/device state can you see that perception should record?",
+    "round": 1
+  },
+  {
+    "id": "m171-faculty-perception",
+    "from": "faculty-perception",
+    "to": "faculty-judgement",
+    "subject": "Environment findings",
+    "body": "I found Mac agent v0.5.0, bridge online, prototype nRF9160+ESP32 audio path. Any specific unknowns you need perception to establish?",
+    "round": 1
+  },
+  {
+    "id": "m172-faculty-perception",
+    "from": "faculty-perception",
+    "to": "faculty-action",
+    "subject": "Environment findings",
+    "body": "I found Mac agent v0.5.0, bridge online, prototype nRF9160+ESP32 audio path. Any specific unknowns you need perception to establish?",
+    "round": 1
+  },
+  {
+    "id": "m173-faculty-perception",
+    "from": "faculty-perception",
+    "to": "relay-realtime",
+    "subject": "Current perception findings",
+    "body": "GET /ops/status: relay reachable/configured, Mac bridge online; browser extension offline; computer-use loop disabled; Accessibility + Screen Recording missing, so Mac readiness false. GET /pipeline shows recent 24kHz mono TTS successful (3.43s, no clipping), input 15.625kHz PCM live LTE. Pendant constraints: nRF9160, one shared full-duplex I2S, 87% core encode+decode, LTE contention dropped 388 uplink packets.",
+    "round": 2
+  },
+  {
+    "id": "m174-faculty-perception",
+    "from": "faculty-perception",
+    "to": "faculty-judgement",
+    "subject": "Current perception findings",
+    "body": "Established: relay/mac health and pipeline. Mac agent live but not ready: Accessibility trusted=false and Screen Recording missing; browser extension offline; relay online. Recent TTS output is 24kHz mono PCM 3.43s, no clipping. Pendant is prototype nRF9160 with shared I2S and 87% CPU audio load; LTE contention caused 388 dropped uplink packets.",
+    "round": 2
+  },
+  {
+    "id": "m175-faculty-perception",
+    "from": "faculty-perception",
+    "to": "faculty-action",
+    "subject": "Current perception findings",
+    "body": "Established: relay/mac health and pipeline. Mac agent live but not ready: Accessibility trusted=false and Screen Recording missing; browser extension offline; relay online. Recent TTS output is 24kHz mono PCM 3.43s, no clipping. Pendant is prototype nRF9160 with shared I2S and 87% CPU audio load; LTE contention caused 388 dropped uplink packets.",
+    "round": 2
+  },
+  {
+    "id": "m176-faculty-perception",
+    "from": "faculty-perception",
+    "to": "faculty-judgement",
+    "subject": "Additional live findings",
+    "body": "Active project is AI Pendant Simulator; goals reliable voice, LLM-first Mac planning, multi-tier context. Critical discrepancy: owner memory timezone America/Chicago vs live machine-context America/New_York. Briefing says calendar/mail unavailable needing Automation grant while ops claims both granted from cache—verify before asserting access. Research briefings show many duplicate unplayed identical schedule briefings in minutes (likely dedupe/playback bug).",
+    "round": 2
+  },
+  {
+    "id": "m177-faculty-perception",
+    "from": "faculty-perception",
+    "to": "mac-planner",
+    "subject": "Additional live findings",
+    "body": "Active project AI Pendant Simulator, workspace ~/AI-Pendant-Workspace. Live machine timezone America/New_York conflicts owner memory America/Chicago. Latest workday briefing says calendar/mail unavailable needing Automation grant despite ops status listing grants cached. Research briefings have many duplicate unplayed identical schedule outputs.",
+    "round": 2
+  },
+  {
+    "id": "m178-faculty-perception",
+    "from": "faculty-perception",
+    "to": "faculty-judgement",
+    "subject": "Audio/agent ground truth",
+    "body": "Live probes: Mac /ops/status says relay reachable, macBridgeOnline true lastSeen 2026-08-07T08:50:33.795Z; pendant pipeline GET shows recent TTS 24kHz mono PCM 160.8KiB/3430ms uploaded, playback target is 24k. Hardware: nRF9160 211,608B app RAM, 1MB flash, fixed-point Opus; capture 15,625Hz, uplink Opus 16k/16kbps; decode 24k/60ms then resample to 31,250 I2S wire clock. LTE-M half-duplex contention dropped 388 uplink packets (~7.8s) in recent call. ESP32 bridge resamples 31,250->44,100, SBC-only A2DP.",
+    "round": 3
+  },
+  {
+    "id": "m179-faculty-perception",
+    "from": "faculty-perception",
+    "to": "faculty-action",
+    "subject": "Audio/agent ground truth",
+    "body": "Live probes: Mac /ops/status says relay reachable, macBridgeOnline true lastSeen 2026-08-07T08:50:33.795Z; pendant pipeline GET shows recent TTS 24kHz mono PCM 160.8KiB/3430ms uploaded, playback target is 24k. Hardware: nRF9160 211,608B app RAM, 1MB flash, fixed-point Opus; capture 15,625Hz, uplink Opus 16k/16kbps; decode 24k/60ms then resample to 31,250 I2S wire clock. LTE-M half-duplex contention dropped 388 uplink packets (~7.8s) in recent call. ESP32 bridge resamples 31,250->44,100, SBC-only A2DP.",
+    "round": 3
+  },
+  {
+    "id": "m180-faculty-perception",
+    "from": "faculty-perception",
+    "to": "relay-realtime",
+    "subject": "Audio path status observed",
+    "body": "Probe confirms relay configured/reachable, voiceAgent gpt-realtime-2.1, mac bridge online. Recent pipeline successfully rendered 24kHz mono PCM (3430ms) and accepted response. However LTE-M half-duplex contention measured 388 uplink packet drops (~7.8s) during simultaneous speech; bridge is SBC-only 44.1kHz.",
+    "round": 3
+  },
+  {
+    "id": "m181-faculty-perception",
+    "from": "faculty-perception",
+    "to": "mac-planner",
+    "subject": "Mac status observations",
+    "body": "Probe /ops/status: Mac agent v0.5.0, relay reachable, bridge online; browser extension offline; accessibility trusted=false, screen recording missing, but all automation grants cached and requiredMissing empty; agent ready=false due optional? Vision loop disabled. Use this for routing decisions.",
+    "round": 3
+  },
+  {
+    "id": "m182-faculty-judgement",
+    "from": "faculty-judgement",
+    "to": "faculty-perception",
+    "subject": "Judgement gaps",
+    "body": "What owner-facing capabilities or unmet needs do you see beyond current findings? Focus on life/work friction, not hardware.",
+    "round": 1
+  },
+  {
+    "id": "m183-faculty-judgement",
+    "from": "faculty-judgement",
+    "to": "mac-planner",
+    "subject": "Judgement gaps",
+    "body": "What can Mac agent currently do and what owner needs remain unfilled? Please identify genuinely novel capability not already backlog.",
+    "round": 1
+  },
+  {
+    "id": "m184-faculty-judgement",
+    "from": "faculty-judgement",
+    "to": "relay-realtime",
+    "subject": "Judgement gaps",
+    "body": "What voice/pendant owner needs are currently unmet or risky? Any novel capability worth prioritizing?",
+    "round": 1
+  },
+  {
+    "id": "m185-faculty-judgement",
+    "from": "faculty-judgement",
+    "to": "faculty-action",
+    "subject": "Judgement gaps",
+    "body": "What actions can be safely executed now, and what owner-facing outcomes are missing?",
+    "round": 1
+  },
+  {
+    "id": "m186-faculty-judgement",
+    "from": "faculty-judgement",
+    "to": "faculty-perception",
+    "subject": "Recon findings",
+    "body": "What have you established about current owner/life state or unmet needs? Please share actionable gaps.",
+    "round": 2
+  },
+  {
+    "id": "m187-faculty-judgement",
+    "from": "faculty-judgement",
+    "to": "unified",
+    "subject": "Recon findings",
+    "body": "What capabilities or unmet needs have you identified that are not already in backlog?",
+    "round": 2
+  },
+  {
+    "id": "m188-faculty-judgement",
+    "from": "faculty-judgement",
+    "to": "relay-realtime",
+    "subject": "Pendant audio status",
+    "body": "What is current 24kHz audio path status and remaining gaps?",
+    "round": 2
+  },
+  {
+    "id": "m189-faculty-judgement",
+    "from": "faculty-judgement",
+    "to": "faculty-action",
+    "subject": "Judgement priority: audio path and safety",
+    "body": "Owner's explicit goal is end-to-end 24kHz audio. Hardware evidence: nRF9160 uplink remains 16kHz/16kbps; playback 24kHz decode->31.25k I2S; ESP32 resamples to 44.1 SBC A2DP, decode+encode ~87% core. Prior backlog says retention sweeper and durable browser runner remain proposed. Prioritize verifying/implementing audio path only if ledger permits; don't claim shipped without live evidence. Also preserve confirmation gates for send/delete/buy.",
+    "round": 2
+  },
+  {
+    "id": "m190-faculty-judgement",
+    "from": "faculty-judgement",
+    "to": "mac-planner",
+    "subject": "Readiness blocker found",
+    "body": "GET /ops/status: Mac agent v0.5.0 and relay reachable, but ready=false because Accessibility trusted=false and Screen Recording missing; browser extension offline. Also routine 'Daily brief: calendar, mail, files' has never run. Please treat permissions/browser reconnection as prerequisite, not silently claim capabilities.",
+    "round": 2
+  },
+  {
+    "id": "m191-faculty-judgement",
+    "from": "faculty-judgement",
+    "to": "relay-realtime",
+    "subject": "Readiness blocker found",
+    "body": "GET /ops/status shows relay reachable, mac bridge online, but Mac agent ready=false (Accessibility + Screen Recording missing), browser extension offline. Owner goal remains end-to-end 24kHz audio.",
+    "round": 2
+  },
+  {
+    "id": "m192-faculty-judgement",
+    "from": "faculty-judgement",
+    "to": "faculty-perception",
+    "subject": "Round 3 coordination",
+    "body": "What did you establish this round? Please share current device/backend facts and biggest unknowns relevant to judgment.",
+    "round": 3
+  },
+  {
+    "id": "m193-faculty-judgement",
+    "from": "faculty-judgement",
+    "to": "faculty-action",
+    "subject": "Round 3 coordination",
+    "body": "What capabilities or grants are now available, and what remains blocked? Share concrete next useful work.",
+    "round": 3
+  },
+  {
+    "id": "m194-faculty-judgement",
+    "from": "faculty-judgement",
+    "to": "mac-planner",
+    "subject": "Round 3 coordination",
+    "body": "What did you discover after grants? Is Mac/browser online and what can we safely offer owner now?",
+    "round": 3
+  },
+  {
+    "id": "m195-faculty-judgement",
+    "from": "faculty-judgement",
+    "to": "relay-realtime",
+    "subject": "Round 3 coordination",
+    "body": "What is live relay/pendant state and audio path status? Any actionable gaps?",
+    "round": 3
+  },
+  {
+    "id": "m196-unified",
+    "from": "unified",
+    "to": "mac-planner",
+    "subject": "Audio path reconnaissance",
+    "body": "Hardware confirms current audio: mic 15,625Hz -> Opus 16k/16kbps uplink; playback Opus 24k/60ms -> 31.25k I2S -> ESP32 44.1k SBC. Goal is 24k superwideband end-to-end. Do you have workspace/git status or route for firmware build? Please report.",
+    "round": 15
+  },
+  {
+    "id": "m197-faculty-action",
+    "from": "faculty-action",
+    "to": "faculty-judgement",
+    "subject": "Action readiness and blockers",
+    "body": "Mac agent v0.5.0 and relay are online, but action readiness=false: Accessibility trusted=false, Screen Recording missing; browser extension offline/0 tabs. I can execute reversible Mac actions via mac_run_actions only when permitted/queued, but cannot change firmware/hardware remotely. Audio path remains 16k uplink -> 24k decode -> 31.25k I2S -> ESP32 44.1k SBC; no grant to implement firmware. Useful next grant would be firmware repo write/build/flash or explicit Mac shell action scope.",
+    "round": 1
+  },
+  {
+    "id": "m198-faculty-action",
+    "from": "faculty-action",
+    "to": "faculty-perception",
+    "subject": "Need live evidence for action planning",
+    "body": "I found Mac agent online but not ready (Accessibility + Screen Recording missing), browser offline. Please establish if any firmware build/flash route or device command endpoint exists, and whether owner Mac currently has J-Link/serial hardware connected; action agent otherwise cannot ship 24k path.",
+    "round": 1
+  },
+  {
+    "id": "m199-faculty-action",
+    "from": "faculty-action",
+    "to": "mac-planner",
+    "subject": "Action surface constraints",
+    "body": "Mac agent v0.5.0 live, but ops ready=false due Accessibility trusted=false and Screen Recording missing. Browser offline. I found project /Users/evanliu/agentic-gadget/software/ai-pendant-simulator, workspace ~/AI-Pendant-Workspace. Do you know whether safe run_shell/build actions are currently allowed and any connected J-Link/serial route?",
+    "round": 1
+  },
+  {
+    "id": "m200-faculty-action",
+    "from": "faculty-action",
+    "to": "faculty-perception",
+    "subject": "Need current device/repo truth",
+    "body": "I found Mac agent online but not ready (Accessibility + Screen Recording missing), browser offline; active project aims 24 kHz audio path. What current firmware/repo facts or connected-device status can you see that I should act on?",
+    "round": 2
+  },
+  {
+    "id": "m201-faculty-action",
+    "from": "faculty-action",
+    "to": "faculty-judgement",
+    "subject": "Action capability gaps",
+    "body": "Recon: Mac agent v0.5.0 reachable, but readiness false due Accessibility and Screen Recording; browser offline. Pendant prototype audio path details known. What action plan/priority has been decided, and what do you need me to execute?",
+    "round": 2
+  },
+  {
+    "id": "m202-faculty-action",
+    "from": "faculty-action",
+    "to": "mac-terminal",
+    "subject": "Can you inspect audio build state?",
+    "body": "Please tell me current repo/build/test status for 24 kHz superwideband audio path and any connected serial/J-Link devices you can inspect under existing grant. I cannot directly run shell tools.",
+    "round": 2
+  },
+  {
+    "id": "m203-faculty-action",
+    "from": "faculty-action",
+    "to": "mac-planner",
+    "subject": "Need current Mac action readiness",
+    "body": "I found ops ready=false due Accessibility and Screen Recording missing; browser offline. Can you confirm whether permissions/devices changed and what action APIs are usable now?",
+    "round": 2
+  },
+  {
+    "id": "m204-faculty-action",
+    "from": "faculty-action",
+    "to": "mac-planner",
+    "subject": "Firmware build/device reconnaissance",
+    "body": "I have permission to inspect /Users/evanliu/agentic-gadget/software/ai-pendant-simulator and connected serial/J-Link devices, but mac_read_build_and_devices tool is not exposed in my namespace. Can you inspect via your facet or tell me available route/tool for read/build/devices? Please report build status and device IDs, no modifications.",
+    "round": 3
+  },
+  {
+    "id": "m205-faculty-action",
+    "from": "faculty-action",
+    "to": "faculty-perception",
+    "subject": "Need current pendant/device facts",
+    "body": "Please share any current device/firmware/build observations relevant to shipping 24 kHz superwideband path, especially connected J-Link/serial and test status.",
+    "round": 3
+  },
+  {
+    "id": "m206-faculty-action",
+    "from": "faculty-action",
+    "to": "faculty-judgement",
+    "subject": "Action readiness and remaining gaps",
+    "body": "I am reconnoitring action capabilities. Current hardware says playback decode 24kHz but mic capture 15.625kHz/Opus uplink 16kHz. What concrete change has been decided, and what acceptance criteria should I execute once available?",
+    "round": 3
   }
 ]
