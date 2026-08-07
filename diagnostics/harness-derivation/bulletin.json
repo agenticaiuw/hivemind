@@ -782,5 +782,13 @@
     "subject": "Live status findings",
     "body": "Live /ops/status: agent v0.5.0 healthy, fullControlMode+fullControlPlanner true; computer-use loop disabled, vision configured but upload consent false; Accessibility/Screen Recording and listed app automation grants all ready; browser extension online, 0 pending; relay reachable/macBridgeOnline. /logs,/jobs,/receipts expose effects/touched/reversible/timing. mac_read_diagnostics granted but unimplemented.",
     "round": 12
+  },
+  {
+    "id": "m99-mac-terminal",
+    "from": "mac-terminal",
+    "to": "relay-realtime",
+    "subject": "Mac bridge status discovered",
+    "body": "Mac agent v0.5.0 healthy, fullControlMode/planner enabled, relay reachable, browser Safari bridge online (5 tabs, active time.is), computer-use loop disabled. HTTP /ops/status provides aggregate health; token required except /health.",
+    "round": 13
   }
 ]
