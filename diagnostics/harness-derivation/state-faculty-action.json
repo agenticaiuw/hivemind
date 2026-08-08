@@ -266,7 +266,121 @@
         "requestedInRound": 10
       }
     ],
-    "tools": [],
+    "tools": [
+      {
+        "id": "t21-8d1c",
+        "name": "verify_operation_step",
+        "why": "The proposed commit protocol cannot honestly close an operation from executor receipts alone. faculty-action needs a read-only verifier call to faculty-perception that independently checks a specific step's postconditions against fresh Mac/browser state and returns provenance, without opening a microphone or performing mutations.",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "operation_id": {
+              "type": "string"
+            },
+            "step_id": {
+              "type": "string"
+            },
+            "postconditions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "app_state",
+                      "file_state",
+                      "browser_field",
+                      "browser_url",
+                      "message_draft",
+                      "generic"
+                    ]
+                  },
+                  "expected": {
+                    "type": "string"
+                  },
+                  "locator": {
+                    "type": "string"
+                  },
+                  "sensitivity": {
+                    "type": "string",
+                    "enum": [
+                      "normal",
+                      "private",
+                      "secret"
+                    ]
+                  }
+                },
+                "required": [
+                  "kind",
+                  "expected"
+                ]
+              }
+            },
+            "evidence_mode": {
+              "type": "string",
+              "enum": [
+                "hash_only",
+                "minimal_snippet",
+                "full"
+              ],
+              "default": "hash_only"
+            }
+          },
+          "required": [
+            "operation_id",
+            "step_id",
+            "postconditions"
+          ]
+        },
+        "grantedInRound": 139
+      },
+      {
+        "id": "t23-jjid",
+        "name": "audio_path_probe",
+        "why": "I need to execute the owner’s explicit 24 kHz end-to-end audio goal rather than merely propose it. Existing Mac/browser action tools cannot measure I2S sample clocks, Opus frame metadata, LTE jitter, or round-trip playback, and success cannot be claimed from configuration labels.",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "capabilities",
+                "loopback",
+                "golden_fixture",
+                "live_measurement"
+              ]
+            },
+            "duration_ms": {
+              "type": "integer",
+              "minimum": 1000,
+              "maximum": 60000
+            },
+            "inject_packet_loss_pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 50
+            },
+            "fixture": {
+              "type": "string",
+              "enum": [
+                "speech",
+                "sweep",
+                "silence",
+                "none"
+              ]
+            },
+            "persist_receipt": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "mode"
+          ]
+        },
+        "grantedInRound": 139
+      }
+    ],
     "permissions": []
   },
   "proposals": [
@@ -13489,270 +13603,7 @@
       "round": 139
     }
   ],
-  "pending": [
-    {
-      "id": "t1-go53",
-      "kind": "tool",
-      "round": 2,
-      "name": "mac_read_build_and_devices",
-      "why": "The active owner goal is shipping the pendant's 24 kHz audio path, but this faculty-action agent has no direct shell/build or serial/J-Link inspection tool. A read-only Mac tool is needed to inspect the granted firmware tree, run bounded build/tests, and enumerate connected debug devices without flashing or modifying hardware.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "working_directory": {
-            "type": "string",
-            "description": "Absolute path constrained to approved firmware repository."
-          },
-          "commands": {
-            "type": "array",
-            "description": "Read-only or build/test commands only; reject writes, flashing, and destructive operations.",
-            "items": {
-              "type": "string"
-            }
-          },
-          "device_probe": {
-            "type": "boolean",
-            "description": "If true, enumerate serial ports and J-Link devices without opening or modifying them."
-          },
-          "timeout_seconds": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 600
-          }
-        },
-        "required": [
-          "working_directory",
-          "commands",
-          "device_probe"
-        ]
-      },
-      "example_call": {
-        "working_directory": "/Users/evanliu/agentic-gadget/software/ai-pendant-simulator",
-        "commands": [
-          "git status --short --branch",
-          "git log -1 --oneline",
-          "find firmware/nrf9160 -maxdepth 3 -type f | sort",
-          "cmake --build build --target all"
-        ],
-        "device_probe": true,
-        "timeout_seconds": 120
-      },
-      "expected_output": "Structured result containing command exit codes, bounded stdout/stderr, repository/build/test summaries, and a non-mutating list of serial ports and J-Link probes. Must explicitly report any rejected command and guarantee no flash/write operation.",
-      "summary": "mac_read_build_and_devices"
-    },
-    {
-      "id": "t21-8d1c",
-      "kind": "tool",
-      "round": 20,
-      "name": "verify_operation_step",
-      "why": "The proposed commit protocol cannot honestly close an operation from executor receipts alone. faculty-action needs a read-only verifier call to faculty-perception that independently checks a specific step's postconditions against fresh Mac/browser state and returns provenance, without opening a microphone or performing mutations.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "operation_id": {
-            "type": "string"
-          },
-          "step_id": {
-            "type": "string"
-          },
-          "postconditions": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "kind": {
-                  "type": "string",
-                  "enum": [
-                    "app_state",
-                    "file_state",
-                    "browser_field",
-                    "browser_url",
-                    "message_draft",
-                    "generic"
-                  ]
-                },
-                "expected": {
-                  "type": "string"
-                },
-                "locator": {
-                  "type": "string"
-                },
-                "sensitivity": {
-                  "type": "string",
-                  "enum": [
-                    "normal",
-                    "private",
-                    "secret"
-                  ]
-                }
-              },
-              "required": [
-                "kind",
-                "expected"
-              ]
-            }
-          },
-          "evidence_mode": {
-            "type": "string",
-            "enum": [
-              "hash_only",
-              "minimal_snippet",
-              "full"
-            ],
-            "default": "hash_only"
-          }
-        },
-        "required": [
-          "operation_id",
-          "step_id",
-          "postconditions"
-        ]
-      },
-      "example_call": {
-        "operation_id": "op_123",
-        "step_id": "browser_2",
-        "postconditions": [
-          {
-            "kind": "browser_field",
-            "locator": "#status",
-            "expected": "Saved",
-            "sensitivity": "normal"
-          }
-        ],
-        "evidence_mode": "minimal_snippet"
-      },
-      "expected_output": "JSON {status:'proven'|'unproven'|'unknown', checks:[{postcondition, observed, match, source:'mac'|'browser', url_or_path, tab_id_or_app, observed_at}], evidence_refs:[], reason?:string}. Read-only; if fresh observation is unavailable or stale, return unknown rather than guessing.",
-      "summary": "verify_operation_step"
-    },
-    {
-      "id": "t22-oceb",
-      "kind": "tool",
-      "round": 33,
-      "name": "verify_action_proof",
-      "why": "Action execution needs deterministic postcondition verification tied to the same target and attempt; without it the action agent can only report that a click/API call completed, not that the intended world state resulted.",
-      "input_schema": {
-        "type": "object",
-        "required": [
-          "actionId",
-          "attemptId",
-          "target",
-          "expectedPostcondition",
-          "beforeEvidence",
-          "afterEvidence"
-        ],
-        "properties": {
-          "actionId": {
-            "type": "string"
-          },
-          "attemptId": {
-            "type": "string"
-          },
-          "target": {
-            "type": "object",
-            "properties": {
-              "surface": {
-                "type": "string"
-              },
-              "entityId": {
-                "type": "string"
-              },
-              "sessionId": {
-                "type": "string"
-              },
-              "tabId": {
-                "type": "string"
-              }
-            }
-          },
-          "expectedPostcondition": {
-            "type": "object",
-            "description": "Typed predicate, not free-form prose"
-          },
-          "beforeEvidence": {
-            "type": "object"
-          },
-          "afterEvidence": {
-            "type": "object"
-          }
-        }
-      },
-      "example_call": {
-        "actionId": "act_123",
-        "attemptId": "try_1",
-        "target": {
-          "surface": "browser",
-          "sessionId": "sess_1",
-          "tabId": "tab_2",
-          "entityId": "invoice:42"
-        },
-        "expectedPostcondition": {
-          "kind": "field_equals",
-          "path": "status",
-          "value": "submitted"
-        },
-        "beforeEvidence": {
-          "status": "draft"
-        },
-        "afterEvidence": {
-          "status": "submitted"
-        }
-      },
-      "expected_output": "A typed result {status: VERIFIED|FAILED|UNKNOWN, mismatches: [...], evidenceRefs: [...], checkedAt, verifierVersion}; never infer VERIFIED from executor success alone.",
-      "summary": "verify_action_proof"
-    },
-    {
-      "id": "t23-jjid",
-      "kind": "tool",
-      "round": 51,
-      "name": "audio_path_probe",
-      "why": "I need to execute the owner’s explicit 24 kHz end-to-end audio goal rather than merely propose it. Existing Mac/browser action tools cannot measure I2S sample clocks, Opus frame metadata, LTE jitter, or round-trip playback, and success cannot be claimed from configuration labels.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "mode": {
-            "type": "string",
-            "enum": [
-              "capabilities",
-              "loopback",
-              "golden_fixture",
-              "live_measurement"
-            ]
-          },
-          "duration_ms": {
-            "type": "integer",
-            "minimum": 1000,
-            "maximum": 60000
-          },
-          "inject_packet_loss_pct": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 50
-          },
-          "fixture": {
-            "type": "string",
-            "enum": [
-              "speech",
-              "sweep",
-              "silence",
-              "none"
-            ]
-          },
-          "persist_receipt": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "mode"
-        ]
-      },
-      "example_call": {
-        "mode": "capabilities",
-        "persist_receipt": true
-      },
-      "expected_output": "A typed report containing each node’s advertised and measured sample rate, codec/profile, frame duration, packet loss/jitter, round-trip latency where applicable, fallback reason, pass/fail per acceptance criterion, and a receipt ID linked to the conversation. It must not return raw audio unless explicitly requested.",
-      "summary": "audio_path_probe"
-    }
-  ],
+  "pending": [],
   "denied": [
     {
       "id": "p2-5ac8",
@@ -14922,6 +14773,132 @@
       "ram_budget": "~2–4 kB including event queue, debounce/timer state, and crypto verification buffers; leave the audio/Opus buffers untouched within the 211,608 B application RAM budget.",
       "summary": "offline_action_cancel_latch",
       "why": "Denied as a duplicate. Six of you asked for the same primitive in six rounds: the relay stages an action, the pendant shows a pending state, the owner makes one deliberate physical gesture, and the device returns a signed nonce that the relay treats as consent. Granted once, as physical_transaction_approval_latch, id s10-j9l4 (unified, round 55) — the best-specified instance: opaque transaction nonce, hash, expiry, monotonic counter, a bounded queue of up to 16 decisions held across a link drop, distinct pending vs approved/cancelled LED patterns, an explicit 'the firmware must not receive form secrets or page contents', and an explicit 'it never submits anything itself'.\n\nThat last property is why the primitive exists at all, and it is the project constraint the whole cluster is serving: the pendant must not act on the owner's behalf without a deliberate physical confirmation. One implementation of that is a security boundary. Six implementations, each with its own envelope format, its own expiry semantics and its own LED language on a single-element LED, is six places for it to be subtly wrong.\n\nBring your differences to s10-j9l4 as amendments — they are additive and most of them are welcome.\n\nSpecific to your request: cancel-only is already inside s10-j9l4 — a short press cancels, and only a deliberate 1.5 s hold plus release approves. Your strongest sentence, 'a short press only acknowledges status; it must never approve an irreversible action', should be lifted into s10-j9l4 as a stated invariant, because it is the asymmetry that makes the latch safe: the cheap gesture must always be the safe one. That is worth more than a separate skill."
+    },
+    {
+      "id": "t1-go53",
+      "kind": "tool",
+      "round": 2,
+      "name": "mac_read_build_and_devices",
+      "why": "No such surface, and the shape is the measured-dead one. Your commands field is an array of free-form shell strings; that exact shape was tested tonight as mac-terminal's mac_readonly_diagnostics_impl and EVERY branch came back UNRESOLVED (pwd 0.273, sw_vers 0.256, df -h 0.256, ps -axo 0.234). No route in the 120-route manifest runs a shell read - run_shell exists only as one of 95 action types behind POST /execute, and POST /execute captures no exit code, no argv and no env, so it cannot return build or test results you could honestly rely on. device_probe has no surface at all: nothing in the manifest enumerates serial ports or J-Link probes. What resolves instead is a concrete enum of named probes, scored value by value. Proven tonight: mac_read_diagnostics{checks:['os_version']} really calls GET /machine-context, {checks:['local_agent_health']} really calls GET /health, mac_readonly_inspect{operation:'running_apps'} really calls GET /observe. Re-request as e.g. operation enum ['serial_ports','jlink_probes','build_status','test_results'] and each value gets its own verdict plus the nearest three real capabilities; a free-form command string can never get one.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "working_directory": {
+            "type": "string",
+            "description": "Absolute path constrained to approved firmware repository."
+          },
+          "commands": {
+            "type": "array",
+            "description": "Read-only or build/test commands only; reject writes, flashing, and destructive operations.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "device_probe": {
+            "type": "boolean",
+            "description": "If true, enumerate serial ports and J-Link devices without opening or modifying them."
+          },
+          "timeout_seconds": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 600
+          }
+        },
+        "required": [
+          "working_directory",
+          "commands",
+          "device_probe"
+        ]
+      },
+      "example_call": {
+        "working_directory": "/Users/evanliu/agentic-gadget/software/ai-pendant-simulator",
+        "commands": [
+          "git status --short --branch",
+          "git log -1 --oneline",
+          "find firmware/nrf9160 -maxdepth 3 -type f | sort",
+          "cmake --build build --target all"
+        ],
+        "device_probe": true,
+        "timeout_seconds": 120
+      },
+      "expected_output": "Structured result containing command exit codes, bounded stdout/stderr, repository/build/test summaries, and a non-mutating list of serial ports and J-Link probes. Must explicitly report any rejected command and guarantee no flash/write operation.",
+      "summary": "mac_read_build_and_devices"
+    },
+    {
+      "id": "t22-oceb",
+      "kind": "tool",
+      "round": 33,
+      "name": "verify_action_proof",
+      "why": "Duplicate - the kept id is t21-8d1c (verify_operation_step), which is GRANTED and covers this. Both ask for postcondition verification of an executed step. t21 declares kind as a real enum (app_state, file_state, browser_field, browser_url, message_draft, generic) plus sensitivity and evidence_mode enums, so the resolver scores each postcondition kind separately and one branch can go live while another does not. Yours declares expectedPostcondition, beforeEvidence and afterEvidence as bare {type:'object'} with no properties and no enum. A property typed only 'object' is structurally equivalent to prose: it yields zero selector tokens, so the entire call collapses to a single name-only score - the failure mode that left relay_route_intent at 0.266 and server_browser_actions at 0.251. Use t21-8d1c. The actionId/attemptId correlation you add is a genuinely good idea t21 lacks; ask for that as a narrow addition to the granted tool, not as a second verifier.",
+      "input_schema": {
+        "type": "object",
+        "required": [
+          "actionId",
+          "attemptId",
+          "target",
+          "expectedPostcondition",
+          "beforeEvidence",
+          "afterEvidence"
+        ],
+        "properties": {
+          "actionId": {
+            "type": "string"
+          },
+          "attemptId": {
+            "type": "string"
+          },
+          "target": {
+            "type": "object",
+            "properties": {
+              "surface": {
+                "type": "string"
+              },
+              "entityId": {
+                "type": "string"
+              },
+              "sessionId": {
+                "type": "string"
+              },
+              "tabId": {
+                "type": "string"
+              }
+            }
+          },
+          "expectedPostcondition": {
+            "type": "object",
+            "description": "Typed predicate, not free-form prose"
+          },
+          "beforeEvidence": {
+            "type": "object"
+          },
+          "afterEvidence": {
+            "type": "object"
+          }
+        }
+      },
+      "example_call": {
+        "actionId": "act_123",
+        "attemptId": "try_1",
+        "target": {
+          "surface": "browser",
+          "sessionId": "sess_1",
+          "tabId": "tab_2",
+          "entityId": "invoice:42"
+        },
+        "expectedPostcondition": {
+          "kind": "field_equals",
+          "path": "status",
+          "value": "submitted"
+        },
+        "beforeEvidence": {
+          "status": "draft"
+        },
+        "afterEvidence": {
+          "status": "submitted"
+        }
+      },
+      "expected_output": "A typed result {status: VERIFIED|FAILED|UNKNOWN, mismatches: [...], evidenceRefs: [...], checkedAt, verifierVersion}; never infer VERIFIED from executor success alone.",
+      "summary": "verify_action_proof"
     }
   ],
   "findings": [

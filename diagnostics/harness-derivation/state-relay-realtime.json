@@ -401,6 +401,43 @@
           ]
         },
         "grantedInRound": 13
+      },
+      {
+        "id": "t17-6ymj",
+        "name": "relay_event_push",
+        "why": "The relay needs a way to deliver asynchronous completion updates to the pendant (or to a paired phone) after the voice session ends. Without it, users have to poll for status, which is awkward and unreliable for long-running tasks.",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "jobId": {
+              "type": "string",
+              "description": "The job to monitor for completion."
+            },
+            "event": {
+              "type": "string",
+              "enum": [
+                "complete",
+                "failed",
+                "needs_attention"
+              ],
+              "description": "High-level outcome."
+            },
+            "spoken": {
+              "type": "string",
+              "description": "A short user-facing sentence to play on the pendant."
+            },
+            "ttl_seconds": {
+              "type": "integer",
+              "description": "How long the notification should be kept if the device is offline."
+            }
+          },
+          "required": [
+            "jobId",
+            "event",
+            "spoken"
+          ]
+        },
+        "grantedInRound": 156
       }
     ],
     "permissions": [
@@ -15912,147 +15949,7 @@
       "round": 156
     }
   ],
-  "pending": [
-    {
-      "id": "t12-81eu",
-      "kind": "tool",
-      "round": 43,
-      "name": "relay_route_intent",
-      "why": "The relay needs a safe, explicit routing tool to send normalized intents to downstream agents without inventing ad-hoc protocols in the voice path. It should encapsulate target selection, session binding, and minimal context fields, and return a job reference for status checks.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "intent": {
-            "type": "string",
-            "description": "Concise intent label, e.g. 'open_app', 'search_web', 'dictation', 'system_status'."
-          },
-          "utterance": {
-            "type": "string",
-            "description": "Raw or normalized user utterance to preserve meaning."
-          },
-          "context": {
-            "type": "object",
-            "description": "Optional session context such as locale, time, constraints.",
-            "additionalProperties": true
-          },
-          "target": {
-            "type": "string",
-            "description": "Preferred downstream target agent id, e.g. 'mac-planner' or 'mac-vision'."
-          }
-        },
-        "required": [
-          "intent",
-          "utterance",
-          "target"
-        ]
-      },
-      "example_call": {
-        "intent": "open_app",
-        "utterance": "Open Safari and go to my inbox.",
-        "target": "mac-planner",
-        "context": {
-          "locale": "en-US"
-        }
-      },
-      "expected_output": "A structured response containing an accepted flag, normalized intent, resolved target, and a jobId or correlation id for later status queries. May include a spoken_reply for immediate voice feedback.",
-      "summary": "relay_route_intent"
-    },
-    {
-      "id": "t13-6jyq",
-      "kind": "tool",
-      "round": 43,
-      "name": "server_browser_actions",
-      "why": "To do useful voice tasks when the owner’s Mac/browser is offline, the relay needs a server-side browser automation capability (Cloudflare Browser Run) for public pages. This reduces dependency on the Mac being online and avoids fragile routing through the browser extension.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "url": {
-            "type": "string",
-            "description": "Starting URL to open."
-          },
-          "actions": {
-            "type": "array",
-            "description": "High-level browser actions to perform (navigate, click, extract, search).",
-            "items": {
-              "type": "object",
-              "additionalProperties": true
-            }
-          },
-          "timeout_ms": {
-            "type": "number",
-            "description": "Overall timeout in milliseconds."
-          }
-        },
-        "required": [
-          "url",
-          "actions"
-        ]
-      },
-      "example_call": {
-        "url": "https://example.com",
-        "actions": [
-          {
-            "type": "navigate",
-            "to": "https://example.com"
-          },
-          {
-            "type": "extract",
-            "selector": "h1"
-          }
-        ],
-        "timeout_ms": 20000
-      },
-      "expected_output": "A result object with a final URL, a list of step results, and extracted artifacts (text/HTML). Should include errors and timeouts in a consistent shape.",
-      "summary": "server_browser_actions"
-    },
-    {
-      "id": "t17-6ymj",
-      "kind": "tool",
-      "round": 117,
-      "name": "relay_event_push",
-      "why": "The relay needs a way to deliver asynchronous completion updates to the pendant (or to a paired phone) after the voice session ends. Without it, users have to poll for status, which is awkward and unreliable for long-running tasks.",
-      "why_existing_tools_insufficient": "mac_run_actions and mac_delegate start work; relay_job_status answers only when asked. There is no implemented relay notification channel to push a completion message to the wearer when the Mac finishes a job.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "jobId": {
-            "type": "string",
-            "description": "The job to monitor for completion."
-          },
-          "event": {
-            "type": "string",
-            "enum": [
-              "complete",
-              "failed",
-              "needs_attention"
-            ],
-            "description": "High-level outcome."
-          },
-          "spoken": {
-            "type": "string",
-            "description": "A short user-facing sentence to play on the pendant."
-          },
-          "ttl_seconds": {
-            "type": "integer",
-            "description": "How long the notification should be kept if the device is offline."
-          }
-        },
-        "required": [
-          "jobId",
-          "event",
-          "spoken"
-        ]
-      },
-      "example_call": {
-        "jobId": "job_12345",
-        "event": "complete",
-        "spoken": "The Outlook cleanup finished. I archived 12 messages and left a summary on your Mac.",
-        "ttl_seconds": 86400
-      },
-      "expected_output": "Acknowledgement that the event was queued for delivery, plus a delivery status (queued/delivered/expired).",
-      "summary": "relay_event_push"
-    }
-  ],
+  "pending": [],
   "denied": [
     {
       "id": "cap-fc6643a7",
@@ -16147,6 +16044,98 @@
       "ram_budget": "Very small: a few structs and counters; well under 10 KB.",
       "summary": "uplink_health_ping",
       "why": "Denied as a duplicate. Granted once, as offline-reality-beacon, id s2-i8xy (faculty-perception, round 40), which is a superset of this: firmware build ID, boot/session ID, monotonic timestamp, WebSocket connected state, last successful relay acknowledgement, uplink/downlink packet-loss counters, audio mode and SD fallback accounting, sent on connect/reconnect and on a low-rate heartbeat.\n\ns2-i8xy was kept because it answers the question yours does not: it lets a consumer distinguish 'last heard' from 'currently healthy'. Your version only reports during an active conversation, which means silence stays ambiguous — a healthy idle pendant and a dead one look identical. It also earned the grant by respecting the owner's storage rule without being told: 'obey the owner's rule that SD is failure-buffer-only, so do not write routinely when connected.'\n\nYour jitter proxy and the button-triggered preflight are worth folding into s2-i8xy. Note that a preflight does not need a new gesture — s2-i8xy already carries a diagnostic request path, and USB serial is the transport that works today while LTE-M is unregistered."
+    },
+    {
+      "id": "t12-81eu",
+      "kind": "tool",
+      "round": 43,
+      "name": "relay_route_intent",
+      "why": "No such surface - verified, not inferred. relay_route_intent has ZERO occurrences anywhere in this repository outside the harness state files, and the identically-named tool you were already granted resolves to nothing: best match GET /ops/status at 0.266, far under the 0.45 floor. Nothing in the 120-route, 95-action manifest routes a labelled intent to a named downstream agent. Your schema also gives the resolver nothing: intent and target are free-form strings whose candidate values ('open_app', 'search_web', 'mac-planner') appear only in the description text, and prose is deliberately excluded from anchoring because a why habitually names capabilities the agent already has. What actually exists: intents become typed actions through POST /plan and then POST /execute, whose action types are a real 95-value vocabulary (launch_app, open_url, browser_navigate, run_shell, ...), and the job reference you want back is GET /jobs/:jobId - already yours, and proven LIVE tonight via relay_job_status at 0.645. Route through /plan and /execute, then poll relay_job_status. If you still want a routing tool, declare intent as an enum drawn from those real action-type names and it will be scored value by value.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "intent": {
+            "type": "string",
+            "description": "Concise intent label, e.g. 'open_app', 'search_web', 'dictation', 'system_status'."
+          },
+          "utterance": {
+            "type": "string",
+            "description": "Raw or normalized user utterance to preserve meaning."
+          },
+          "context": {
+            "type": "object",
+            "description": "Optional session context such as locale, time, constraints.",
+            "additionalProperties": true
+          },
+          "target": {
+            "type": "string",
+            "description": "Preferred downstream target agent id, e.g. 'mac-planner' or 'mac-vision'."
+          }
+        },
+        "required": [
+          "intent",
+          "utterance",
+          "target"
+        ]
+      },
+      "example_call": {
+        "intent": "open_app",
+        "utterance": "Open Safari and go to my inbox.",
+        "target": "mac-planner",
+        "context": {
+          "locale": "en-US"
+        }
+      },
+      "expected_output": "A structured response containing an accepted flag, normalized intent, resolved target, and a jobId or correlation id for later status queries. May include a spoken_reply for immediate voice feedback.",
+      "summary": "relay_route_intent"
+    },
+    {
+      "id": "t13-6jyq",
+      "kind": "tool",
+      "round": 43,
+      "name": "server_browser_actions",
+      "why": "No such surface. There is no sandboxed cloud browser in this system - no Cloudflare Browser Rendering binding, no server-side headless browser, nothing. The identically-named tool you already hold scores 0.251 against the full manifest, well under the 0.45 floor, and that is the whole answer: the capability is ABSENT, not unimplemented, so no rename or reschema will reach it. Your actions field compounds it - an array of {additionalProperties:true}, a structureless blob with no enum, which would give one name-only score even against a matching surface. What exists instead: browser work runs on the owner's own Safari through POST /execute with browser_* action types (browser_navigate, browser_click, browser_type, browser_read_page, browser_list_tabs, browser_press_key), plus GET /browser/poll and POST /browser/inspect. Note /browser/commands and /browser/enqueue both return 404 - do not build against them. The real constraint you are routing around is that this path needs the Mac online. That is a genuine architectural gap and worth naming as a proposal about what should exist; it cannot be closed by a tool grant.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Starting URL to open."
+          },
+          "actions": {
+            "type": "array",
+            "description": "High-level browser actions to perform (navigate, click, extract, search).",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "timeout_ms": {
+            "type": "number",
+            "description": "Overall timeout in milliseconds."
+          }
+        },
+        "required": [
+          "url",
+          "actions"
+        ]
+      },
+      "example_call": {
+        "url": "https://example.com",
+        "actions": [
+          {
+            "type": "navigate",
+            "to": "https://example.com"
+          },
+          {
+            "type": "extract",
+            "selector": "h1"
+          }
+        ],
+        "timeout_ms": 20000
+      },
+      "expected_output": "A result object with a final URL, a list of step results, and extracted artifacts (text/HTML). Should include errors and timeouts in a consistent shape.",
+      "summary": "server_browser_actions"
     }
   ],
   "findings": [

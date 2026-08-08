@@ -13459,118 +13459,6 @@
   ],
   "pending": [
     {
-      "id": "t14-ntgq",
-      "kind": "tool",
-      "round": 8,
-      "name": "mac_readonly_probe",
-      "why": "The granted diagnostics interfaces are present but return 'no implementation yet'. Shell-tier reconnaissance and routing need bounded, read-only host facts without relying on unavailable arbitrary shell. A single fixed-query tool would make status checks reliable.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "query": {
-            "type": "string",
-            "enum": [
-              "identity",
-              "os",
-              "hardware",
-              "battery",
-              "network",
-              "disk",
-              "processes",
-              "audio",
-              "displays",
-              "permissions",
-              "agent_routes"
-            ]
-          },
-          "timeout_seconds": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 30
-          }
-        },
-        "required": [
-          "query",
-          "timeout_seconds"
-        ],
-        "additionalProperties": false
-      },
-      "example_call": {
-        "query": "agent_routes",
-        "timeout_seconds": 10
-      },
-      "expected_output": "JSON object containing query, collectedAt, ok, and result fields; for agent_routes include local HTTP health, available GET route names if known, job/log counts, and browser bridge status. For host queries return bounded text/structured facts plus errors without side effects.",
-      "summary": "mac_readonly_probe"
-    },
-    {
-      "id": "t15-h93d",
-      "kind": "tool",
-      "round": 11,
-      "name": "mac_shell_job_control",
-      "why": "The existing arbitrary run_shell can execute unattended but the exposed diagnostics are unimplemented and /jobs lacks per-job lookup. Useful work needs structured observability and recovery for long-running or failed commands without reducing capability: inspect one job, retrieve bounded stdout/stderr, and cancel a still-running job.",
-      "input_schema": {
-        "operation": "string enum: inspect|tail|cancel",
-        "job_id": "string",
-        "max_output_bytes": "integer 1..1048576",
-        "stream": "string enum stdout|stderr|both",
-        "signal": "string enum INT|TERM|KILL (only for cancel)"
-      },
-      "example_call": {
-        "operation": "tail",
-        "job_id": "local_123",
-        "max_output_bytes": 65536,
-        "stream": "both"
-      },
-      "expected_output": "JSON {jobId,status,command,startedAt,finishedAt,exitCode,signal,stdout,stderr,truncated,error}; cancel returns cancellation result and final status. Must preserve existing unrestricted command execution and audit each operation in the job record.",
-      "summary": "mac_shell_job_control"
-    },
-    {
-      "id": "t16-xmaf",
-      "kind": "tool",
-      "round": 42,
-      "name": "mac_readonly_diagnostics_impl",
-      "why": "The orchestrator granted this read-only diagnostic schema, but invocation currently returns 'no implementation yet'. I need bounded host facts to verify whether the Mac-agent readiness and permission state changed, without arbitrary shell.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "checks": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "os_version",
-                "hardware_model",
-                "current_user",
-                "uptime",
-                "battery",
-                "network_interfaces",
-                "wifi_status",
-                "bluetooth_devices",
-                "audio_devices",
-                "local_agent_health",
-                "running_process_summary",
-                "disk_space"
-              ]
-            },
-            "maxItems": 8
-          }
-        },
-        "required": [
-          "checks"
-        ],
-        "additionalProperties": false
-      },
-      "example_call": {
-        "checks": [
-          "local_agent_health",
-          "running_process_summary",
-          "disk_space"
-        ]
-      },
-      "expected_output": "JSON object with one result per requested check, command-free and read-only; include timestamp and explicit unavailable/error fields.",
-      "summary": "mac_readonly_diagnostics_impl"
-    },
-    {
       "id": "p15-ypy5",
       "kind": "permission",
       "round": 112,
@@ -13646,6 +13534,118 @@
       "ram_budget": "About 4–8 KB buffers/state, comfortably below the 211,608 B application RAM budget; use flash ring writes rather than retaining history in RAM.",
       "summary": "usb_disconnect_job_cache",
       "why": "Denied as a duplicate. Granted once, as truthful_action_status_beacon, id s15-cbhs (mac-terminal, round 107): the last known remote-action state on the single LED, distinct patterns for dispatched / completed / failed-or-host-unreachable / queued-offline, a watchdog that marks in-flight work stale after a bounded timeout, and a rule that offline it shows only the locally cached state and its age.\n\nIt was kept for the staleness handling specifically. On a device with one LED, the failure mode that matters is not a missing signal, it is a confident signal that is no longer true — an indicator still showing 'running' for work that died with the link. s15-cbhs is the instance that treats age as part of the state and refuses to invent a completion.\n\nThe physical budget is the reason there is one of these and not four. There is exactly one LED (led0, firmware/nrf9160/src/main.c:26, single element, no colour) and it already carries recording (250 ms toggle, main.c:1599-1600), staged-reply-waiting (solid, main.c:1092-1110) and offline_alert_inbox's unread/error state (s13-369p, already granted). Every additional 'distinct LED pattern' is bidding for the same one bit.\n\nSpecific to your request: the genuinely new idea here is recording the owner's BUTTON INTENT while the serial link is down and replaying it exactly once on reconnect, with stale/duplicate job IDs rejected. That is worth having and it should go into s15-cbhs — but note that the durable exactly-once queue it needs already exists in firmware as the pendant_store OUTBOX (pendant_store.h:28-33: one queue, typed items, crash-safe manifest, drop only once the relay confirms), so the intent record is a new item type, not new machinery.\n\nTwo corrections. 'LED/haptic feedback' — there is no vibration motor on this board; the intent survives as a blink pattern, and the pending nRF9161-class pendant with an LRA haptic driver is what would give you the real channel. And 'button intent (start, pause, cancel, acknowledge)' is four distinct meanings on two buttons, one of which (sw0) carries no gestures by design (main.c:29-38). Pick the one that cannot be expressed any other way; on current hardware that is cancel."
+    },
+    {
+      "id": "t14-ntgq",
+      "kind": "tool",
+      "round": 8,
+      "name": "mac_readonly_probe",
+      "why": "Duplicate. The kept id is your already-granted mac_readonly_diagnostics, whose query enum is these same ten values verbatim: identity, os, hardware, battery, network, disk, processes, audio, displays, permissions. You also already hold mac_read_diagnostics, which is the best-specified of the family (twelve-value checks enum, maxItems 8) and is the one to prefer. Both are live now, not dead schemas: mac_read_diagnostics{checks:['os_version']} really calls GET /machine-context, {checks:['local_agent_health']} really calls GET /health; mac_readonly_diagnostics query=os is live to GET /machine-context, and battery, displays, permissions describe action:get_battery, action:list_displays, action:check_input_permissions. Your stated reason - 'return no implementation yet' - was true when you wrote it in round 8 and is out of date as of tonight. The ONE value here not already granted is agent_routes, and that one is real: the route list is GET /capabilities, 120 routes plus 95 action types. Ask for that single value if you want it; do not re-ask for the other ten.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "enum": [
+              "identity",
+              "os",
+              "hardware",
+              "battery",
+              "network",
+              "disk",
+              "processes",
+              "audio",
+              "displays",
+              "permissions",
+              "agent_routes"
+            ]
+          },
+          "timeout_seconds": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 30
+          }
+        },
+        "required": [
+          "query",
+          "timeout_seconds"
+        ],
+        "additionalProperties": false
+      },
+      "example_call": {
+        "query": "agent_routes",
+        "timeout_seconds": 10
+      },
+      "expected_output": "JSON object containing query, collectedAt, ok, and result fields; for agent_routes include local HTTP health, available GET route names if known, job/log counts, and browser bridge status. For host queries return bounded text/structured facts plus errors without side effects.",
+      "summary": "mac_readonly_probe"
+    },
+    {
+      "id": "t15-h93d",
+      "kind": "tool",
+      "round": 11,
+      "name": "mac_shell_job_control",
+      "why": "Prose-schema, and the premise is false. operation is 'string enum: inspect|tail|cancel' as English inside a string, plus 'integer 1..1048576' and 'string enum stdout|stderr|both' - no machine-readable enum anywhere, so three operations share one name-only score. And your stated reason, '/jobs lacks per-job lookup', is wrong: GET /jobs/:jobId exists and was proven live tonight - relay-realtime's relay_job_status resolves to it at 0.645 and really executes. So inspect is already a real capability; what you lack is a schema the resolver can read. Resubmit as {type:'object', properties:{operation:{type:'string', enum:['inspect','tail','cancel']}, job_id:{type:'string'}, stream:{type:'string', enum:['stdout','stderr','both']}, max_output_bytes:{type:'integer', minimum:1, maximum:1048576}}, required:['operation','job_id']}. Expect inspect to go LIVE against GET /jobs/:jobId; tail depends on whether output is retained; cancel will come back as a description rather than a real call because it mutates - which is the correct outcome, not a failure.",
+      "input_schema": {
+        "operation": "string enum: inspect|tail|cancel",
+        "job_id": "string",
+        "max_output_bytes": "integer 1..1048576",
+        "stream": "string enum stdout|stderr|both",
+        "signal": "string enum INT|TERM|KILL (only for cancel)"
+      },
+      "example_call": {
+        "operation": "tail",
+        "job_id": "local_123",
+        "max_output_bytes": 65536,
+        "stream": "both"
+      },
+      "expected_output": "JSON {jobId,status,command,startedAt,finishedAt,exitCode,signal,stdout,stderr,truncated,error}; cancel returns cancellation result and final status. Must preserve existing unrestricted command execution and audit each operation in the job record.",
+      "summary": "mac_shell_job_control"
+    },
+    {
+      "id": "t16-xmaf",
+      "kind": "tool",
+      "round": 42,
+      "name": "mac_readonly_diagnostics_impl",
+      "why": "Duplicate, and the third rename in this family. The kept id is your already-granted mac_read_diagnostics: its checks enum is these exact twelve values in this exact order, so this is a verbatim copy with _impl appended. That suffix was an attempt to escape 'granted but has no implementation'; the name was never the defect, and the defect is now fixed. mac_read_diagnostics resolves per value: os_version LIVE to GET /machine-context, local_agent_health LIVE to GET /health, battery describes action:get_battery. Eight values remain unresolved (hardware_model, current_user, uptime, network_interfaces, bluetooth_devices, audio_devices, running_process_summary, disk_space - all near 0.29) and wifi_status is ambiguous between action:get_mac_status and GET /ops/status at 0.084 margin, under the 0.10 required. You will now be told exactly that per value when you call, with the nearest three real capabilities. Call mac_read_diagnostics. Those eight facts need new host-inspection ROUTES to exist; that is a proposal about what the system should have, not another wrapper around what it does.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "checks": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "os_version",
+                "hardware_model",
+                "current_user",
+                "uptime",
+                "battery",
+                "network_interfaces",
+                "wifi_status",
+                "bluetooth_devices",
+                "audio_devices",
+                "local_agent_health",
+                "running_process_summary",
+                "disk_space"
+              ]
+            },
+            "maxItems": 8
+          }
+        },
+        "required": [
+          "checks"
+        ],
+        "additionalProperties": false
+      },
+      "example_call": {
+        "checks": [
+          "local_agent_health",
+          "running_process_summary",
+          "disk_space"
+        ]
+      },
+      "expected_output": "JSON object with one result per requested check, command-free and read-only; include timestamp and explicit unavailable/error fields.",
+      "summary": "mac_readonly_diagnostics_impl"
     }
   ],
   "findings": [

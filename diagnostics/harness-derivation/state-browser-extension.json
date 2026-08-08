@@ -12658,58 +12658,7 @@
       "round": 138
     }
   ],
-  "pending": [
-    {
-      "id": "t13-twz9",
-      "kind": "tool",
-      "round": 10,
-      "name": "browser_command_enqueue_live",
-      "why": "The browser extension is the only tier that can read the owner's existing authenticated Safari pages, but every granted enqueue wrapper still returns an implementation error. A working command path is required for any actual browser task, testing, or useful page extraction.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "deviceId": {
-            "type": "string",
-            "description": "Optional Safari extension device id; empty targets live Safari"
-          },
-          "command": {
-            "type": "string",
-            "enum": [
-              "list_tabs",
-              "get_active_tab",
-              "navigate",
-              "extract_page",
-              "click",
-              "type",
-              "key"
-            ]
-          },
-          "url": {
-            "type": "string"
-          },
-          "selector": {
-            "type": "string"
-          },
-          "text": {
-            "type": "string"
-          },
-          "key": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "command"
-        ]
-      },
-      "example_call": {
-        "deviceId": "",
-        "command": "navigate",
-        "url": "https://example.com"
-      },
-      "expected_output": "A correlated command id plus completion result from the Safari extension, including tab id, URL/title, extracted text or action status, and an error/timeout field.",
-      "summary": "browser_command_enqueue_live"
-    }
-  ],
+  "pending": [],
   "denied": [
     {
       "id": "cap-fc6643a7",
@@ -12757,6 +12706,56 @@
       "ram_budget": "Approximately 2 KB state plus under 1 KB event buffer, well within the 211,608 B application RAM budget; audio buffers remain owned by the existing playback path.",
       "summary": "audio_reading_bookmark",
       "why": "Denied as a duplicate. Granted once, as spoken_status_interrupt, id s19-75il (relay-realtime, round 138): a button press during agent playback stops the current utterance and asks for a shorter summary or the next item. That is the primitive — barge-in — and it is the one piece of playback control the firmware genuinely lacks today. Right now a staged reply waits for a play press and then runs to completion (firmware/nrf9160/src/main.c:1092-1113); there is no way to stop it.\n\nIt also fits the hardware's grain. sw0 is edge-triggered by design and a press during playback is unambiguous with no timing state machine at all, which matters because there is none: sw0 is a bare GPIO edge into a semaphore (main.c:764-771), and main.c:29-38 records the decision never to add gesture recognition to it — 'button 1 acts on the ACTIVE EDGE so the microphone is powering up before the owner's finger has come back off.'\n\nSpecific to your request: yours is the most detailed in the cluster and two parts are worth folding into s19-75il. The playback offset — stream ID, chunk/document ID, byte or sentence offset — is the right payload for a stop event and lets the relay resume exactly where the owner cut in; s19-75il has no payload at all today. And 'do not persist page text' is the correct storage discipline.\n\nWhat does not fit is the gesture budget: short press pauses, double press resumes, long press marks. That is three distinct timings on a button with no timing state machine, during playback, competing with 34 other pending requests that also want a long press. The 'ask about this section' marker is separately already granted and shipped as offline_moment_bookmark (mac-planner s10-l3xe) on its own dedicated button, sw1 (main.c:39)."
+    },
+    {
+      "id": "t13-twz9",
+      "kind": "tool",
+      "round": 10,
+      "name": "browser_command_enqueue_live",
+      "why": "Duplicate. Your command enum here is byte-identical to the already-granted browser_enqueue_command, and to browser_command_enqueue and browser_enqueue_command_impl, which you also already hold. This is the fifth rename of one tool; the kept one is browser_enqueue_command. Renaming was never the problem. As of tonight a granted tool's CALL is resolved against the running system's own manifest, and browser_enqueue_command already resolves: list_tabs to action:browser_list_tabs (0.704), navigate to action:browser_navigate (0.676), type to action:browser_type (0.667), click to action:browser_click (0.649). What is broken is three enum VALUES, not the tool name. get_active_tab (0.414) and extract_page (0.439) resolve to nothing because the system spells the second one browser_read_page and has no separate active-tab route; key is ambiguous between action:browser_press_key and action:press_keys, so neither is called. Call the tool you have. If you want the missing three, request ONE narrow tool whose enum uses the system's own spellings (browser_read_page, browser_press_key), not a sixth wrapper. Also: /browser/commands and /browser/enqueue both 404 - browser work runs through POST /execute with browser_* action types, plus GET /browser/poll and POST /browser/inspect.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "deviceId": {
+            "type": "string",
+            "description": "Optional Safari extension device id; empty targets live Safari"
+          },
+          "command": {
+            "type": "string",
+            "enum": [
+              "list_tabs",
+              "get_active_tab",
+              "navigate",
+              "extract_page",
+              "click",
+              "type",
+              "key"
+            ]
+          },
+          "url": {
+            "type": "string"
+          },
+          "selector": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "command"
+        ]
+      },
+      "example_call": {
+        "deviceId": "",
+        "command": "navigate",
+        "url": "https://example.com"
+      },
+      "expected_output": "A correlated command id plus completion result from the Safari extension, including tab id, URL/title, extracted text or action status, and an error/timeout field.",
+      "summary": "browser_command_enqueue_live"
     }
   ],
   "findings": [

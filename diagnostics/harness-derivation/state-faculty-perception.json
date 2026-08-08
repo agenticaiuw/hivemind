@@ -270,7 +270,46 @@
         "requestedInRound": 86
       }
     ],
-    "tools": [],
+    "tools": [
+      {
+        "id": "t3-s77a",
+        "name": "read_continuity_snapshot",
+        "why": "Perception needs one authenticated, read-only view of liveness, freshness, offline high-water marks, pipeline/job states, browser pending commands, and permission trust to answer the owner's 'what happened while I was away?' without scraping multiple endpoints or inferring success.",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "since": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Optional lower bound for event metadata; default bounded recent window"
+            },
+            "include": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "pendant",
+                  "relay",
+                  "mac",
+                  "browser",
+                  "pipeline",
+                  "permissions"
+                ]
+              },
+              "description": "Optional source filters"
+            },
+            "maxItems": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "description": "Maximum event metadata records"
+            }
+          },
+          "additionalProperties": false
+        },
+        "grantedInRound": 131
+      }
+    ],
     "permissions": [
       {
         "id": "p1-s20c",
@@ -13048,95 +13087,7 @@
       "round": 131
     }
   ],
-  "pending": [
-    {
-      "id": "t2-bi37",
-      "kind": "tool",
-      "round": 19,
-      "name": "get_perception_snapshot",
-      "why": "The owner needs a single read-only, provenance-bearing answer about what each surface can currently observe/control. Existing tools expose Mac status and browser actions separately, and stale/offline state can otherwise be mistaken for live truth.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "include_pendant": {
-            "type": "boolean"
-          },
-          "include_browser": {
-            "type": "boolean"
-          },
-          "include_mac_ui": {
-            "type": "boolean"
-          },
-          "max_age_seconds": {
-            "type": "integer",
-            "minimum": 0
-          }
-        },
-        "additionalProperties": false
-      },
-      "example_call": {
-        "include_pendant": true,
-        "include_browser": true,
-        "include_mac_ui": true,
-        "max_age_seconds": 30
-      },
-      "expected_output": "Object with observedAt and per-surface records: status (online/offline/unknown), capabilities (observe/control), facts, source, sourceObservedAt, ageSeconds, confidence, and explicit blockers. Must be read-only and must never infer control from an untrusted action receipt.",
-      "summary": "get_perception_snapshot"
-    },
-    {
-      "id": "t3-s77a",
-      "kind": "tool",
-      "round": 20,
-      "name": "read_continuity_snapshot",
-      "why": "Perception needs one authenticated, read-only view of liveness, freshness, offline high-water marks, pipeline/job states, browser pending commands, and permission trust to answer the owner's 'what happened while I was away?' without scraping multiple endpoints or inferring success.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "since": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Optional lower bound for event metadata; default bounded recent window"
-          },
-          "include": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "pendant",
-                "relay",
-                "mac",
-                "browser",
-                "pipeline",
-                "permissions"
-              ]
-            },
-            "description": "Optional source filters"
-          },
-          "maxItems": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 100,
-            "description": "Maximum event metadata records"
-          }
-        },
-        "additionalProperties": false
-      },
-      "example_call": {
-        "since": "2026-08-07T09:00:00Z",
-        "include": [
-          "pendant",
-          "relay",
-          "mac",
-          "browser",
-          "pipeline",
-          "permissions"
-        ],
-        "maxItems": 50
-      },
-      "expected_output": "Authenticated JSON: {observedAt, partial, nodes:[{source,online,lastSeenAt,freshnessMs}], events:[{eventId,source,kind,capturedAt,receivedAt,deliveredAt,status,confidence,evidenceRef}], pending:[{id,source,status,ageMs}], permissions:{uiControlTrusted,screenRecording,automation}, omissions:[{source,reason}]}. No payload bodies, audio, page contents, or secrets.",
-      "summary": "read_continuity_snapshot"
-    }
-  ],
+  "pending": [],
   "denied": [
     {
       "id": "p2-qsvr",
@@ -13218,6 +13169,40 @@
       "ram_budget": "~2–4 KiB ring buffer and one record encoder; no audio buffering beyond existing path. Fits within 211,608 B application RAM, but must avoid increasing the already high simultaneous Opus CPU load.",
       "summary": "playback-lifecycle-telemetry",
       "why": "Denied as a duplicate. Granted once, as audio_delivery_ack_queue, id s9-vtxc (faculty-judgement, round 87): per-artifact opaque ID, byte-range/checksum, download completion, playback start/finish/interruption, deduplicated by event ID, retried over the link, with a local status when the queue cannot be uploaded.\n\ns9-vtxc was kept over the alternatives for one reason: it keeps the ledger in a bounded ring in non-volatile settings (32 records of about 96 bytes, under 4 KB) rather than on the microSD card. The card is the audio failure path (pendant_store.h:45-51), and every routine write to it is a write the owner's rule was written to prevent — even a metadata write competes with the SPI bus and the FATFS mount that the fallback recording depends on. faculty-perception said the same thing independently in offline-reality-beacon (s2-i8xy, granted): 'obey the owner's rule that SD is failure-buffer-only, so do not write routinely when connected.'\n\nThe property the whole cluster is protecting is right and worth stating once: relay acceptance is not delivery, and delivery is not hearing. Only the device knows whether audio physically came out of the bridge.\n\nSpecific to your request: your reason for existing is the sharpest statement of it in the queue — 'relay acceptance cannot establish playback' — and it should be written into s9-vtxc verbatim. Your interruption-reason enum and the bytes/frames-consumed field are also more useful than what s9-vtxc carries. What does not survive is 'microSD append-only records... retain the last 256 responses (~40 KiB)': that is a routine write to the failure-path card on every single response. Same ledger, NVS instead of SD, and it lands."
+    },
+    {
+      "id": "t2-bi37",
+      "kind": "tool",
+      "round": 19,
+      "name": "get_perception_snapshot",
+      "why": "Duplicate - the kept id is t3-s77a (read_continuity_snapshot, round 20), which is GRANTED. That is your own re-ask of this request one round later and it is strictly better specified. Both want a single read-only, provenance-bearing cross-surface snapshot with a freshness bound. t3 declares include as a real enum (pendant, relay, mac, browser, pipeline, permissions), so the resolver scores each source independently. Yours offers only include_pendant / include_browser / include_mac_ui booleans: a boolean is typed but it is not a SELECTOR - it gives the resolver no enum value to anchor on, so the whole tool gets one name-only score. Use t3-s77a and pass include. Grounding for what those branches can reach, measured tonight: mac resolves live to GET /observe and GET /machine-context, permissions to action:check_input_permissions, browser to POST /browser/inspect and GET /browser/poll, relay job state to GET /jobs/:jobId (live at 0.645). The one thing t3 does not carry that you asked for is max_age_seconds; a freshness bound is worth having, so ask for it as a narrow addition.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "include_pendant": {
+            "type": "boolean"
+          },
+          "include_browser": {
+            "type": "boolean"
+          },
+          "include_mac_ui": {
+            "type": "boolean"
+          },
+          "max_age_seconds": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      },
+      "example_call": {
+        "include_pendant": true,
+        "include_browser": true,
+        "include_mac_ui": true,
+        "max_age_seconds": 30
+      },
+      "expected_output": "Object with observedAt and per-surface records: status (online/offline/unknown), capabilities (observe/control), facts, source, sourceObservedAt, ageSeconds, confidence, and explicit blockers. Must be read-only and must never infer control from an untrusted action receipt.",
+      "summary": "get_perception_snapshot"
     }
   ],
   "findings": [

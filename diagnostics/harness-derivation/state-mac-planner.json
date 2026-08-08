@@ -552,6 +552,120 @@
           "additionalProperties": false
         },
         "grantedInRound": 12
+      },
+      {
+        "id": "t9-e7fl",
+        "name": "mac_action_preflight",
+        "why": "FULL_CONTROL_MODE currently executes arbitrary desktop actions without actionRisk or confirmation. Before executing a server plan, the planner needs a read-only deterministic classification, touched-resource list, reversibility assessment, and exact preview so irreversible actions can be gated.",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "actions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "app": {
+                    "type": "string"
+                  },
+                  "path": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string"
+                  },
+                  "content": {
+                    "type": "string"
+                  },
+                  "destination": {
+                    "type": "string"
+                  },
+                  "key": {
+                    "type": "string"
+                  },
+                  "modifiers": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "shortcut": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "dry_run": {
+              "type": "boolean",
+              "const": true
+            }
+          },
+          "required": [
+            "actions",
+            "dry_run"
+          ]
+        },
+        "grantedInRound": 166
+      },
+      {
+        "id": "t10-701y",
+        "name": "mac_workbench_transaction",
+        "why": "Overnight cross-node jobs need idempotent, atomic staging of multiple files and a receipt; mac_run_actions is action-oriented and cannot guarantee rollback or deduplicate retries.",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "job_id": {
+              "type": "string"
+            },
+            "root": {
+              "type": "string",
+              "description": "Allowlisted workbench root only"
+            },
+            "files": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "relative_path": {
+                    "type": "string"
+                  },
+                  "content": {
+                    "type": "string"
+                  },
+                  "sha256": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "relative_path",
+                  "content"
+                ]
+              },
+              "maxItems": 100
+            },
+            "open_after": {
+              "type": "boolean"
+            },
+            "receipt_metadata": {
+              "type": "object"
+            }
+          },
+          "required": [
+            "job_id",
+            "root",
+            "files"
+          ]
+        },
+        "grantedInRound": 166
       }
     ],
     "permissions": [
@@ -17037,294 +17151,7 @@
       "round": 166
     }
   ],
-  "pending": [
-    {
-      "id": "t9-e7fl",
-      "kind": "tool",
-      "round": 18,
-      "name": "mac_action_preflight",
-      "why": "FULL_CONTROL_MODE currently executes arbitrary desktop actions without actionRisk or confirmation. Before executing a server plan, the planner needs a read-only deterministic classification, touched-resource list, reversibility assessment, and exact preview so irreversible actions can be gated.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "actions": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string"
-                },
-                "app": {
-                  "type": "string"
-                },
-                "path": {
-                  "type": "string"
-                },
-                "url": {
-                  "type": "string"
-                },
-                "content": {
-                  "type": "string"
-                },
-                "destination": {
-                  "type": "string"
-                },
-                "key": {
-                  "type": "string"
-                },
-                "modifiers": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                "text": {
-                  "type": "string"
-                },
-                "shortcut": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "type"
-              ]
-            }
-          },
-          "dry_run": {
-            "type": "boolean",
-            "const": true
-          }
-        },
-        "required": [
-          "actions",
-          "dry_run"
-        ]
-      },
-      "example_call": {
-        "actions": [
-          {
-            "type": "delete_file",
-            "path": "/Users/owner/Desktop/old.pdf"
-          }
-        ],
-        "dry_run": true
-      },
-      "expected_output": "JSON containing risk per action (safe/reversible/irreversible/blocked), exact resources and external recipients touched, redacted human-readable preview, undo availability, policy reason, and a plan hash suitable for a single-use approval token.",
-      "summary": "mac_action_preflight"
-    },
-    {
-      "id": "t10-701y",
-      "kind": "tool",
-      "round": 21,
-      "name": "mac_workbench_transaction",
-      "why": "Overnight cross-node jobs need idempotent, atomic staging of multiple files and a receipt; mac_run_actions is action-oriented and cannot guarantee rollback or deduplicate retries.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "job_id": {
-            "type": "string"
-          },
-          "root": {
-            "type": "string",
-            "description": "Allowlisted workbench root only"
-          },
-          "files": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "relative_path": {
-                  "type": "string"
-                },
-                "content": {
-                  "type": "string"
-                },
-                "sha256": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "relative_path",
-                "content"
-              ]
-            },
-            "maxItems": 100
-          },
-          "open_after": {
-            "type": "boolean"
-          },
-          "receipt_metadata": {
-            "type": "object"
-          }
-        },
-        "required": [
-          "job_id",
-          "root",
-          "files"
-        ]
-      },
-      "example_call": {
-        "job_id": "brief-2025-02-14",
-        "root": "/Users/owner/AI-Workbench",
-        "files": [
-          {
-            "relative_path": "brief.md",
-            "content": "..."
-          }
-        ],
-        "open_after": true
-      },
-      "expected_output": "{status: created|already_exists|partial_failure, job_id, root_path, files_written, receipt_path, errors[]}",
-      "summary": "mac_workbench_transaction"
-    },
-    {
-      "id": "t11-h383",
-      "kind": "tool",
-      "round": 24,
-      "name": "mac_ui_state_snapshot",
-      "why": "mac-vision and focus-safe execution need current accessibility hierarchy/state, while mac_readonly_inspect(ui_snapshot) is only a schema with no implementation. GET /observe exposes foreground apps and permissions but not controls, roles, labels, or enabled state.",
-      "input_schema": {
-        "operation": "ui_snapshot",
-        "app": "string (optional; defaults to foreground app)",
-        "max_depth": "integer 1-20",
-        "max_elements": "integer 1-500",
-        "include_values": "boolean (default false; redact text/password fields unless explicitly enabled)",
-        "timeout_ms": "integer 100-5000"
-      },
-      "example_call": {
-        "operation": "ui_snapshot",
-        "app": "Claude",
-        "max_depth": 6,
-        "max_elements": 250,
-        "include_values": false,
-        "timeout_ms": 1500
-      },
-      "expected_output": "{ok:true, observedAt:string, app:{name,bundleId,pid}, tree:{role,title,identifier,enabled,focused,children:[...]}, redactions:[...], truncated:boolean}. Read-only; must not activate apps, move focus, capture pixels, or type.",
-      "summary": "mac_ui_state_snapshot"
-    },
-    {
-      "id": "t12-xerg",
-      "kind": "tool",
-      "round": 39,
-      "name": "mac_context_capture",
-      "why": "The new resumable-task capsule needs a bounded read-only snapshot of the owner's current desktop context (foreground app, document/window identity, selected text or URL when available) without scraping arbitrary files or using side-effect-capable actions. Existing mac_readonly_inspect does not expose the active document/window semantic identity.",
-      "input_schema": {
-        "operation": "current_context",
-        "app_scope": "optional application bundle identifier or name; empty means foreground app",
-        "include_selection": "boolean, default false",
-        "include_window_title": "boolean, default true",
-        "redact": "boolean, default true"
-      },
-      "example_call": {
-        "operation": "current_context",
-        "app_scope": "",
-        "include_selection": false,
-        "include_window_title": true,
-        "redact": true
-      },
-      "expected_output": "JSON containing timestamp, foreground app, window/document identity where available, URL or file path only when the app exposes it, optional redacted selection, and per-field provenance/confidence; no mutations.",
-      "summary": "mac_context_capture"
-    },
-    {
-      "id": "t13-ysut",
-      "kind": "tool",
-      "round": 40,
-      "name": "mac_readonly_inspect_impl",
-      "why": "The granted mac_readonly_inspect schema currently returns 'no implementation yet', so I cannot verify foreground app, running apps, or browser tabs before planning non-interfering actions. This is needed to make the proposed browser preflight and cooperative execution real rather than blind.",
-      "input_schema": {
-        "operation": "running_apps | foreground_app | accessibility_enabled | ui_snapshot | browser_tabs | list_directory",
-        "path": "string, required only for list_directory; approved absolute path",
-        "limit": "integer 1..200",
-        "max_elements": "integer 1..500"
-      },
-      "example_call": {
-        "operation": "browser_tabs",
-        "path": "",
-        "limit": 50,
-        "max_elements": 50
-      },
-      "expected_output": "Typed JSON inspection result with timestamp, freshness, and either app/tab/UI data or a structured unavailable/error reason; read-only and no arbitrary shell.",
-      "summary": "mac_readonly_inspect_impl"
-    },
-    {
-      "id": "t14-8v4g",
-      "kind": "tool",
-      "round": 88,
-      "name": "mac_resume_capsule",
-      "why": "The planner needs one controlled operation to checkpoint and later restore a cross-surface task without manually stitching Mac jobs, browser tabs, and pendant offsets. Existing mac_run_actions can execute actions but cannot atomically persist a manifest, compare state, or resume idempotently.",
-      "why_existing_tools_insufficient": "GET /jobs and browser session routes expose pieces only; mac_run_actions has no durable capsule/checkpoint or drift comparison, and the read-only inspection/source grants are schema-only today.",
-      "input_schema": {
-        "operation": "string enum: checkpoint|inspect|resume|discard",
-        "capsule_id": "string optional; required for inspect/resume/discard",
-        "goal": "string optional; required for checkpoint",
-        "constraints": "array of strings optional",
-        "pending_action": "object optional, with kind and human_description",
-        "mac_job_id": "string optional",
-        "browser_session_ids": "array of strings optional",
-        "evidence_refs": "array of objects optional, each with source,id,hash",
-        "audio_offset": "object optional",
-        "ttl_seconds": "integer optional, default 604800",
-        "dry_run": "boolean default true",
-        "confirmation_token": "string optional"
-      },
-      "example_call": {
-        "operation": "checkpoint",
-        "goal": "finish the draft from the logged-in support page",
-        "constraints": [
-          "do not submit"
-        ],
-        "pending_action": {
-          "kind": "prepared_mutation",
-          "human_description": "form filled, review before submit"
-        },
-        "mac_job_id": "job_123",
-        "browser_session_ids": [
-          "session_abc"
-        ],
-        "dry_run": true
-      },
-      "expected_output": "For checkpoint: capsule_id, immutable version, redacted manifest summary, expiry, and receipt. For inspect: current manifest plus drift report from Mac/browser/relay. For resume: preflight drift report, planned idempotent restoration actions, and a receipt; no irreversible mutation is performed implicitly. For discard: deletion receipt.",
-      "summary": "mac_resume_capsule"
-    },
-    {
-      "id": "t15-un54",
-      "kind": "tool",
-      "round": 119,
-      "name": "meeting_capsule_api",
-      "why": "The proposed meeting lifecycle needs one durable, idempotent record shared by pendant marker events, Mac/browser evidence, generated brief/audio, and post-meeting follow-ups. Existing capture and briefing routes are separate and cannot safely correlate enter/leave events or deduplicate reconnects.",
-      "why_existing_tools_insufficient": "POST /capture stores generic facts/notes, while /briefing and /research create outputs without a shared meeting state or event sequence. Browser sessions and Mac reads provide evidence but no durable cross-surface capsule.",
-      "input_schema": {
-        "operation": "string enum: open|append_event|attach_source|set_brief|append_followup|close|discard",
-        "capsule_id": "string optional for open, required otherwise",
-        "device_event_id": "string optional, idempotency key for pendant events",
-        "event_type": "string optional enum: enter|leave|memo_start|memo_chunk|memo_stop|reconnect",
-        "event_seq": "integer optional monotonic per device",
-        "source": {
-          "kind": "calendar|browser|mac|pendant",
-          "id": "string",
-          "url": "string",
-          "title": "string",
-          "snippet": "string",
-          "captured_at": "string"
-        },
-        "payload": "object optional structured event or extracted text",
-        "retention_hours": "integer optional, bounded server policy"
-      },
-      "example_call": {
-        "operation": "append_event",
-        "capsule_id": "mc_123",
-        "device_event_id": "dev_88_42",
-        "event_type": "leave",
-        "event_seq": 42,
-        "payload": {
-          "captured_at": "2026-08-07T18:10:00Z"
-        }
-      },
-      "expected_output": "A durable capsule object containing status, deduplicated events, attached cited sources, brief/audio references, follow-up drafts, created/updated timestamps, and a per-event acceptance/duplicate result.",
-      "summary": "meeting_capsule_api"
-    }
-  ],
+  "pending": [],
   "denied": [
     {
       "id": "cap-fc6643a7",
@@ -17451,6 +17278,152 @@
       "ram_budget": "About 3–6 KB worst case: counters/state, one small compressed test buffer, and a bounded event record. No second audio stream or large waveform buffer; stay comfortably within 211,608 B application RAM and avoid increasing Opus working memory.",
       "summary": "offline_audio_path_self_test",
       "why": "Denied as a duplicate. Granted once, as audio_path_diagnostic_fixture, id s16-dbfs (mac-planner, round 121). It was kept because it is the only instance that exercises BOTH directions — timestamped sequence-numbered synthetic uplink frames AND a fixed 24 kHz playback fixture — and reports capture clock, Opus encode duration, modem send/drop counters, playback decode duration and resampler underruns together. A self-test that only covers playback cannot tell you which half is broken.\n\nThis is the highest-value cluster in the queue given the project's history: the last four commits are all audio-path bugs that a fixture would have caught earlier (an unfiltered downsampler, an unoptimised libopus, a sync preamble played as audio). Note that the firmware already has the seeds of this — main.c:193 and main.c:211 document J-Link-settable selftest hooks that run the pipeline 'from the serial log alone, no button press required', and there is a selftest PCM path around main.c:1307-1335. s16-dbfs should be built on those rather than beside them.\n\nSpecific to your request: the built-in test vector stored in flash and the peak/clipping counter are both good and belong in s16-dbfs. Your trigger is the problem and it is worth stating plainly because it is the clearest example of the queue-wide gesture squeeze: 'hold 2 seconds, release, then click' is a two-stage timed chord on a button that has no timing state machine and, by explicit design, never will (main.c:29-38). It would also be indistinguishable in practice from several other pending long-press proposals. Diagnostics do not need a gesture at all — they should arm over USB serial, which is the transport that works today while LTE-M is unregistered."
+    },
+    {
+      "id": "t11-h383",
+      "kind": "tool",
+      "round": 24,
+      "name": "mac_ui_state_snapshot",
+      "why": "Prose-schema, and the premise is now false. Your input_schema is a bag of free text ('integer 1-20', 'boolean (default false; redact text/password fields...)'), not a JSON Schema, so nothing in it is a typed parameter the resolver can read. More importantly, your why says mac_readonly_inspect(ui_snapshot) is 'only a schema with no implementation'. That was true until tonight and is not true now: mac_readonly_inspect{operation:'ui_snapshot'} resolves to action:ui_snapshot at 0.653 with margin 0.244, and {operation:'running_apps'} and {operation:'foreground_app'} both really call GET /observe. You already hold this tool - call it. If action:ui_snapshot does not return the roles, labels and enabled-state you need, request exactly that delta as real JSON Schema with an enum and with bounds expressed as minimum/maximum, not as English inside a string value.",
+      "input_schema": {
+        "operation": "ui_snapshot",
+        "app": "string (optional; defaults to foreground app)",
+        "max_depth": "integer 1-20",
+        "max_elements": "integer 1-500",
+        "include_values": "boolean (default false; redact text/password fields unless explicitly enabled)",
+        "timeout_ms": "integer 100-5000"
+      },
+      "example_call": {
+        "operation": "ui_snapshot",
+        "app": "Claude",
+        "max_depth": 6,
+        "max_elements": 250,
+        "include_values": false,
+        "timeout_ms": 1500
+      },
+      "expected_output": "{ok:true, observedAt:string, app:{name,bundleId,pid}, tree:{role,title,identifier,enabled,focused,children:[...]}, redactions:[...], truncated:boolean}. Read-only; must not activate apps, move focus, capture pixels, or type.",
+      "summary": "mac_ui_state_snapshot"
+    },
+    {
+      "id": "t12-xerg",
+      "kind": "tool",
+      "round": 39,
+      "name": "mac_context_capture",
+      "why": "Prose-schema. Every value in input_schema is an English sentence ('optional application bundle identifier or name; empty means foreground app', 'boolean, default false'), so the object declares no types and no enum. That exact free-text shape is why safe_mac_command and both _implemented variants are unresolvable, measured tonight - an enum resolves per value where a free-form string resolves to nothing. Part of this is also already yours: mac_readonly_inspect{operation:'foreground_app'} really calls GET /observe, and {operation:'browser_tabs'} reaches POST /browser/inspect at 0.674 for the active URL. The genuinely missing piece is document/window semantic identity and selected text - that is a fair gap. Re-request just that, as real JSON Schema: {type:'object', properties:{operation:{type:'string', enum:['window_identity','selected_text','document_path']}, app_scope:{type:'string'}, redact:{type:'boolean'}}, required:['operation']}. Each enum value then gets its own score and its own verdict.",
+      "input_schema": {
+        "operation": "current_context",
+        "app_scope": "optional application bundle identifier or name; empty means foreground app",
+        "include_selection": "boolean, default false",
+        "include_window_title": "boolean, default true",
+        "redact": "boolean, default true"
+      },
+      "example_call": {
+        "operation": "current_context",
+        "app_scope": "",
+        "include_selection": false,
+        "include_window_title": true,
+        "redact": true
+      },
+      "expected_output": "JSON containing timestamp, foreground app, window/document identity where available, URL or file path only when the app exposes it, optional redacted selection, and per-field provenance/confidence; no mutations.",
+      "summary": "mac_context_capture"
+    },
+    {
+      "id": "t13-ysut",
+      "kind": "tool",
+      "round": 40,
+      "name": "mac_readonly_inspect_impl",
+      "why": "Duplicate, and prose. The kept id is your already-granted mac_readonly_inspect - the operation list here is exactly its six values restated as one free-text pipe-string ('running_apps | foreground_app | ... | list_directory') instead of a JSON Schema enum, which scores strictly worse, not better. The _impl suffix is the same escape attempt mac-terminal made with mac_readonly_diagnostics_impl and browser-extension made four times; renaming never resolved anything, because the name was never what was broken. The dead-schema defect is fixed: mac_readonly_inspect{operation:'running_apps'} and {operation:'foreground_app'} now really call GET /observe and return live data, ui_snapshot maps to action:ui_snapshot (0.653), browser_tabs to POST /browser/inspect (0.674), list_directory to action:list_directory (0.667). Only accessibility_enabled is unresolved (best 0.295), and you will now be told that per value when you call, with the nearest three real capabilities. Call the tool you already have.",
+      "input_schema": {
+        "operation": "running_apps | foreground_app | accessibility_enabled | ui_snapshot | browser_tabs | list_directory",
+        "path": "string, required only for list_directory; approved absolute path",
+        "limit": "integer 1..200",
+        "max_elements": "integer 1..500"
+      },
+      "example_call": {
+        "operation": "browser_tabs",
+        "path": "",
+        "limit": 50,
+        "max_elements": 50
+      },
+      "expected_output": "Typed JSON inspection result with timestamp, freshness, and either app/tab/UI data or a structured unavailable/error reason; read-only and no arbitrary shell.",
+      "summary": "mac_readonly_inspect_impl"
+    },
+    {
+      "id": "t14-8v4g",
+      "kind": "tool",
+      "round": 88,
+      "name": "mac_resume_capsule",
+      "why": "Prose-schema. You wrote operation as 'string enum: checkpoint|inspect|resume|discard' - the enum spelled in English inside a string value, which is exactly the pattern measured unresolvable tonight. The resolver reads schema.properties[x].enum as an ARRAY; a sentence that contains the word enum is prose and yields no selector, so four distinct operations collapse into one name-only score. Same for 'boolean default true' and 'integer optional, default 604800'. The fix is mechanical and it is the whole difference: {type:'object', properties:{operation:{type:'string', enum:['checkpoint','inspect','resume','discard']}, capsule_id:{type:'string'}, ttl_seconds:{type:'integer', minimum:1, maximum:604800}, dry_run:{type:'boolean'}}, required:['operation']}. Resubmit in that form and each operation is scored separately; inspect has a real chance, since the analogous relay_job_status now runs GET /jobs/:jobId live at 0.645. Keep capsule_id OUT of the enum - a required free-form property is what lets the resolver match a :param route, while an enum property is read as a dispatch selector.",
+      "why_existing_tools_insufficient": "GET /jobs and browser session routes expose pieces only; mac_run_actions has no durable capsule/checkpoint or drift comparison, and the read-only inspection/source grants are schema-only today.",
+      "input_schema": {
+        "operation": "string enum: checkpoint|inspect|resume|discard",
+        "capsule_id": "string optional; required for inspect/resume/discard",
+        "goal": "string optional; required for checkpoint",
+        "constraints": "array of strings optional",
+        "pending_action": "object optional, with kind and human_description",
+        "mac_job_id": "string optional",
+        "browser_session_ids": "array of strings optional",
+        "evidence_refs": "array of objects optional, each with source,id,hash",
+        "audio_offset": "object optional",
+        "ttl_seconds": "integer optional, default 604800",
+        "dry_run": "boolean default true",
+        "confirmation_token": "string optional"
+      },
+      "example_call": {
+        "operation": "checkpoint",
+        "goal": "finish the draft from the logged-in support page",
+        "constraints": [
+          "do not submit"
+        ],
+        "pending_action": {
+          "kind": "prepared_mutation",
+          "human_description": "form filled, review before submit"
+        },
+        "mac_job_id": "job_123",
+        "browser_session_ids": [
+          "session_abc"
+        ],
+        "dry_run": true
+      },
+      "expected_output": "For checkpoint: capsule_id, immutable version, redacted manifest summary, expiry, and receipt. For inspect: current manifest plus drift report from Mac/browser/relay. For resume: preflight drift report, planned idempotent restoration actions, and a receipt; no irreversible mutation is performed implicitly. For discard: deletion receipt.",
+      "summary": "mac_resume_capsule"
+    },
+    {
+      "id": "t15-un54",
+      "kind": "tool",
+      "round": 119,
+      "name": "meeting_capsule_api",
+      "why": "Prose-schema. operation is 'string enum: open|append_event|...', event_type is 'string optional enum: enter|leave|...', and source is a nested object whose every field is an English type description. None of it is machine-readable, so seven distinct operations share one name-only score. Resubmit as real JSON Schema with operation and event_type as actual enum arrays and source as a typed object with kind:{type:'string', enum:['calendar','browser','mac','pendant']}. Two branches have plausible real backing once they are separable: attach_source overlaps POST /meeting-followup, which IS in the live manifest, while the pendant marker events (enter/leave/memo_*) have no route at all. Split them. A request that folds one resolvable branch and one unbacked branch into a single seven-operation API gets a useful verdict for neither.",
+      "why_existing_tools_insufficient": "POST /capture stores generic facts/notes, while /briefing and /research create outputs without a shared meeting state or event sequence. Browser sessions and Mac reads provide evidence but no durable cross-surface capsule.",
+      "input_schema": {
+        "operation": "string enum: open|append_event|attach_source|set_brief|append_followup|close|discard",
+        "capsule_id": "string optional for open, required otherwise",
+        "device_event_id": "string optional, idempotency key for pendant events",
+        "event_type": "string optional enum: enter|leave|memo_start|memo_chunk|memo_stop|reconnect",
+        "event_seq": "integer optional monotonic per device",
+        "source": {
+          "kind": "calendar|browser|mac|pendant",
+          "id": "string",
+          "url": "string",
+          "title": "string",
+          "snippet": "string",
+          "captured_at": "string"
+        },
+        "payload": "object optional structured event or extracted text",
+        "retention_hours": "integer optional, bounded server policy"
+      },
+      "example_call": {
+        "operation": "append_event",
+        "capsule_id": "mc_123",
+        "device_event_id": "dev_88_42",
+        "event_type": "leave",
+        "event_seq": 42,
+        "payload": {
+          "captured_at": "2026-08-07T18:10:00Z"
+        }
+      },
+      "expected_output": "A durable capsule object containing status, deduplicated events, attached cited sources, brief/audio references, follow-up drafts, created/updated timestamps, and a per-event acceptance/duplicate result.",
+      "summary": "meeting_capsule_api"
     }
   ],
   "findings": [

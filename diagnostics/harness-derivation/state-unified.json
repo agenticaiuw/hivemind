@@ -225,7 +225,334 @@
         "requestedInRound": 39
       }
     ],
-    "tools": [],
+    "tools": [
+      {
+        "id": "t1-nphy",
+        "name": "mac_workspace_edit",
+        "why": "Useful work will require implementing and testing the owner's requested 24 kHz superwideband pendant audio path and other code changes in ~/AI-Pendant-Workspace. Existing Mac actions can run limited shell commands but do not expose a safe, structured multi-file edit/test workflow with diffs and receipts.",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "root": {
+              "type": "string",
+              "description": "Workspace root, constrained to an approved project directory such as /Users/evanliu/AI-Pendant-Workspace or /Users/evanliu/agentic-gadget/software/ai-pendant-simulator"
+            },
+            "operations": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "read",
+                      "write",
+                      "patch",
+                      "run_test",
+                      "git_diff"
+                    ]
+                  },
+                  "path": {
+                    "type": "string"
+                  },
+                  "content": {
+                    "type": "string"
+                  },
+                  "unified_diff": {
+                    "type": "string"
+                  },
+                  "command": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "path"
+                ]
+              }
+            },
+            "spoken_reply": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "root",
+            "operations"
+          ]
+        },
+        "grantedInRound": 139
+      },
+      {
+        "id": "t3-trkd",
+        "name": "audio_pipeline_validate",
+        "why": "The owner’s stated goal is to ship the 24 kHz superwideband path end to end. Reconnaissance confirms 24 kHz WAV output, but we lack a safe, read-only validator that checks capture→relay→TTS→pendant/bridge formats, resampling, frame timing, clipping, and round-trip continuity against the acceptance criteria.",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "pipeline_id": {
+              "type": "string",
+              "description": "Existing pipeline run ID to validate; if omitted, choose the newest completed audio run."
+            },
+            "directions": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "input",
+                  "output",
+                  "both"
+                ]
+              },
+              "description": "Audio directions to inspect."
+            },
+            "checks": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "wav_header",
+                  "sample_rate",
+                  "channels",
+                  "sample_format",
+                  "duration_consistency",
+                  "frame_continuity",
+                  "clipping",
+                  "resampler_ratio",
+                  "opus_packet_timing",
+                  "bridge_buffer_safety"
+                ]
+              },
+              "description": "Checks to perform; defaults to all safe checks."
+            }
+          },
+          "required": []
+        },
+        "grantedInRound": 139
+      },
+      {
+        "id": "t6-ggnh",
+        "name": "audio_link_fault_inject",
+        "why": "The live measurements show simultaneous uplink/downlink loss, and the requested 24 kHz path cannot be responsibly shipped without repeatable fault-injection across modem, relay, and codec. Existing discovery exposes no tool that can run this end-to-end test.",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "profile": {
+              "type": "string",
+              "enum": [
+                "legacy_16k",
+                "swb_24k"
+              ]
+            },
+            "uplink_loss_percent": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "downlink_loss_percent": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "jitter_ms": {
+              "type": "number",
+              "minimum": 0
+            },
+            "duration_s": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 300
+            },
+            "capture_artifacts": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "profile",
+            "duration_s"
+          ]
+        },
+        "grantedInRound": 139
+      },
+      {
+        "id": "t7-wwdv",
+        "name": "fleet_health_and_repair",
+        "why": "The current system exposes raw /ops/status but no typed, callable health diagnosis or safe repair operation. This capability is needed to turn offline-browser and missing-permission failures into fast, resumable owner-facing recovery instead of repeated timeouts.",
+        "input_schema": {
+          "type": "object",
+          "required": [
+            "operation"
+          ],
+          "properties": {
+            "operation": {
+              "type": "string",
+              "enum": [
+                "diagnose",
+                "repair",
+                "revalidate"
+              ]
+            },
+            "jobId": {
+              "type": "string"
+            },
+            "surfaces": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "relay",
+                  "mac-bridge",
+                  "browser",
+                  "pendant"
+                ]
+              }
+            },
+            "repairKind": {
+              "type": "string",
+              "enum": [
+                "wake_browser_bridge",
+                "restart_browser_polling",
+                "clear_stale_command_lease",
+                "open_accessibility_settings",
+                "open_screen_recording_settings"
+              ]
+            },
+            "idempotencyKey": {
+              "type": "string"
+            },
+            "confirmationToken": {
+              "type": "string"
+            }
+          }
+        },
+        "grantedInRound": 139
+      },
+      {
+        "id": "t8-7lhy",
+        "name": "commitment_evidence_query",
+        "why": "The proposed promise tracker cannot safely decide whether an uttered commitment was completed using generic browser/Mac actions alone. It needs one least-privilege, provenance-preserving query that searches only explicitly bound tabs/apps and returns evidence candidates without mutating anything.",
+        "input_schema": {
+          "type": "object",
+          "required": [
+            "commitmentId",
+            "bindings"
+          ],
+          "properties": {
+            "commitmentId": {
+              "type": "string"
+            },
+            "bindings": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "surface",
+                  "target"
+                ],
+                "properties": {
+                  "surface": {
+                    "type": "string",
+                    "enum": [
+                      "browser",
+                      "mac"
+                    ]
+                  },
+                  "target": {
+                    "type": "string",
+                    "description": "Specific tab/session URL pattern or app/path binding"
+                  }
+                }
+              }
+            },
+            "query": {
+              "type": "string"
+            },
+            "since": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "maxResults": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10
+            }
+          }
+        },
+        "grantedInRound": 139
+      },
+      {
+        "id": "t9-4s7o",
+        "name": "privacy_convergence_check",
+        "why": "The proposed privacy latch needs a read-only, cross-surface verification after a local button press; existing Mac/browser action tools do not provide a single authenticated receipt proving that capture, playback, relay persistence, queued jobs, and browser exposure are all stopped.",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "latchId": {
+              "type": "string"
+            },
+            "includeDiagnostics": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          "required": [
+            "latchId"
+          ]
+        },
+        "grantedInRound": 139
+      },
+      {
+        "id": "t10-s5iq",
+        "name": "incident_diagnostics",
+        "why": "The proposed cross-surface diagnosis capability cannot be implemented with the current seven tools: it needs a read-only, correlated snapshot of pendant/relay/Mac/browser evidence and a dry-run repair plan without granting mutation access.",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "incidentId": {
+              "type": "string"
+            },
+            "since": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "until": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "include": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "pendant_events",
+                  "audio_link",
+                  "relay_receipts",
+                  "mac_jobs",
+                  "browser_commands",
+                  "system_health"
+                ]
+              }
+            },
+            "mode": {
+              "type": "string",
+              "enum": [
+                "snapshot",
+                "hypotheses",
+                "repair_dry_run"
+              ]
+            },
+            "redact": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          "required": [
+            "mode"
+          ],
+          "additionalProperties": false
+        },
+        "grantedInRound": 139
+      }
+    ],
     "permissions": [],
     "deviceSkills": [
       {
@@ -13208,529 +13535,7 @@
       "round": 139
     }
   ],
-  "pending": [
-    {
-      "id": "t1-nphy",
-      "kind": "tool",
-      "round": 1,
-      "name": "mac_workspace_edit",
-      "why": "Useful work will require implementing and testing the owner's requested 24 kHz superwideband pendant audio path and other code changes in ~/AI-Pendant-Workspace. Existing Mac actions can run limited shell commands but do not expose a safe, structured multi-file edit/test workflow with diffs and receipts.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "root": {
-            "type": "string",
-            "description": "Workspace root, constrained to an approved project directory such as /Users/evanliu/AI-Pendant-Workspace or /Users/evanliu/agentic-gadget/software/ai-pendant-simulator"
-          },
-          "operations": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "kind": {
-                  "type": "string",
-                  "enum": [
-                    "read",
-                    "write",
-                    "patch",
-                    "run_test",
-                    "git_diff"
-                  ]
-                },
-                "path": {
-                  "type": "string"
-                },
-                "content": {
-                  "type": "string"
-                },
-                "unified_diff": {
-                  "type": "string"
-                },
-                "command": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "kind",
-                "path"
-              ]
-            }
-          },
-          "spoken_reply": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "root",
-          "operations"
-        ]
-      },
-      "example_call": {
-        "root": "/Users/evanliu/agentic-gadget/software/ai-pendant-simulator",
-        "operations": [
-          {
-            "kind": "read",
-            "path": "firmware/nrf9160/src/audio_opus.c"
-          },
-          {
-            "kind": "git_diff",
-            "path": "."
-          },
-          {
-            "kind": "run_test",
-            "path": "firmware/nrf9160",
-            "command": "west build -b nrf9160dk_nrf9160_ns"
-          }
-        ],
-        "spoken_reply": "I’ll inspect the audio path and run a safe build check."
-      },
-      "expected_output": "Structured per-operation results including file contents or bounded excerpts, applied-change status, test exit code/stdout/stderr, git diff summary, and explicit refusal if a path escapes the approved root.",
-      "summary": "mac_workspace_edit"
-    },
-    {
-      "id": "t2-h6u8",
-      "kind": "tool",
-      "round": 2,
-      "name": "mac_workspace_edit",
-      "why": "The owner's stated goal is to ship the 24 kHz superwideband pendant audio path end-to-end. Reconnaissance shows mismatched 15,625 Hz capture/16 kHz uplink, 24 kHz decode, and 31,250 Hz I2S; implementing and validating this requires editing firmware and relay source files in ~/AI-Pendant-Workspace, then running builds/tests without relying on destructive GUI automation.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "files": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "path": {
-                  "type": "string"
-                },
-                "patch": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "path",
-                "patch"
-              ]
-            }
-          },
-          "commands": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "Allowlisted build/test commands to run after edits"
-          },
-          "dry_run": {
-            "type": "boolean",
-            "description": "If true, show proposed diffs and commands without writing or executing"
-          }
-        },
-        "required": [
-          "files",
-          "commands",
-          "dry_run"
-        ]
-      },
-      "example_call": {
-        "files": [
-          {
-            "path": "firmware/nrf9160/src/audio_opus.c",
-            "patch": "unified diff"
-          }
-        ],
-        "commands": [
-          "west build -b nrf9160dk/nrf9160 firmware/nrf9160"
-        ],
-        "dry_run": true
-      },
-      "expected_output": "Structured result containing per-file diff status, command stdout/stderr/exit codes, and artifact paths; no write or command execution when dry_run=true.",
-      "summary": "mac_workspace_edit"
-    },
-    {
-      "id": "t3-trkd",
-      "kind": "tool",
-      "round": 3,
-      "name": "audio_pipeline_validate",
-      "why": "The owner’s stated goal is to ship the 24 kHz superwideband path end to end. Reconnaissance confirms 24 kHz WAV output, but we lack a safe, read-only validator that checks capture→relay→TTS→pendant/bridge formats, resampling, frame timing, clipping, and round-trip continuity against the acceptance criteria.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "pipeline_id": {
-            "type": "string",
-            "description": "Existing pipeline run ID to validate; if omitted, choose the newest completed audio run."
-          },
-          "directions": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "input",
-                "output",
-                "both"
-              ]
-            },
-            "description": "Audio directions to inspect."
-          },
-          "checks": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "wav_header",
-                "sample_rate",
-                "channels",
-                "sample_format",
-                "duration_consistency",
-                "frame_continuity",
-                "clipping",
-                "resampler_ratio",
-                "opus_packet_timing",
-                "bridge_buffer_safety"
-              ]
-            },
-            "description": "Checks to perform; defaults to all safe checks."
-          }
-        },
-        "required": []
-      },
-      "summary": "audio_pipeline_validate"
-    },
-    {
-      "id": "t6-ggnh",
-      "kind": "tool",
-      "round": 27,
-      "name": "audio_link_fault_inject",
-      "why": "The live measurements show simultaneous uplink/downlink loss, and the requested 24 kHz path cannot be responsibly shipped without repeatable fault-injection across modem, relay, and codec. Existing discovery exposes no tool that can run this end-to-end test.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "profile": {
-            "type": "string",
-            "enum": [
-              "legacy_16k",
-              "swb_24k"
-            ]
-          },
-          "uplink_loss_percent": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 100
-          },
-          "downlink_loss_percent": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 100
-          },
-          "jitter_ms": {
-            "type": "number",
-            "minimum": 0
-          },
-          "duration_s": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 300
-          },
-          "capture_artifacts": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "profile",
-          "duration_s"
-        ]
-      },
-      "example_call": {
-        "profile": "swb_24k",
-        "uplink_loss_percent": 10,
-        "downlink_loss_percent": 10,
-        "jitter_ms": 120,
-        "duration_s": 30,
-        "capture_artifacts": false
-      },
-      "expected_output": "A JSON report with packet loss, late/duplicate counts, end-to-end latency, audio underruns/overruns, codec CPU time, recovered speech duration, and pass/fail against the configured acceptance thresholds. Artifacts must be opt-in and auto-expire.",
-      "summary": "audio_link_fault_inject"
-    },
-    {
-      "id": "t7-wwdv",
-      "kind": "tool",
-      "round": 28,
-      "name": "fleet_health_and_repair",
-      "why": "The current system exposes raw /ops/status but no typed, callable health diagnosis or safe repair operation. This capability is needed to turn offline-browser and missing-permission failures into fast, resumable owner-facing recovery instead of repeated timeouts.",
-      "input_schema": {
-        "type": "object",
-        "required": [
-          "operation"
-        ],
-        "properties": {
-          "operation": {
-            "type": "string",
-            "enum": [
-              "diagnose",
-              "repair",
-              "revalidate"
-            ]
-          },
-          "jobId": {
-            "type": "string"
-          },
-          "surfaces": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "relay",
-                "mac-bridge",
-                "browser",
-                "pendant"
-              ]
-            }
-          },
-          "repairKind": {
-            "type": "string",
-            "enum": [
-              "wake_browser_bridge",
-              "restart_browser_polling",
-              "clear_stale_command_lease",
-              "open_accessibility_settings",
-              "open_screen_recording_settings"
-            ]
-          },
-          "idempotencyKey": {
-            "type": "string"
-          },
-          "confirmationToken": {
-            "type": "string"
-          }
-        }
-      },
-      "example_call": {
-        "operation": "diagnose",
-        "jobId": "local_example",
-        "surfaces": [
-          "mac-bridge",
-          "browser"
-        ]
-      },
-      "expected_output": "Typed per-surface health records with online state, last-seen age, failure cause, safeRepair options, lease expiry, and a redacted evidence receipt. Repair returns repairId, changed surfaces, confirmationRequired, and next revalidateAt; revalidate returns whether the original job may safely resume.",
-      "summary": "fleet_health_and_repair"
-    },
-    {
-      "id": "t8-7lhy",
-      "kind": "tool",
-      "round": 37,
-      "name": "commitment_evidence_query",
-      "why": "The proposed promise tracker cannot safely decide whether an uttered commitment was completed using generic browser/Mac actions alone. It needs one least-privilege, provenance-preserving query that searches only explicitly bound tabs/apps and returns evidence candidates without mutating anything.",
-      "input_schema": {
-        "type": "object",
-        "required": [
-          "commitmentId",
-          "bindings"
-        ],
-        "properties": {
-          "commitmentId": {
-            "type": "string"
-          },
-          "bindings": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "required": [
-                "surface",
-                "target"
-              ],
-              "properties": {
-                "surface": {
-                  "type": "string",
-                  "enum": [
-                    "browser",
-                    "mac"
-                  ]
-                },
-                "target": {
-                  "type": "string",
-                  "description": "Specific tab/session URL pattern or app/path binding"
-                }
-              }
-            }
-          },
-          "query": {
-            "type": "string"
-          },
-          "since": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "maxResults": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 10
-          }
-        }
-      },
-      "example_call": {
-        "commitmentId": "prm_123",
-        "bindings": [
-          {
-            "surface": "browser",
-            "target": "https://tasks.example/*"
-          },
-          {
-            "surface": "mac",
-            "target": "Calendar"
-          }
-        ],
-        "query": "find evidence that the promised task was completed",
-        "since": "2026-08-07T00:00:00Z",
-        "maxResults": 5
-      },
-      "expected_output": "A typed read-only result: {ok, commitmentId, candidates:[{surface,target,urlOrApp,timestamp,summary,sourceSnippetHash,semanticFingerprint,confidence}], freshness, warnings}; no raw page text or secrets by default, and no action execution.",
-      "summary": "commitment_evidence_query"
-    },
-    {
-      "id": "t9-4s7o",
-      "kind": "tool",
-      "round": 42,
-      "name": "privacy_convergence_check",
-      "why": "The proposed privacy latch needs a read-only, cross-surface verification after a local button press; existing Mac/browser action tools do not provide a single authenticated receipt proving that capture, playback, relay persistence, queued jobs, and browser exposure are all stopped.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "latchId": {
-            "type": "string"
-          },
-          "includeDiagnostics": {
-            "type": "boolean",
-            "default": false
-          }
-        },
-        "required": [
-          "latchId"
-        ]
-      },
-      "example_call": {
-        "latchId": "privacy_01JABC",
-        "includeDiagnostics": true
-      },
-      "expected_output": "A signed JSON receipt with latchId, monotonic transition number, observedAt, and per-surface states (pendant captureMuted/playbackMuted/ledPattern, relay retentionBlocked/proactiveOutputBlocked, Mac jobsPaused/screenPrivacy, browser locked), plus stale/error reasons without page URLs or content.",
-      "summary": "privacy_convergence_check"
-    },
-    {
-      "id": "t10-s5iq",
-      "kind": "tool",
-      "round": 47,
-      "name": "incident_diagnostics",
-      "why": "The proposed cross-surface diagnosis capability cannot be implemented with the current seven tools: it needs a read-only, correlated snapshot of pendant/relay/Mac/browser evidence and a dry-run repair plan without granting mutation access.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "incidentId": {
-            "type": "string"
-          },
-          "since": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "until": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "include": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "pendant_events",
-                "audio_link",
-                "relay_receipts",
-                "mac_jobs",
-                "browser_commands",
-                "system_health"
-              ]
-            }
-          },
-          "mode": {
-            "type": "string",
-            "enum": [
-              "snapshot",
-              "hypotheses",
-              "repair_dry_run"
-            ]
-          },
-          "redact": {
-            "type": "boolean",
-            "default": true
-          }
-        },
-        "required": [
-          "mode"
-        ],
-        "additionalProperties": false
-      },
-      "example_call": {
-        "incidentId": "inc_123",
-        "mode": "repair_dry_run",
-        "include": [
-          "pendant_events",
-          "audio_link",
-          "relay_receipts",
-          "mac_jobs",
-          "browser_commands"
-        ],
-        "redact": true
-      },
-      "expected_output": "JSON containing incidentId, normalized events with node/request/job/command IDs, redacted evidence pointers and snippets, ranked hypotheses with confidence and supporting event IDs, health checks performed, and (for repair_dry_run) an ordered reversible repair manifest with preconditions, expected verification, rollback steps, approvalRequired=true, and no side effects.",
-      "summary": "incident_diagnostics"
-    },
-    {
-      "id": "t11-iqwz",
-      "kind": "tool",
-      "round": 77,
-      "name": "catch_up_status",
-      "why": "The owner needs a single spoken answer after offline periods that merges held pendant alerts, relay/Mac job receipts, pipeline outcomes, and browser command results without making the realtime agent manually join four stores or guess completion.",
-      "why_existing_tools_insufficient": "relay_job_status only reads relay job records; GET /jobs and /pipeline are separate HTTP records; browser status exposes pending connectivity but not a normalized outcome history. No current tool returns an acknowledged, deduplicated cross-surface catch-up projection.",
-      "input_schema": {
-        "since": "string, optional ISO-8601 timestamp; defaults to last owner acknowledgement",
-        "limit": "integer, optional 1-20, default 8",
-        "include_pending": "boolean, optional, default true",
-        "include_sources": "array of strings, optional enum pendant|relay|mac|browser"
-      },
-      "example_call": {
-        "since": "2026-08-07T07:00:00-05:00",
-        "limit": 5,
-        "include_pending": true,
-        "include_sources": [
-          "pendant",
-          "relay",
-          "mac",
-          "browser"
-        ]
-      },
-      "expected_output": "Object containing items[]; each item has stable id, source, occurredAt, status enum observed|queued|running|completed|failed|approval-required|unknown, one-sentence summary, evidence refs (jobId/pipelineId/commandId/URL where safe), sensitivity, and dedupeKey; plus nextSince and counts by status.",
-      "summary": "catch_up_status"
-    },
-    {
-      "id": "t12-uicl",
-      "kind": "tool",
-      "round": 119,
-      "name": "query_unified_job_receipt",
-      "why": "The existing job, pipeline, browser-inspection, and action-receipt reads are separate; we need one authenticated read that can determine whether a cross-surface task actually completed and whether its audio was delivered.",
-      "why_existing_tools_insufficient": "relay_job_status reports relay jobs, GET /jobs/:jobId/receipts reports receipts, and GET /pipeline exposes event streams, but none joins Mac action receipts, browser tab evidence, approval state, reconnect checkpoints, and pendant playback ACK into one causally ordered result. The recent pipeline demonstrates the gap: approval was waiting while TTS and relay delivery were already done.",
-      "input_schema": {
-        "jobId": "string",
-        "includeEvidence": "boolean, default false",
-        "includeUndo": "boolean, default true",
-        "maxEvents": "integer, default 50"
-      },
-      "example_call": {
-        "jobId": "job_309f5663-e01a-4f8a-b798-319c7c18313f",
-        "includeEvidence": true,
-        "includeUndo": true
-      },
-      "expected_output": "JSON with status (pending|completed|failed|expired|partially_completed), causal events ordered by time, blockedAction and approval expiry if applicable, action receipts with idempotency keys, browser evidence references (tabId/url/timestamp/snippetHash), audio delivery status (rendered|uploaded|downloaded|played|ack timeout), safe undo availability, and a short owner-facing summary.",
-      "summary": "query_unified_job_receipt"
-    }
-  ],
+  "pending": [],
   "denied": [
     {
       "id": "p1-dmre",
@@ -13999,6 +13804,114 @@
       "ram_budget": "~2 KiB working buffers plus one 128-byte latest-entry cache; comfortably below the 211,608 B application RAM budget, but append/flush must not contend with Opus buffers or the modem.",
       "summary": "last_interaction_receipt_index",
       "why": "Denied as a duplicate. Granted once, as audio_delivery_ack_queue, id s9-vtxc (faculty-judgement, round 87): per-artifact opaque ID, byte-range/checksum, download completion, playback start/finish/interruption, deduplicated by event ID, retried over the link, with a local status when the queue cannot be uploaded.\n\ns9-vtxc was kept over the alternatives for one reason: it keeps the ledger in a bounded ring in non-volatile settings (32 records of about 96 bytes, under 4 KB) rather than on the microSD card. The card is the audio failure path (pendant_store.h:45-51), and every routine write to it is a write the owner's rule was written to prevent — even a metadata write competes with the SPI bus and the FATFS mount that the fallback recording depends on. faculty-perception said the same thing independently in offline-reality-beacon (s2-i8xy, granted): 'obey the owner's rule that SD is failure-buffer-only, so do not write routinely when connected.'\n\nThe property the whole cluster is protecting is right and worth stating once: relay acceptance is not delivery, and delivery is not hearing. Only the device knows whether audio physically came out of the bridge.\n\nSpecific to your request: you were the only one to reason explicitly about the SD rule ('the SD policy permits failure buffering but forbids routine audio storage, so this skill is intentionally metadata-only') and then to specify a 64 KiB rotating journal on the card anyway. The instinct was right; carry it one step further, as s9-vtxc does, and keep the journal off SD entirely. The redacted 48-byte label and the RAM-degraded mode when SD is unavailable are worth folding in.\n\nThe second gesture does not exist. 'Second button gesture (short double-press)' on sw0 is not available — bare GPIO edge into a semaphore, no timing state machine (main.c:764-771), deliberately so (main.c:29-38). If you want a physical 'what just happened?' query, sw1 (main.c:39) is the button with headroom, though it currently means moment bookmark."
+    },
+    {
+      "id": "t2-h6u8",
+      "kind": "tool",
+      "round": 2,
+      "name": "mac_workspace_edit",
+      "why": "Duplicate - the kept id is t1-nphy, your round-1 request under the identical name, now GRANTED. t1-nphy is the better-specified of the pair: it declares operations[].kind as a real enum (read, write, patch, run_test, git_diff), so each operation is scored and resolved independently. Yours has no enum at all - files[].patch plus commands as an array of free-form strings - and a free-form command array is the measured-dead shape: the same pattern tested tonight as mac_readonly_diagnostics_impl scored 0.23-0.32 on every single branch. Use t1-nphy. Your dry_run flag is the one genuinely good idea here that t1-nphy lacks; ask for it as a narrow addition. Worth knowing for either: file mutation does exist as executor action types (create_file, write_file, move_file, copy_file, delete_file behind POST /execute), but POST /execute captures no exit code, no argv and no env, so run_test will come back thinner than you expect - do not claim a green build from it.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "patch": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path",
+                "patch"
+              ]
+            }
+          },
+          "commands": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Allowlisted build/test commands to run after edits"
+          },
+          "dry_run": {
+            "type": "boolean",
+            "description": "If true, show proposed diffs and commands without writing or executing"
+          }
+        },
+        "required": [
+          "files",
+          "commands",
+          "dry_run"
+        ]
+      },
+      "example_call": {
+        "files": [
+          {
+            "path": "firmware/nrf9160/src/audio_opus.c",
+            "patch": "unified diff"
+          }
+        ],
+        "commands": [
+          "west build -b nrf9160dk/nrf9160 firmware/nrf9160"
+        ],
+        "dry_run": true
+      },
+      "expected_output": "Structured result containing per-file diff status, command stdout/stderr/exit codes, and artifact paths; no write or command execution when dry_run=true.",
+      "summary": "mac_workspace_edit"
+    },
+    {
+      "id": "t11-iqwz",
+      "kind": "tool",
+      "round": 77,
+      "name": "catch_up_status",
+      "why": "Prose-schema. Every field is an English sentence: since is 'string, optional ISO-8601 timestamp; defaults to last owner acknowledgement', include_sources is 'array of strings, optional enum pendant|relay|mac|browser'. That last one is exactly the pattern measured unresolvable tonight - the word 'enum' inside a string is not an enum. Compare your own t10-s5iq (incident_diagnostics), which was granted this round: it declares include as a real enum array and mode as a real enum, and is therefore scored per value. Resubmit as {type:'object', properties:{since:{type:'string', format:'date-time'}, limit:{type:'integer', minimum:1, maximum:20}, include_pending:{type:'boolean'}, include_sources:{type:'array', items:{type:'string', enum:['pendant','relay','mac','browser']}}}}. Before you do, check whether it is still distinct from t10-s5iq - a merged read across held pendant alerts, relay receipts, Mac jobs and browser results is close to what that grant already covers in snapshot mode, and a sixth overlapping read is worth less to you than one that resolves.",
+      "why_existing_tools_insufficient": "relay_job_status only reads relay job records; GET /jobs and /pipeline are separate HTTP records; browser status exposes pending connectivity but not a normalized outcome history. No current tool returns an acknowledged, deduplicated cross-surface catch-up projection.",
+      "input_schema": {
+        "since": "string, optional ISO-8601 timestamp; defaults to last owner acknowledgement",
+        "limit": "integer, optional 1-20, default 8",
+        "include_pending": "boolean, optional, default true",
+        "include_sources": "array of strings, optional enum pendant|relay|mac|browser"
+      },
+      "example_call": {
+        "since": "2026-08-07T07:00:00-05:00",
+        "limit": 5,
+        "include_pending": true,
+        "include_sources": [
+          "pendant",
+          "relay",
+          "mac",
+          "browser"
+        ]
+      },
+      "expected_output": "Object containing items[]; each item has stable id, source, occurredAt, status enum observed|queued|running|completed|failed|approval-required|unknown, one-sentence summary, evidence refs (jobId/pipelineId/commandId/URL where safe), sensitivity, and dedupeKey; plus nextSince and counts by status.",
+      "summary": "catch_up_status"
+    },
+    {
+      "id": "t12-uicl",
+      "kind": "tool",
+      "round": 119,
+      "name": "query_unified_job_receipt",
+      "why": "Prose-schema. jobId is 'string', includeEvidence is 'boolean, default false', maxEvents is 'integer, default 50' - the types are written as English, so the object declares no readable properties and the call gets one name-only score. Fix this one carefully, because the surface behind it is real and proven: GET /jobs/:jobId resolved LIVE tonight at 0.645 via relay-realtime's relay_job_status, and a required free-form handle like jobId is precisely what lets the resolver match a :param route - it is treated as a path handle rather than a dispatch selector, which is why it helps you here. Resubmit as {type:'object', properties:{jobId:{type:'string'}, includeEvidence:{type:'boolean'}, includeUndo:{type:'boolean'}, maxEvents:{type:'integer', minimum:1, maximum:200}}, required:['jobId']} and the base read should go live. The cross-surface join you want on top - pipeline outcome plus browser command result plus audio delivery - spans POST /pipeline/audio and POST /browser/inspect and is a separate proposal; ask for it with an explicit enum of sources rather than folding it into the job read.",
+      "why_existing_tools_insufficient": "relay_job_status reports relay jobs, GET /jobs/:jobId/receipts reports receipts, and GET /pipeline exposes event streams, but none joins Mac action receipts, browser tab evidence, approval state, reconnect checkpoints, and pendant playback ACK into one causally ordered result. The recent pipeline demonstrates the gap: approval was waiting while TTS and relay delivery were already done.",
+      "input_schema": {
+        "jobId": "string",
+        "includeEvidence": "boolean, default false",
+        "includeUndo": "boolean, default true",
+        "maxEvents": "integer, default 50"
+      },
+      "example_call": {
+        "jobId": "job_309f5663-e01a-4f8a-b798-319c7c18313f",
+        "includeEvidence": true,
+        "includeUndo": true
+      },
+      "expected_output": "JSON with status (pending|completed|failed|expired|partially_completed), causal events ordered by time, blockedAction and approval expiry if applicable, action receipts with idempotency keys, browser evidence references (tabId/url/timestamp/snippetHash), audio delivery status (rendered|uploaded|downloaded|played|ack timeout), safe undo availability, and a short owner-facing summary.",
+      "summary": "query_unified_job_receipt"
     }
   ],
   "findings": [

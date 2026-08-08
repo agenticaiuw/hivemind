@@ -355,7 +355,566 @@
         "requestedInRound": 58
       }
     ],
-    "tools": [],
+    "tools": [
+      {
+        "id": "t1-3r6y",
+        "name": "reconcile_personal_state",
+        "why": "The owner’s system currently has conflicting timezone/permission reports and duplicate scheduled audio. Judgement needs a read-only, provenance-backed reconciliation before promising calendar/mail access or issuing briefings; existing status endpoints expose raw surfaces but no unified conflict detector.",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "domains": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "timezone",
+                  "permissions",
+                  "scheduled_briefings",
+                  "browser_connectivity",
+                  "audio_queue",
+                  "goals"
+                ]
+              }
+            },
+            "as_of": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "include_recommendations": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "domains"
+          ]
+        },
+        "grantedInRound": 146
+      },
+      {
+        "id": "t2-zs14",
+        "name": "pendant_diagnostics_and_bug_draft",
+        "why": "The owner explicitly has the idea of a pendant that files its own bug reports from the UART log. Existing production tools cover Mac/browser/research/status but do not expose a safe, structured UART-log parser or issue-draft workflow. This is useful even before automatic filing: detect anomalies, correlate link/audio metrics, and produce a reviewable draft without sending externally.",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "since": {
+              "type": "string",
+              "description": "ISO timestamp, duration (for example 'last 30m'), or log cursor from which to inspect UART/diagnostic records"
+            },
+            "include_audio_metrics": {
+              "type": "boolean",
+              "description": "Include packet loss, queue depth, underruns, sample-rate transitions, and latency evidence"
+            },
+            "draft_target": {
+              "type": "string",
+              "enum": [
+                "local_note",
+                "github_issue_draft",
+                "email_draft",
+                "none"
+              ],
+              "description": "Where to prepare a reviewable draft; never send or submit"
+            },
+            "severity_threshold": {
+              "type": "string",
+              "enum": [
+                "info",
+                "warning",
+                "error",
+                "critical"
+              ],
+              "description": "Minimum severity to include"
+            },
+            "spoken_reply": {
+              "type": "string",
+              "description": "Short user-facing status sentence"
+            }
+          },
+          "required": [
+            "since",
+            "draft_target"
+          ]
+        },
+        "grantedInRound": 146
+      },
+      {
+        "id": "t6-raqo",
+        "name": "cross_surface_preflight",
+        "why": "To fulfill the proposed truthful routing behavior, I need one cheap authoritative call that reports which surfaces can currently read, draft, or execute for a given job, rather than repeatedly invoking unavailable tools or claiming success.",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "intent": {
+              "type": "string"
+            },
+            "required_scopes": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "read",
+                  "draft",
+                  "mutate",
+                  "destructive"
+                ]
+              }
+            },
+            "targets": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "pendant",
+                  "relay",
+                  "mac",
+                  "browser"
+                ]
+              }
+            }
+          },
+          "required": [
+            "intent"
+          ]
+        },
+        "grantedInRound": 146
+      },
+      {
+        "id": "t8-zr10",
+        "name": "audio_brief_item_action",
+        "why": "The two proposed capabilities need a durable, source-linked way to pause the pendant brief, bind the owner's utterance to the current item, and enqueue a reminder/note/draft without losing playback position. Existing tools expose generic Mac/browser actions but not the semantic audio cursor or idempotent item action.",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "string",
+              "enum": [
+                "get_state",
+                "pause",
+                "resume",
+                "next",
+                "previous",
+                "defer",
+                "create_note",
+                "create_reminder",
+                "append_to_draft",
+                "get_evidence"
+              ]
+            },
+            "item_id": {
+              "type": "string"
+            },
+            "cursor_token": {
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            },
+            "due_at": {
+              "type": "string",
+              "description": "ISO-8601 timestamp for reminders"
+            },
+            "target": {
+              "type": "string",
+              "description": "Note, reminder, or draft identifier"
+            },
+            "request_id": {
+              "type": "string",
+              "description": "Idempotency key"
+            }
+          },
+          "required": [
+            "operation",
+            "request_id"
+          ]
+        },
+        "grantedInRound": 146
+      },
+      {
+        "id": "t13-5tzh",
+        "name": "explain_action_provenance",
+        "why": "The owner needs an immediate, trustworthy answer to ‘why did you suggest/do this?’ and the ability to revoke a source. Existing receipts are completion records, not a verified chain from evidence through judgement to effect.",
+        "input_schema": {
+          "type": "object",
+          "required": [
+            "action_or_item_id",
+            "mode"
+          ],
+          "properties": {
+            "action_or_item_id": {
+              "type": "string",
+              "description": "Receipt, job, briefing item, reminder, or proposal identifier."
+            },
+            "mode": {
+              "type": "string",
+              "enum": [
+                "explain",
+                "list_sources",
+                "revoke_source",
+                "revoke_task"
+              ],
+              "description": "Explain the evidence chain or apply a scoped revocation."
+            },
+            "source_id": {
+              "type": "string",
+              "description": "Required for revoke_source."
+            },
+            "confirmation_token": {
+              "type": "string",
+              "description": "Required for revocation writes; generated by a prior explanation response."
+            },
+            "include_sensitive": {
+              "type": "boolean",
+              "default": false,
+              "description": "Only local dashboard may request true; spoken relay must reject it."
+            }
+          }
+        },
+        "grantedInRound": 146
+      },
+      {
+        "id": "t15-p8zd",
+        "name": "revalidate_pending_plan",
+        "why": "The proposed stale-plan sentinel cannot safely compare a prepared browser/Mac action against current state without a typed, least-privilege recheck that returns only changed fields and provenance. Existing generic execution tools are too broad and may commit actions.",
+        "input_schema": {
+          "type": "object",
+          "required": [
+            "planId"
+          ],
+          "properties": {
+            "planId": {
+              "type": "string",
+              "description": "Durable draft/plan identifier"
+            },
+            "maxAgeSeconds": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 86400
+            },
+            "sources": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Optional source IDs; defaults to sources captured in the plan"
+            },
+            "includeSensitiveSnippets": {
+              "type": "boolean",
+              "description": "Must default false; only true after explicit owner request"
+            }
+          }
+        },
+        "grantedInRound": 146
+      },
+      {
+        "id": "t17-1jsi",
+        "name": "autonomy_policy_evaluate",
+        "why": "A shared deterministic evaluator is needed so relay, Mac, browser, and pendant make the same ACT/PREPARE/QUEUE/ASK decision without asking the expensive model on every job. It must be fail-closed and expose matched rules for owner-facing explanations.",
+        "input_schema": {
+          "type": "object",
+          "required": [
+            "action",
+            "context"
+          ],
+          "properties": {
+            "action": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string"
+                },
+                "target": {
+                  "type": "string"
+                },
+                "reversible": {
+                  "type": "boolean"
+                },
+                "external_side_effect": {
+                  "type": "boolean"
+                },
+                "spend_cents": {
+                  "type": "integer"
+                },
+                "audience": {
+                  "type": "string"
+                },
+                "deadline": {
+                  "type": "string"
+                }
+              }
+            },
+            "context": {
+              "type": "object",
+              "properties": {
+                "surface": {
+                  "type": "string"
+                },
+                "attention_state": {
+                  "type": "string"
+                },
+                "confidence": {
+                  "type": "number"
+                },
+                "evidence_refs": {
+                  "type": "array"
+                },
+                "policy_version": {
+                  "type": "string"
+                }
+              }
+            },
+            "mode": {
+              "type": "string",
+              "enum": [
+                "evaluate",
+                "explain"
+              ]
+            }
+          }
+        },
+        "grantedInRound": 146
+      },
+      {
+        "id": "t18-8ylu",
+        "name": "attention_arbitrate",
+        "why": "A single durable arbiter is needed to decide whether cross-surface events should interrupt, defer, coalesce, or suppress. Without a typed decision endpoint, each scheduled job and surface will continue notifying independently and the proposed capability cannot be implemented safely.",
+        "input_schema": {
+          "type": "object",
+          "required": [
+            "events",
+            "owner_state"
+          ],
+          "properties": {
+            "events": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "event_id",
+                  "source",
+                  "summary",
+                  "urgency",
+                  "confidence",
+                  "sensitivity",
+                  "dedupe_key",
+                  "expires_at"
+                ],
+                "properties": {
+                  "event_id": {
+                    "type": "string"
+                  },
+                  "source": {
+                    "type": "string"
+                  },
+                  "summary": {
+                    "type": "string"
+                  },
+                  "urgency": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "confidence": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "sensitivity": {
+                    "type": "string",
+                    "enum": [
+                      "public",
+                      "normal",
+                      "private",
+                      "secret"
+                    ]
+                  },
+                  "dedupe_key": {
+                    "type": "string"
+                  },
+                  "deadline": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "date-time"
+                  },
+                  "expires_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "evidence_ref": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              }
+            },
+            "owner_state": {
+              "type": "object",
+              "required": [
+                "pendant_available",
+                "quiet_window"
+              ],
+              "properties": {
+                "pendant_available": {
+                  "type": "boolean"
+                },
+                "wearing": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "speaking": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "focus_mode": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "in_meeting": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "quiet_window": {
+                  "type": "boolean"
+                },
+                "last_interrupt_at": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                }
+              }
+            },
+            "policy": {
+              "type": "object",
+              "properties": {
+                "max_batch_size": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "urgent_threshold": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "default_quiet_until": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                }
+              }
+            }
+          },
+          "example_call": {
+            "events": [
+              {
+                "event_id": "mail-123",
+                "source": "browser:gmail",
+                "summary": "Two-factor code expires in 8 minutes",
+                "urgency": 0.95,
+                "confidence": 0.88,
+                "sensitivity": "private",
+                "dedupe_key": "gmail:2fa",
+                "deadline": "2026-08-07T12:00:00Z",
+                "expires_at": "2026-08-07T12:05:00Z",
+                "evidence_ref": "tab-4#msg-22"
+              }
+            ],
+            "owner_state": {
+              "pendant_available": true,
+              "wearing": true,
+              "speaking": false,
+              "focus_mode": "Work",
+              "in_meeting": false,
+              "quiet_window": false,
+              "last_interrupt_at": null
+            }
+          },
+          "expected_output": "A signed, explainable decision per event: decision (speak_now|vibrate|defer|queue|coalesce|suppress), deliver_after, expires_at, rationale_codes, grouped_event_ids, policy_version, and an audit record with idempotency key. It must fail closed for normal sensitive content but fail open for explicit deadlines above the urgent threshold."
+        },
+        "grantedInRound": 146
+      },
+      {
+        "id": "t23-hkrj",
+        "name": "record_pendant_delivery_event",
+        "why": "The existing job and pipeline receipts stop at server-side generation/acceptance; no current tool can ingest or reconcile a pendant's authenticated downloaded/played ACK, including offline replay and duplicate suppression.",
+        "input_schema": {
+          "type": "object",
+          "required": [
+            "artifactId",
+            "deviceSessionId",
+            "eventType",
+            "deviceSequence",
+            "occurredAtMonotonicMs",
+            "eventId"
+          ],
+          "properties": {
+            "artifactId": {
+              "type": "string",
+              "description": "Opaque audio artifact identifier"
+            },
+            "deviceSessionId": {
+              "type": "string",
+              "description": "Authenticated pendant session identifier"
+            },
+            "eventType": {
+              "type": "string",
+              "enum": [
+                "downloaded",
+                "playback_started",
+                "playback_finished",
+                "playback_interrupted",
+                "checksum_error",
+                "no_audio"
+              ],
+              "description": "Observed local delivery state"
+            },
+            "deviceSequence": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "occurredAtMonotonicMs": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "eventId": {
+              "type": "string",
+              "description": "Stable deduplication key"
+            },
+            "bytesReceived": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "expectedBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "playbackPositionMs": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "reason": {
+              "type": "string"
+            }
+          }
+        },
+        "grantedInRound": 146
+      }
+    ],
     "permissions": [],
     "deviceSkills": [
       {
@@ -16358,1559 +16917,7 @@
       "round": 146
     }
   ],
-  "pending": [
-    {
-      "id": "t1-3r6y",
-      "kind": "tool",
-      "round": 1,
-      "name": "reconcile_personal_state",
-      "why": "The owner’s system currently has conflicting timezone/permission reports and duplicate scheduled audio. Judgement needs a read-only, provenance-backed reconciliation before promising calendar/mail access or issuing briefings; existing status endpoints expose raw surfaces but no unified conflict detector.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "domains": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "timezone",
-                "permissions",
-                "scheduled_briefings",
-                "browser_connectivity",
-                "audio_queue",
-                "goals"
-              ]
-            }
-          },
-          "as_of": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "include_recommendations": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "domains"
-        ]
-      },
-      "example_call": {
-        "domains": [
-          "timezone",
-          "permissions",
-          "scheduled_briefings",
-          "audio_queue"
-        ],
-        "include_recommendations": true
-      },
-      "expected_output": "JSON object containing each domain’s observed values, source and timestamp for every observation, conflicts with severity, freshness, recommended safe next step, and whether owner confirmation is required. Read-only; never changes schedules or permissions.",
-      "summary": "reconcile_personal_state"
-    },
-    {
-      "id": "t2-zs14",
-      "kind": "tool",
-      "round": 3,
-      "name": "pendant_diagnostics_and_bug_draft",
-      "why": "The owner explicitly has the idea of a pendant that files its own bug reports from the UART log. Existing production tools cover Mac/browser/research/status but do not expose a safe, structured UART-log parser or issue-draft workflow. This is useful even before automatic filing: detect anomalies, correlate link/audio metrics, and produce a reviewable draft without sending externally.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "since": {
-            "type": "string",
-            "description": "ISO timestamp, duration (for example 'last 30m'), or log cursor from which to inspect UART/diagnostic records"
-          },
-          "include_audio_metrics": {
-            "type": "boolean",
-            "description": "Include packet loss, queue depth, underruns, sample-rate transitions, and latency evidence"
-          },
-          "draft_target": {
-            "type": "string",
-            "enum": [
-              "local_note",
-              "github_issue_draft",
-              "email_draft",
-              "none"
-            ],
-            "description": "Where to prepare a reviewable draft; never send or submit"
-          },
-          "severity_threshold": {
-            "type": "string",
-            "enum": [
-              "info",
-              "warning",
-              "error",
-              "critical"
-            ],
-            "description": "Minimum severity to include"
-          },
-          "spoken_reply": {
-            "type": "string",
-            "description": "Short user-facing status sentence"
-          }
-        },
-        "required": [
-          "since",
-          "draft_target"
-        ]
-      },
-      "example_call": {
-        "since": "last 24h",
-        "include_audio_metrics": true,
-        "draft_target": "local_note",
-        "severity_threshold": "warning",
-        "spoken_reply": "I’m checking the pendant diagnostics and preparing a reviewable bug draft."
-      },
-      "expected_output": "Structured diagnostics summary with source log ranges, detected incidents, confidence, suggested reproducer, and a draft artifact path/content. No external submission and no destructive changes.",
-      "summary": "pendant_diagnostics_and_bug_draft"
-    },
-    {
-      "id": "t3-j9ss",
-      "kind": "tool",
-      "round": 7,
-      "name": "commitment_ledger",
-      "why": "Commitment radar cannot safely infer, track, verify, and remind about commitments without a durable typed record with provenance and uncertainty. Existing generic notes/reminders lose source evidence and status transitions.",
-      "input_schema": {
-        "operation": "string enum: upsert_candidate|list_at_risk|record_evidence|set_status|snooze|dismiss",
-        "commitment": {
-          "id": "optional string",
-          "summary": "string",
-          "owner": "optional string",
-          "due_at": "optional RFC3339 timestamp",
-          "due_window": "optional object with start/end RFC3339 timestamps",
-          "confidence": "number 0..1",
-          "sensitivity": "enum normal|sensitive|secret",
-          "source_refs": "array of objects {surface,locator,captured_at,quote_hash}",
-          "consent": "enum explicit_track|configured_opt_in"
-        },
-        "evidence": {
-          "surface": "string",
-          "locator": "string",
-          "captured_at": "RFC3339 timestamp",
-          "status": "enum open|done|blocked|unclear",
-          "quote_hash": "string"
-        },
-        "idempotency_key": "string"
-      },
-      "example_call": {
-        "operation": "upsert_candidate",
-        "commitment": {
-          "summary": "Send revised proposal to Alex",
-          "due_window": {
-            "end": "2026-08-14T17:00:00-05:00"
-          },
-          "confidence": 0.84,
-          "sensitivity": "normal",
-          "source_refs": [
-            {
-              "surface": "voice",
-              "locator": "session:abc",
-              "captured_at": "2026-08-07T10:00:00Z",
-              "quote_hash": "sha256:..."
-            }
-          ],
-          "consent": "explicit_track"
-        },
-        "idempotency_key": "voice-session-abc-track-1"
-      },
-      "expected_output": "JSON object containing commitment id, normalized record, prior/new status, provenance, and any validation warnings; list_at_risk returns ranked items with reason, freshness, and suggested reminder time.",
-      "summary": "commitment_ledger"
-    },
-    {
-      "id": "t4-b4ht",
-      "kind": "tool",
-      "round": 8,
-      "name": "resume_packet",
-      "why": "The proposed deferred-intention capability needs one durable, provenance-aware object spanning pendant capture, relay scheduling, Mac/browser context restoration, snooze/complete, and deletion. Existing generic action tools cannot guarantee source binding or idempotent lifecycle.",
-      "input_schema": {
-        "operation": "string enum: create|get|list|transition|delete",
-        "packet_id": "string optional",
-        "intent": "string optional",
-        "return_at": "ISO-8601 timestamp or condition optional",
-        "source": {
-          "kind": "browser|mac_file|mac_window|voice_only",
-          "stable_id": "string",
-          "title": "string optional",
-          "url_or_path": "string optional",
-          "excerpt_hash": "string optional"
-        },
-        "sensitivity": "string enum: normal|sensitive|secret optional",
-        "transition": "string enum: staged|reminded|snoozed|completed|cancelled optional",
-        "snooze_until": "ISO-8601 timestamp optional",
-        "idempotency_key": "string optional"
-      },
-      "example_call": {
-        "operation": "create",
-        "intent": "review the insurance form",
-        "return_at": "2026-08-08T14:00:00-05:00",
-        "source": {
-          "kind": "browser",
-          "stable_id": "tab:abc123",
-          "title": "Insurance form",
-          "url_or_path": "https://example.test/form",
-          "excerpt_hash": "sha256:..."
-        },
-        "sensitivity": "sensitive",
-        "idempotency_key": "voice-turn-123"
-      },
-      "expected_output": "For create: packet_id, normalized intent, source binding, status, and scheduled time. For get/list: packets with lifecycle and revalidation state. For transition/delete: idempotent success, prior and new status, and any source invalidation or permission error.",
-      "summary": "resume_packet"
-    },
-    {
-      "id": "t5-tkcm",
-      "kind": "tool",
-      "round": 15,
-      "name": "cross_surface_recovery",
-      "why": "The owner’s repeated Gmail/GitHub/calendar/browser failures currently collapse into opaque failure. This tool would let the judgement layer classify a failed intent, inspect safe local/browser health signals, and return a bounded remediation or resumable blocker without credentials or irreversible actions.",
-      "input_schema": {
-        "type": "object",
-        "required": [
-          "intent_id",
-          "original_request",
-          "attempted_surfaces"
-        ],
-        "properties": {
-          "intent_id": {
-            "type": "string"
-          },
-          "original_request": {
-            "type": "string"
-          },
-          "attempted_surfaces": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "pendant",
-                "relay",
-                "mac",
-                "browser"
-              ]
-            }
-          },
-          "allow_reversible_repairs": {
-            "type": "boolean"
-          },
-          "retry_budget": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 2
-          }
-        }
-      },
-      "example_call": {
-        "intent_id": "req_123",
-        "original_request": "read my calendar",
-        "attempted_surfaces": [
-          "pendant",
-          "relay",
-          "mac",
-          "browser"
-        ],
-        "allow_reversible_repairs": true,
-        "retry_budget": 1
-      },
-      "expected_output": "A typed result containing status (recovered, needs_owner, blocked, or succeeded), failure class, evidence summary, remediation steps, resume token, data accessed, and whether confirmation is required.",
-      "summary": "cross_surface_recovery"
-    },
-    {
-      "id": "t6-raqo",
-      "kind": "tool",
-      "round": 16,
-      "name": "cross_surface_preflight",
-      "why": "To fulfill the proposed truthful routing behavior, I need one cheap authoritative call that reports which surfaces can currently read, draft, or execute for a given job, rather than repeatedly invoking unavailable tools or claiming success.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "intent": {
-            "type": "string"
-          },
-          "required_scopes": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "read",
-                "draft",
-                "mutate",
-                "destructive"
-              ]
-            }
-          },
-          "targets": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "pendant",
-                "relay",
-                "mac",
-                "browser"
-              ]
-            }
-          }
-        },
-        "required": [
-          "intent"
-        ]
-      },
-      "example_call": {
-        "intent": "read my calendar and draft a concise briefing",
-        "required_scopes": [
-          "read",
-          "draft"
-        ],
-        "targets": [
-          "mac",
-          "browser",
-          "relay"
-        ]
-      },
-      "expected_output": "Object with checkedAt, per-surface status (available|blocked|stale|unknown), granted scopes, session freshness, blocker code plus human-readable reconnect instruction, safe fallback route, and an overall executable scope. Must not include page contents or secrets.",
-      "summary": "cross_surface_preflight"
-    },
-    {
-      "id": "t7-wopx",
-      "kind": "tool",
-      "round": 17,
-      "name": "attention_event_submit",
-      "why": "Implement the proposed cross-surface attention arbitration without forcing each surface to invent its own notification logic. Relay, Mac, and browser adapters need a common write path for candidate events and a typed disposition result.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "source": {
-            "type": "string",
-            "enum": [
-              "pendant",
-              "relay",
-              "mac",
-              "browser",
-              "schedule"
-            ]
-          },
-          "subject": {
-            "type": "string",
-            "description": "Minimal human-readable subject; never include full private body unless explicitly allowed."
-          },
-          "evidence_ref": {
-            "type": "string",
-            "description": "Opaque pointer to source evidence retained on its originating surface."
-          },
-          "urgency": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 100
-          },
-          "sensitivity": {
-            "type": "string",
-            "enum": [
-              "public",
-              "normal",
-              "private",
-              "secret"
-            ]
-          },
-          "required_action": {
-            "type": "string",
-            "enum": [
-              "inform",
-              "review",
-              "reply",
-              "submit",
-              "none"
-            ]
-          },
-          "dedupe_key": {
-            "type": "string"
-          },
-          "expires_at": {
-            "type": "string",
-            "description": "ISO-8601 expiry; event must not be delivered after this time."
-          },
-          "owner_policy_hint": {
-            "type": "string",
-            "description": "Optional source-specific hint, not an override."
-          }
-        },
-        "required": [
-          "source",
-          "subject",
-          "urgency",
-          "sensitivity",
-          "required_action",
-          "dedupe_key"
-        ]
-      },
-      "example_call": {
-        "source": "browser",
-        "subject": "Appointment time changed",
-        "evidence_ref": "tab:7:hash:abc",
-        "urgency": 78,
-        "sensitivity": "private",
-        "required_action": "review",
-        "dedupe_key": "appointment:123",
-        "expires_at": "2026-08-07T18:00:00-05:00"
-      },
-      "expected_output": "{event_id, disposition: 'speak_now'|'haptic_only'|'queue_until_open'|'suppress', reason, delivery_id, expires_at}",
-      "summary": "attention_event_submit"
-    },
-    {
-      "id": "t8-zr10",
-      "kind": "tool",
-      "round": 18,
-      "name": "audio_brief_item_action",
-      "why": "The two proposed capabilities need a durable, source-linked way to pause the pendant brief, bind the owner's utterance to the current item, and enqueue a reminder/note/draft without losing playback position. Existing tools expose generic Mac/browser actions but not the semantic audio cursor or idempotent item action.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "operation": {
-            "type": "string",
-            "enum": [
-              "get_state",
-              "pause",
-              "resume",
-              "next",
-              "previous",
-              "defer",
-              "create_note",
-              "create_reminder",
-              "append_to_draft",
-              "get_evidence"
-            ]
-          },
-          "item_id": {
-            "type": "string"
-          },
-          "cursor_token": {
-            "type": "string"
-          },
-          "text": {
-            "type": "string"
-          },
-          "due_at": {
-            "type": "string",
-            "description": "ISO-8601 timestamp for reminders"
-          },
-          "target": {
-            "type": "string",
-            "description": "Note, reminder, or draft identifier"
-          },
-          "request_id": {
-            "type": "string",
-            "description": "Idempotency key"
-          }
-        },
-        "required": [
-          "operation",
-          "request_id"
-        ]
-      },
-      "example_call": {
-        "operation": "defer",
-        "item_id": "brief-2026-08-07-03",
-        "cursor_token": "cur_abc",
-        "text": "Review LTE-M roaming claim",
-        "due_at": "2026-08-14T09:00:00-05:00",
-        "request_id": "req_123"
-      },
-      "expected_output": "Structured result containing accepted status, item_id, updated playback cursor, queued action ID, source references, and a short spoken-safe receipt; duplicate request_id returns the original result.",
-      "summary": "audio_brief_item_action"
-    },
-    {
-      "id": "t9-8axw",
-      "kind": "tool",
-      "round": 19,
-      "name": "intent_continuity_ledger",
-      "why": "Implement the proposed stale-intent guardian: persist a signed goal/version/assumption record and compare resumed Mac/browser observations before consequential actions.",
-      "input_schema": {
-        "operation": "string enum: create, observe, classify, supersede, answer, get",
-        "jobId": "string",
-        "intentVersion": "string optional",
-        "goal": "string optional",
-        "allowedSideEffects": "array optional",
-        "assumptions": "array of objects {key,value,source,expiresAt} optional",
-        "observations": "array of objects {key,value,source,timestamp,sensitivity,evidenceHash} optional",
-        "ownerAnswer": "string optional",
-        "idempotencyKey": "string optional"
-      },
-      "example_call": {
-        "operation": "classify",
-        "jobId": "job_123",
-        "intentVersion": "v3",
-        "observations": [
-          {
-            "key": "total",
-            "value": "89.00",
-            "source": "authenticated-browser",
-            "timestamp": "2026-08-07T10:00:00Z",
-            "sensitivity": "normal",
-            "evidenceHash": "sha256:..."
-          }
-        ]
-      },
-      "expected_output": "Typed result {jobId,intentVersion,status:'unchanged'|'safe_drift'|'needs_owner'|'expired',materialChanges:[{key,before,after,reason}],allowedNextStep,expiresAt,redactedEvidence,receiptId}; fail closed on ledger or signature errors.",
-      "summary": "intent_continuity_ledger"
-    },
-    {
-      "id": "t10-jg00",
-      "kind": "tool",
-      "round": 22,
-      "name": "decision_window",
-      "why": "Implement the proposed tentative-intent workflow without making each surface invent incompatible state. The relay needs a durable, privacy-scoped record that can be resumed by the pendant, planner, browser, and action executor.",
-      "input_schema": {
-        "operation": "create|append_evidence|set_status|get|list|expire|redact",
-        "windowId": "string, required for all operations except create/list",
-        "ownerWording": "string, required on create",
-        "source": "pendant|voice|mac|browser|system",
-        "confidence": "number 0..1",
-        "missingDecision": "string or null",
-        "evidenceRequirements": "array of {surface, query, allowedSources, freshnessSeconds}",
-        "evidence": "array of {sourceRef, capturedAt, excerpt, sensitivity, confidence}",
-        "status": "tentative|gathering|ready|awaiting_owner|confirmed|rejected|expired",
-        "ttlSeconds": "integer",
-        "allowedActionClass": "read_only|draft|reversible|irreversible",
-        "idempotencyKey": "string",
-        "redact": "boolean"
-      },
-      "example_call": {
-        "operation": "create",
-        "ownerWording": "Maybe move Friday's appointment if the train is delayed",
-        "source": "pendant",
-        "confidence": 0.86,
-        "missingDecision": "Whether delay exceeds the owner's threshold and which alternate slot is acceptable",
-        "evidenceRequirements": [
-          {
-            "surface": "browser",
-            "query": "check authenticated rail status",
-            "allowedSources": [
-              "rail-site"
-            ],
-            "freshnessSeconds": 900
-          },
-          {
-            "surface": "mac",
-            "query": "find calendar event and free alternate slots",
-            "allowedSources": [
-              "calendar"
-            ],
-            "freshnessSeconds": 3600
-          }
-        ],
-        "status": "tentative",
-        "ttlSeconds": 86400,
-        "allowedActionClass": "draft",
-        "idempotencyKey": "dw-demo-1"
-      },
-      "expected_output": "A typed JSON result containing windowId, status, nextQuestion (or null), evidence summary with provenance, actionManifestId (or null), expiresAt, and redaction/deletion receipt when applicable.",
-      "summary": "decision_window"
-    },
-    {
-      "id": "t11-xyom",
-      "kind": "tool",
-      "round": 25,
-      "name": "cross_surface_impact_scan",
-      "why": "The proposed consequence-preview capability needs one read-only operation that gathers scoped, provenance-carrying evidence from authenticated browser tabs, Mac context, calendar/files/reminders, and active relay jobs. Without a single typed result, realtime cannot honestly answer what a proposed commitment will cause elsewhere.",
-      "input_schema": {
-        "type": "object",
-        "required": [
-          "candidate"
-        ],
-        "properties": {
-          "candidate": {
-            "type": "object",
-            "required": [
-              "summary"
-            ],
-            "properties": {
-              "summary": {
-                "type": "string"
-              },
-              "sourceUrl": {
-                "type": "string"
-              },
-              "proposedFields": {
-                "type": "object"
-              },
-              "timeRange": {
-                "type": "object"
-              },
-              "estimatedCost": {
-                "type": "number"
-              },
-              "audience": {
-                "type": "string"
-              },
-              "actionKind": {
-                "type": "string",
-                "enum": [
-                  "accept",
-                  "send",
-                  "purchase",
-                  "schedule",
-                  "delete",
-                  "edit",
-                  "other"
-                ]
-              }
-            }
-          },
-          "scopes": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "browser",
-                "calendar",
-                "mail",
-                "files",
-                "reminders",
-                "jobs"
-              ]
-            }
-          },
-          "maxSeconds": {
-            "type": "integer",
-            "minimum": 5,
-            "maximum": 120
-          },
-          "freshnessSeconds": {
-            "type": "integer",
-            "minimum": 30,
-            "maximum": 86400
-          }
-        }
-      },
-      "example_call": {
-        "candidate": {
-          "summary": "Accept the proposed Tuesday 3pm appointment",
-          "actionKind": "accept",
-          "timeRange": {
-            "start": "2026-08-11T15:00:00-05:00",
-            "end": "2026-08-11T16:00:00-05:00"
-          }
-        },
-        "scopes": [
-          "browser",
-          "calendar",
-          "reminders",
-          "jobs"
-        ],
-        "maxSeconds": 45,
-        "freshnessSeconds": 3600
-      },
-      "expected_output": "A typed JSON object with candidateId, impacts[] (severity, kind, explanation, entity, source, sourceSnippetHash, observedAt, confidence, reversible), unknowns[], scopeUsed[], and a safeToProceed tri-state. Read-only; it must never submit, send, buy, delete, or modify anything.",
-      "summary": "cross_surface_impact_scan"
-    },
-    {
-      "id": "t12-h5kb",
-      "kind": "tool",
-      "round": 33,
-      "name": "obligation_graph_reconcile",
-      "why": "The owner needs one trustworthy, contradiction-aware answer about commitments spanning calendar, mail, local notes, reminders, and authenticated browser pages. Existing page-watch and brief tools cannot deduplicate obligations or preserve evidence/confidence across surfaces.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "scope": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "calendar",
-                "mail",
-                "local_notes",
-                "reminders",
-                "authenticated_browser"
-              ]
-            }
-          },
-          "mode": {
-            "type": "string",
-            "enum": [
-              "changed_only",
-              "full_snapshot",
-              "on_demand_question"
-            ]
-          },
-          "since": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "max_items": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 50
-          }
-        },
-        "required": [
-          "scope",
-          "mode"
-        ]
-      },
-      "example_call": {
-        "scope": [
-          "calendar",
-          "mail",
-          "local_notes",
-          "authenticated_browser"
-        ],
-        "mode": "changed_only",
-        "max_items": 20
-      },
-      "expected_output": "A typed result containing obligations[] (stable id, normalized commitment, counterparty, dueAt or dueWindow, consequence, evidence citations with source/tab/path/timestamp, confidence, staleAt, conflictIds, suggested reversible next step), conflicts[], sourceStatuses[], and a run receipt. It must never send/submit/change external state.",
-      "summary": "obligation_graph_reconcile"
-    },
-    {
-      "id": "t13-5tzh",
-      "kind": "tool",
-      "round": 34,
-      "name": "explain_action_provenance",
-      "why": "The owner needs an immediate, trustworthy answer to ‘why did you suggest/do this?’ and the ability to revoke a source. Existing receipts are completion records, not a verified chain from evidence through judgement to effect.",
-      "input_schema": {
-        "type": "object",
-        "required": [
-          "action_or_item_id",
-          "mode"
-        ],
-        "properties": {
-          "action_or_item_id": {
-            "type": "string",
-            "description": "Receipt, job, briefing item, reminder, or proposal identifier."
-          },
-          "mode": {
-            "type": "string",
-            "enum": [
-              "explain",
-              "list_sources",
-              "revoke_source",
-              "revoke_task"
-            ],
-            "description": "Explain the evidence chain or apply a scoped revocation."
-          },
-          "source_id": {
-            "type": "string",
-            "description": "Required for revoke_source."
-          },
-          "confirmation_token": {
-            "type": "string",
-            "description": "Required for revocation writes; generated by a prior explanation response."
-          },
-          "include_sensitive": {
-            "type": "boolean",
-            "default": false,
-            "description": "Only local dashboard may request true; spoken relay must reject it."
-          }
-        }
-      },
-      "example_call": {
-        "action_or_item_id": "job_123",
-        "mode": "explain",
-        "include_sensitive": false
-      },
-      "expected_output": "A typed response with action/item status, one-sentence owner-safe explanation, evidence entries (source surface, redacted pointer, observedAt, freshness, confidence), transformations/policies applied, intended and actual side effects, uncertainty, and a scoped revocation token when requested. Revocation returns scope, expiry, propagation status across relay/Mac/browser/scheduler, and a durable receipt.",
-      "summary": "explain_action_provenance"
-    },
-    {
-      "id": "t14-47wd",
-      "kind": "tool",
-      "round": 38,
-      "name": "deadline_risk_scan",
-      "why": "To make the rescue capability actionable, faculty-judgement needs a read-only, privacy-preserving scan over current calendar/mail/tasks/files and existing action receipts. No current production tool returns linked due dates, blockers, confidence, or source provenance as one typed result.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "scope": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "calendar",
-                "mail",
-                "tasks",
-                "local_files",
-                "browser_tabs",
-                "action_receipts"
-              ]
-            }
-          },
-          "horizonHours": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 720
-          },
-          "includeSensitiveContent": {
-            "type": "boolean",
-            "default": false
-          },
-          "knownGoalIds": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        },
-        "required": [
-          "scope",
-          "horizonHours"
-        ]
-      },
-      "example_call": {
-        "scope": [
-          "calendar",
-          "mail",
-          "tasks",
-          "local_files",
-          "action_receipts"
-        ],
-        "horizonHours": 168,
-        "includeSensitiveContent": false
-      },
-      "expected_output": "JSON object {ok, generatedAt, items:[{riskId,summary,deadlineAt,urgency,confidence,blockedBy:[{kind,id,summary}],recommendedReversibleStep,sourceRefs:[{surface,sourceId,timestamp,expiresAt}],sensitivity}], suppressed:[{reason,count}], errors:[{surface,code,message}]}; must not return raw mail/page body when includeSensitiveContent=false, must be read-only, and must be safe to retry.",
-      "summary": "deadline_risk_scan"
-    },
-    {
-      "id": "t15-p8zd",
-      "kind": "tool",
-      "round": 39,
-      "name": "revalidate_pending_plan",
-      "why": "The proposed stale-plan sentinel cannot safely compare a prepared browser/Mac action against current state without a typed, least-privilege recheck that returns only changed fields and provenance. Existing generic execution tools are too broad and may commit actions.",
-      "input_schema": {
-        "type": "object",
-        "required": [
-          "planId"
-        ],
-        "properties": {
-          "planId": {
-            "type": "string",
-            "description": "Durable draft/plan identifier"
-          },
-          "maxAgeSeconds": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 86400
-          },
-          "sources": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "Optional source IDs; defaults to sources captured in the plan"
-          },
-          "includeSensitiveSnippets": {
-            "type": "boolean",
-            "description": "Must default false; only true after explicit owner request"
-          }
-        }
-      },
-      "example_call": {
-        "planId": "plan_123",
-        "maxAgeSeconds": 300
-      },
-      "expected_output": "A typed read-only result: {planId, status:'unchanged'|'changed'|'unavailable'|'expired', checkedAt, changes:[{sourceId,field,before,after,citation}], blockedActions:[...], missingPermissions:[...], redactionsApplied:true}. It must never execute or submit a mutation.",
-      "summary": "revalidate_pending_plan"
-    },
-    {
-      "id": "t16-iybw",
-      "kind": "tool",
-      "round": 43,
-      "name": "delegation_contract_compile_and_check",
-      "why": "Bounded delegation is the new owner-facing capability proposed this round. It needs a deterministic, shared service to compile a spoken request into explicit constraints and check each planned action before any browser or Mac mutation; without this, the feature would rely on unsafe model judgment.",
-      "input_schema": {
-        "type": "object",
-        "required": [
-          "mode",
-          "request_or_contract",
-          "action"
-        ],
-        "properties": {
-          "mode": {
-            "type": "string",
-            "enum": [
-              "compile",
-              "check",
-              "revoke"
-            ]
-          },
-          "request_or_contract": {
-            "type": "string",
-            "description": "For compile: owner's transcribed request. For check/revoke: signed contract JSON or contract ID."
-          },
-          "action": {
-            "type": "object",
-            "description": "For check: proposed action with target surface, account scope, amount, data classes, reversibility, and evidence references."
-          },
-          "contract_id": {
-            "type": "string"
-          },
-          "now": {
-            "type": "string",
-            "description": "ISO timestamp used for expiry and freshness checks."
-          }
-        }
-      },
-      "example_call": {
-        "mode": "compile",
-        "request_or_contract": "Rebook my flight to arrive before six, under $300, same airline if possible, ask me if neither works.",
-        "now": "2026-08-07T12:00:00Z"
-      },
-      "expected_output": "Compile returns a signed contract with normalized hard/soft predicates, expiration, allowed action classes, confirmation requirements, ambiguity warnings, and read-back text. Check returns allowed|needs_confirmation|refused with exact violated predicates, evidence freshness, and a receipt correlation ID. Revoke invalidates the contract and returns affected jobs.",
-      "summary": "delegation_contract_compile_and_check"
-    },
-    {
-      "id": "t17-1jsi",
-      "kind": "tool",
-      "round": 48,
-      "name": "autonomy_policy_evaluate",
-      "why": "A shared deterministic evaluator is needed so relay, Mac, browser, and pendant make the same ACT/PREPARE/QUEUE/ASK decision without asking the expensive model on every job. It must be fail-closed and expose matched rules for owner-facing explanations.",
-      "input_schema": {
-        "type": "object",
-        "required": [
-          "action",
-          "context"
-        ],
-        "properties": {
-          "action": {
-            "type": "object",
-            "properties": {
-              "kind": {
-                "type": "string"
-              },
-              "target": {
-                "type": "string"
-              },
-              "reversible": {
-                "type": "boolean"
-              },
-              "external_side_effect": {
-                "type": "boolean"
-              },
-              "spend_cents": {
-                "type": "integer"
-              },
-              "audience": {
-                "type": "string"
-              },
-              "deadline": {
-                "type": "string"
-              }
-            }
-          },
-          "context": {
-            "type": "object",
-            "properties": {
-              "surface": {
-                "type": "string"
-              },
-              "attention_state": {
-                "type": "string"
-              },
-              "confidence": {
-                "type": "number"
-              },
-              "evidence_refs": {
-                "type": "array"
-              },
-              "policy_version": {
-                "type": "string"
-              }
-            }
-          },
-          "mode": {
-            "type": "string",
-            "enum": [
-              "evaluate",
-              "explain"
-            ]
-          }
-        }
-      },
-      "example_call": {
-        "action": {
-          "kind": "create_reminder",
-          "reversible": true,
-          "external_side_effect": false,
-          "spend_cents": 0,
-          "audience": "private"
-        },
-        "context": {
-          "surface": "mac",
-          "attention_state": "busy",
-          "confidence": 0.98,
-          "evidence_refs": [
-            "job-123"
-          ],
-          "policy_version": "v4"
-        },
-        "mode": "explain"
-      },
-      "expected_output": "A fail-closed JSON decision {decision:'ACT'|'PREPARE'|'QUEUE'|'ASK'|'DENY', matchedRuleIds:[], explanation, requiredConfirmations:[], evidenceRefs:[], policyVersion, expiresAt}; return ASK or DENY on missing/stale policy, conflict, or insufficient evidence.",
-      "summary": "autonomy_policy_evaluate"
-    },
-    {
-      "id": "t18-8ylu",
-      "kind": "tool",
-      "round": 53,
-      "name": "attention_arbitrate",
-      "why": "A single durable arbiter is needed to decide whether cross-surface events should interrupt, defer, coalesce, or suppress. Without a typed decision endpoint, each scheduled job and surface will continue notifying independently and the proposed capability cannot be implemented safely.",
-      "input_schema": {
-        "type": "object",
-        "required": [
-          "events",
-          "owner_state"
-        ],
-        "properties": {
-          "events": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "required": [
-                "event_id",
-                "source",
-                "summary",
-                "urgency",
-                "confidence",
-                "sensitivity",
-                "dedupe_key",
-                "expires_at"
-              ],
-              "properties": {
-                "event_id": {
-                  "type": "string"
-                },
-                "source": {
-                  "type": "string"
-                },
-                "summary": {
-                  "type": "string"
-                },
-                "urgency": {
-                  "type": "number",
-                  "minimum": 0,
-                  "maximum": 1
-                },
-                "confidence": {
-                  "type": "number",
-                  "minimum": 0,
-                  "maximum": 1
-                },
-                "sensitivity": {
-                  "type": "string",
-                  "enum": [
-                    "public",
-                    "normal",
-                    "private",
-                    "secret"
-                  ]
-                },
-                "dedupe_key": {
-                  "type": "string"
-                },
-                "deadline": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
-                  "format": "date-time"
-                },
-                "expires_at": {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                "evidence_ref": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
-                }
-              }
-            }
-          },
-          "owner_state": {
-            "type": "object",
-            "required": [
-              "pendant_available",
-              "quiet_window"
-            ],
-            "properties": {
-              "pendant_available": {
-                "type": "boolean"
-              },
-              "wearing": {
-                "type": [
-                  "boolean",
-                  "null"
-                ]
-              },
-              "speaking": {
-                "type": [
-                  "boolean",
-                  "null"
-                ]
-              },
-              "focus_mode": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
-              "in_meeting": {
-                "type": [
-                  "boolean",
-                  "null"
-                ]
-              },
-              "quiet_window": {
-                "type": "boolean"
-              },
-              "last_interrupt_at": {
-                "type": [
-                  "string",
-                  "null"
-                ],
-                "format": "date-time"
-              }
-            }
-          },
-          "policy": {
-            "type": "object",
-            "properties": {
-              "max_batch_size": {
-                "type": "integer",
-                "minimum": 1
-              },
-              "urgent_threshold": {
-                "type": "number",
-                "minimum": 0,
-                "maximum": 1
-              },
-              "default_quiet_until": {
-                "type": [
-                  "string",
-                  "null"
-                ],
-                "format": "date-time"
-              }
-            }
-          }
-        },
-        "example_call": {
-          "events": [
-            {
-              "event_id": "mail-123",
-              "source": "browser:gmail",
-              "summary": "Two-factor code expires in 8 minutes",
-              "urgency": 0.95,
-              "confidence": 0.88,
-              "sensitivity": "private",
-              "dedupe_key": "gmail:2fa",
-              "deadline": "2026-08-07T12:00:00Z",
-              "expires_at": "2026-08-07T12:05:00Z",
-              "evidence_ref": "tab-4#msg-22"
-            }
-          ],
-          "owner_state": {
-            "pendant_available": true,
-            "wearing": true,
-            "speaking": false,
-            "focus_mode": "Work",
-            "in_meeting": false,
-            "quiet_window": false,
-            "last_interrupt_at": null
-          }
-        },
-        "expected_output": "A signed, explainable decision per event: decision (speak_now|vibrate|defer|queue|coalesce|suppress), deliver_after, expires_at, rationale_codes, grouped_event_ids, policy_version, and an audit record with idempotency key. It must fail closed for normal sensitive content but fail open for explicit deadlines above the urgent threshold."
-      },
-      "summary": "attention_arbitrate"
-    },
-    {
-      "id": "t19-dltk",
-      "kind": "tool",
-      "round": 58,
-      "name": "reconcile_evidence_claims",
-      "why": "Implement the new epistemic-claim capability without routing raw private content through the realtime model. It should fan out to authorized Mac/browser sources, normalize claims, preserve citations and conflicts, and return a compact topic-scoped answer suitable for spoken output.",
-      "input_schema": {
-        "type": "object",
-        "required": [
-          "topic"
-        ],
-        "properties": {
-          "topic": {
-            "type": "string"
-          },
-          "sources": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "mac_mail",
-                "mac_calendar",
-                "mac_notes",
-                "browser_authenticated",
-                "browser_public",
-                "pendant_notes"
-              ]
-            }
-          },
-          "freshness": {
-            "type": "string",
-            "enum": [
-              "cached",
-              "refresh_stale",
-              "refresh_all"
-            ],
-            "default": "refresh_stale"
-          },
-          "sensitivity_max": {
-            "type": "string",
-            "enum": [
-              "normal",
-              "sensitive",
-              "secret"
-            ],
-            "default": "sensitive"
-          },
-          "action_context": {
-            "type": "string"
-          },
-          "include_raw_quotes": {
-            "type": "boolean",
-            "default": false
-          }
-        }
-      },
-      "example_call": {
-        "topic": "my flight next Tuesday",
-        "sources": [
-          "mac_calendar",
-          "browser_authenticated",
-          "mac_mail"
-        ],
-        "freshness": "refresh_stale",
-        "action_context": "prepare, but do not send, a reminder"
-      },
-      "expected_output": "JSON with topic, claims grouped as confirmed/uncertain/contradicted, each claim carrying source references, observedAt, freshness, confidence, sensitivity, and a recommended next question or safe reversible action; no raw secret values unless explicitly authorized.",
-      "summary": "reconcile_evidence_claims"
-    },
-    {
-      "id": "t20-n326",
-      "kind": "tool",
-      "round": 77,
-      "name": "cross_surface_failure_diagnose",
-      "why": "The owner-facing agent needs one safe, read-only call that explains a failed intent across relay, Mac, and browser and returns a short-lived retry token. Existing status tools expose each surface separately and cannot correlate causes or preserve the original goal.",
-      "why_existing_tools_insufficient": "get_mac_status, browser_run_actions, relay_job_status, GET /jobs and GET /browser/status are separate, mostly operational reads. They do not share an intent ID, normalize errors, run bounded parallel probes, redact evidence, classify likely cause, or issue a safe retry token. mac_delegate is for execution, not diagnosis.",
-      "input_schema": {
-        "type": "object",
-        "required": [
-          "intent_or_job_id"
-        ],
-        "properties": {
-          "intent_or_job_id": {
-            "type": "string",
-            "description": "Original intent fingerprint, job ID, or command ID."
-          },
-          "include_probes": {
-            "type": "boolean",
-            "default": true,
-            "description": "Run only read-only health/session probes."
-          },
-          "max_wait_ms": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 10000,
-            "default": 2000
-          },
-          "retain_retry": {
-            "type": "boolean",
-            "default": true,
-            "description": "Issue a short-lived retry token without retaining sensitive arguments."
-          }
-        }
-      },
-      "example_call": {
-        "intent_or_job_id": "job_abc123",
-        "include_probes": true,
-        "max_wait_ms": 2000,
-        "retain_retry": true
-      },
-      "expected_output": "{status:'failed|partial|blocked|transient|unknown', cause:{class,confidence,evidenceRefs[]}, unchanged:true|false, probes:[{surface,observed}], safe_next_step:string, retryToken:string|null, expiresAt:string|null, redactedReceiptId:string}",
-      "summary": "cross_surface_failure_diagnose"
-    },
-    {
-      "id": "t21-35y1",
-      "kind": "tool",
-      "round": 80,
-      "name": "source_health_snapshot",
-      "why": "The daily brief must distinguish empty results from failed or stale authenticated providers before any model summarizes them; current per-surface action tools return results but do not provide a common health/freshness verdict.",
-      "why_existing_tools_insufficient": "get_mac_status, mac_run_actions, browser_run_actions, and mac_delegate can attempt reads, while relay_job_status can report dispatched jobs, but none yields one typed per-source state with authentication, last-success time, freshness, retry-after, and evidence locator. Building this in the model would make false reassurance likely.",
-      "input_schema": {
-        "sources": "array of {id: string, kind: 'mail'|'calendar'|'github'|'browser_page'|'filesystem', max_age_seconds?: number}",
-        "attempt_budget": "integer, default 2",
-        "include_evidence": "boolean, default true"
-      },
-      "example_call": {
-        "sources": [
-          {
-            "id": "gmail",
-            "kind": "mail",
-            "max_age_seconds": 86400
-          },
-          {
-            "id": "github",
-            "kind": "github",
-            "max_age_seconds": 86400
-          },
-          {
-            "id": "calendar",
-            "kind": "calendar",
-            "max_age_seconds": 86400
-          }
-        ],
-        "attempt_budget": 2,
-        "include_evidence": true
-      },
-      "expected_output": "{observedAt, sources:[{id,status:'fresh'|'stale'|'empty'|'unauthenticated'|'unreachable'|'unknown',lastSuccessAt?,ageSeconds?,attempts, retryAfter?, evidence:{surface,jobId?,tabId?,url?,locator?,contentHash?}}], aggregate:'complete'|'partial'|'none', safeToSummarize:boolean}",
-      "summary": "source_health_snapshot"
-    },
-    {
-      "id": "t22-gmuh",
-      "kind": "tool",
-      "round": 81,
-      "name": "decision_slate_compile",
-      "why": "The owner needs a trustworthy answer to “what should I do next?” that combines current private evidence across the pendant, Mac, authenticated browser and relay, ranks three feasible options, and compiles the selected option into a confirmation-ready reversible plan. Existing plan/execute and individual read/action tools do not provide durable cross-source evidence, contradiction handling, ranking, expiry, or idempotent selection.",
-      "why_existing_tools_insufficient": "POST /plan and POST /execute execute an already-described plan; get_mac_status, browser_run_actions, web_search, read_web_page, and relay_job_status are surface-specific and return no shared evidence ledger. Existing jobs/receipts cover execution after the fact, not a time-bounded decision slate. mac_delegate is for ambiguous Mac work, not cross-surface judgment.",
-      "input_schema": {
-        "request": {
-          "type": "string",
-          "description": "Natural-language goal, usually 'what should I do next?' or a constraint such as 'I have 45 minutes'"
-        },
-        "horizonMinutes": {
-          "type": "integer",
-          "minimum": 15,
-          "maximum": 1440,
-          "default": 60
-        },
-        "maxOptions": {
-          "type": "integer",
-          "minimum": 2,
-          "maximum": 3,
-          "default": 3
-        },
-        "includeSources": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "enum": [
-              "pendant",
-              "mac",
-              "browser",
-              "relay"
-            ]
-          },
-          "default": [
-            "pendant",
-            "mac",
-            "browser",
-            "relay"
-          ]
-        },
-        "mode": {
-          "type": "string",
-          "enum": [
-            "read_only",
-            "prepare_selected"
-          ],
-          "default": "read_only"
-        },
-        "selectedOptionId": {
-          "type": "string",
-          "description": "Required when mode=prepare_selected"
-        },
-        "confirmationToken": {
-          "type": "string",
-          "description": "Required for any irreversible action; reminders and notes may be prepared without it"
-        }
-      },
-      "example_call": {
-        "request": "What should I do next?",
-        "horizonMinutes": 60,
-        "maxOptions": 3,
-        "mode": "read_only"
-      },
-      "expected_output": "{\"slateId\":\"...\",\"generatedAt\":\"...\",\"expiresAt\":\"...\",\"options\":[{\"id\":\"...\",\"title\":\"...\",\"whyRanked\":\"...\",\"estimatedMinutes\":25,\"claims\":[{\"text\":\"...\",\"source\":\"calendar|mail|browser|pendant\",\"observedAt\":\"...\",\"confidence\":0.0,\"citation\":\"...\"}],\"reversibleSteps\":[],\"requiresConfirmation\":false}],\"omittedUrgent\":[...],\"sourceHealth\":{...},\"contradictions\":[...]}",
-      "summary": "decision_slate_compile"
-    },
-    {
-      "id": "t23-hkrj",
-      "kind": "tool",
-      "round": 87,
-      "name": "record_pendant_delivery_event",
-      "why": "The existing job and pipeline receipts stop at server-side generation/acceptance; no current tool can ingest or reconcile a pendant's authenticated downloaded/played ACK, including offline replay and duplicate suppression.",
-      "why_existing_tools_insufficient": "relay_job_status reads existing relay job records but cannot receive a device event or distinguish downloaded from played. POST /pipeline/events and POST /pipeline/audio are generic pipeline primitives and do not define a pendant artifact ID, monotonic device sequence, playback state, or idempotency contract.",
-      "input_schema": {
-        "type": "object",
-        "required": [
-          "artifactId",
-          "deviceSessionId",
-          "eventType",
-          "deviceSequence",
-          "occurredAtMonotonicMs",
-          "eventId"
-        ],
-        "properties": {
-          "artifactId": {
-            "type": "string",
-            "description": "Opaque audio artifact identifier"
-          },
-          "deviceSessionId": {
-            "type": "string",
-            "description": "Authenticated pendant session identifier"
-          },
-          "eventType": {
-            "type": "string",
-            "enum": [
-              "downloaded",
-              "playback_started",
-              "playback_finished",
-              "playback_interrupted",
-              "checksum_error",
-              "no_audio"
-            ],
-            "description": "Observed local delivery state"
-          },
-          "deviceSequence": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "occurredAtMonotonicMs": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "eventId": {
-            "type": "string",
-            "description": "Stable deduplication key"
-          },
-          "bytesReceived": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "expectedBytes": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "playbackPositionMs": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "reason": {
-            "type": "string"
-          }
-        }
-      },
-      "example_call": {
-        "artifactId": "aud_opaque_123",
-        "deviceSessionId": "pendant_session_9",
-        "eventType": "playback_finished",
-        "deviceSequence": 42,
-        "occurredAtMonotonicMs": 183000,
-        "eventId": "pendant_session_9:42",
-        "playbackPositionMs": 12700
-      },
-      "expected_output": "Authenticated, idempotent receipt: {accepted:true, duplicate:boolean, artifactId, canonicalState, missingTransitions, observedAt, nextRetryAfterMs}. Return explicit errors for unknown artifact, stale session, invalid sequence, and unregistered pendant without exposing content.",
-      "summary": "record_pendant_delivery_event"
-    },
-    {
-      "id": "t24-vgln",
-      "kind": "tool",
-      "round": 92,
-      "name": "conditional_followup_watch",
-      "why": "Owner should be able to state a deadline-dependent intention once: monitor one identified private thread, cancel on a genuine reply, and otherwise create a reviewable follow-up draft. Existing page watches detect changes but do not model a condition, cancellation event, deadline semantics, or draft handoff as one durable object.",
-      "why_existing_tools_insufficient": "browser_run_actions and the existing watch/job routes can poll or act, but they cannot atomically bind thread identity + deadline + cancellation condition + timezone, nor guarantee that a draft is prepared exactly once after no reply. commitment_ledger and deadline_risk_scan were requested elsewhere but are not available to this agent and do not expose a concrete browser-thread watcher contract.",
-      "input_schema": {
-        "accountSessionId": "string",
-        "threadId": "string",
-        "threadUrl": "string",
-        "contactIdentity": "string",
-        "deadline": "ISO-8601 timestamp",
-        "timezone": "IANA timezone",
-        "condition": {
-          "kind": "no_genuine_reply",
-          "ignoreAutomated": true
-        },
-        "onDeadline": {
-          "action": "draft_followup",
-          "send": false,
-          "tone": "string"
-        },
-        "notify": {
-          "surface": "pendant",
-          "leadMinutes": 0
-        },
-        "retentionDays": "number"
-      },
-      "example_call": {
-        "accountSessionId": "safari-work",
-        "threadId": "abc123",
-        "threadUrl": "https://mail.example/thread/abc123",
-        "contactIdentity": "person@example.com",
-        "deadline": "2026-08-14T17:00:00-05:00",
-        "timezone": "America/Chicago",
-        "condition": {
-          "kind": "no_genuine_reply",
-          "ignoreAutomated": true
-        },
-        "onDeadline": {
-          "action": "draft_followup",
-          "send": false,
-          "tone": "brief"
-        },
-        "notify": {
-          "surface": "pendant",
-          "leadMinutes": 0
-        },
-        "retentionDays": 30
-      },
-      "expected_output": "{\"watchId\":\"string\",\"status\":\"active\",\"boundIdentity\":{\"accountSessionId\":\"string\",\"threadId\":\"string\"},\"nextCheckAt\":\"ISO-8601\",\"deadline\":\"ISO-8601\",\"cancelledBy\":null,\"draftId\":null,\"audit\":{\"sourceFreshAt\":\"ISO-8601\",\"checks\":0}}",
-      "summary": "conditional_followup_watch"
-    },
-    {
-      "id": "t25-p9ni",
-      "kind": "tool",
-      "round": 121,
-      "name": "audio_profile_apply_verify",
-      "why": "The owner wants 24 kHz speech that stays clear across environments. A profile transition must be applied and verified atomically across the Mac audio stack and the active browser call, with rollback if verification fails.",
-      "why_existing_tools_insufficient": "mac_run_actions can set volume and run allowlisted intents, but it cannot apply a versioned input/output DSP profile, identify the active call route, verify measured effect, or atomically roll back. browser_run_actions can act in tabs but cannot verify OS-level audio.",
-      "input_schema": {
-        "profileId": "string",
-        "profileVersion": "string",
-        "target": "mac_system|browser_tab|both",
-        "expected": {
-          "sampleRateHz": "number",
-          "inputRoute": "string|null",
-          "outputRoute": "string|null",
-          "maxInputLevelDbfs": "number|null",
-          "minSpeechScore": "number|null"
-        },
-        "applyAt": "now|utterance_boundary",
-        "rollbackProfileId": "string|null",
-        "idempotencyKey": "string"
-      },
-      "example_call": {
-        "profileId": "street_voice_24k",
-        "profileVersion": "1",
-        "target": "both",
-        "expected": {
-          "sampleRateHz": 24000,
-          "inputRoute": "pendant",
-          "outputRoute": "mac_speakers",
-          "maxInputLevelDbfs": -3,
-          "minSpeechScore": 0.8
-        },
-        "applyAt": "utterance_boundary",
-        "rollbackProfileId": "quiet_voice_24k",
-        "idempotencyKey": "audio-transition-2026-08-07T12:00:00Z"
-      },
-      "expected_output": "Typed receipt containing requestId, appliedProfile, previousProfile, verification measurements, active call/tab identity if applicable, appliedAt, rollbackAvailable, and a failure reason with automatic rollback status.",
-      "summary": "audio_profile_apply_verify"
-    }
-  ],
+  "pending": [],
   "denied": [
     {
       "id": "p1-na2j",
@@ -18064,6 +17071,899 @@
       "ram_budget": "~3–6 KB for event queue and serialization, plus existing audio buffers; designed to fit comfortably within 211,608 B application RAM, with no additional codec or model memory.",
       "summary": "brief_item_bookmark",
       "why": "Denied as a duplicate. Granted once, as spoken_status_interrupt, id s19-75il (relay-realtime, round 138): a button press during agent playback stops the current utterance and asks for a shorter summary or the next item. That is the primitive — barge-in — and it is the one piece of playback control the firmware genuinely lacks today. Right now a staged reply waits for a play press and then runs to completion (firmware/nrf9160/src/main.c:1092-1113); there is no way to stop it.\n\nIt also fits the hardware's grain. sw0 is edge-triggered by design and a press during playback is unambiguous with no timing state machine at all, which matters because there is none: sw0 is a bare GPIO edge into a semaphore (main.c:764-771), and main.c:29-38 records the decision never to add gesture recognition to it — 'button 1 acts on the ACTIVE EDGE so the microphone is powering up before the owner's finger has come back off.'\n\nSpecific to your request: the rolling audio-item correlation token is the best idea in this cluster — it is what lets the relay bind a physical interrupt to the exact brief item without the device understanding any content — and it should go into s19-75il's event payload. The rest duplicates twice over: pausing on a marker is s19-75il, and persisting the bookmark is offline_moment_bookmark (mac-planner s10-l3xe), already granted and already implemented on sw1, its own dedicated button (main.c:39). 'Double-press, with a long press within five seconds to cancel' is two gestures sw0 cannot produce and does not want to (main.c:29-38)."
+    },
+    {
+      "id": "t3-j9ss",
+      "kind": "tool",
+      "round": 7,
+      "name": "commitment_ledger",
+      "why": "Duplicate. t3, t9-8axw, t12-h5kb, t14-47wd, t19-dltk and t22-gmuh are one idea: a durable, provenance-carrying reconciler over the owner state. Kept t1-3r6y reconcile_personal_state, whose domains enum is concrete and whose every domain maps to a live read route. Fold what is distinct here into t1: add commitments as a domains value and carry confidence, sensitivity and source_refs into the t1 result shape. The durable storage a commitment ledger needs is not missing and does not need a new tool: POST /context-graph/entities plus POST /context-graph/relations for the graph, POST /memory/facts for typed durable facts, POST /capture and GET /capture for quoted source text, and the create_reminder and remind_me executor actions for the reminder leg. Separately, this input_schema is prose (operation: string enum: upsert_candidate|...), which the resolver cannot parse; any re-request must use a real JSON Schema enum.",
+      "input_schema": {
+        "operation": "string enum: upsert_candidate|list_at_risk|record_evidence|set_status|snooze|dismiss",
+        "commitment": {
+          "id": "optional string",
+          "summary": "string",
+          "owner": "optional string",
+          "due_at": "optional RFC3339 timestamp",
+          "due_window": "optional object with start/end RFC3339 timestamps",
+          "confidence": "number 0..1",
+          "sensitivity": "enum normal|sensitive|secret",
+          "source_refs": "array of objects {surface,locator,captured_at,quote_hash}",
+          "consent": "enum explicit_track|configured_opt_in"
+        },
+        "evidence": {
+          "surface": "string",
+          "locator": "string",
+          "captured_at": "RFC3339 timestamp",
+          "status": "enum open|done|blocked|unclear",
+          "quote_hash": "string"
+        },
+        "idempotency_key": "string"
+      },
+      "example_call": {
+        "operation": "upsert_candidate",
+        "commitment": {
+          "summary": "Send revised proposal to Alex",
+          "due_window": {
+            "end": "2026-08-14T17:00:00-05:00"
+          },
+          "confidence": 0.84,
+          "sensitivity": "normal",
+          "source_refs": [
+            {
+              "surface": "voice",
+              "locator": "session:abc",
+              "captured_at": "2026-08-07T10:00:00Z",
+              "quote_hash": "sha256:..."
+            }
+          ],
+          "consent": "explicit_track"
+        },
+        "idempotency_key": "voice-session-abc-track-1"
+      },
+      "expected_output": "JSON object containing commitment id, normalized record, prior/new status, provenance, and any validation warnings; list_at_risk returns ranked items with reason, freshness, and suggested reminder time.",
+      "summary": "commitment_ledger"
+    },
+    {
+      "id": "t9-8axw",
+      "kind": "tool",
+      "round": 19,
+      "name": "intent_continuity_ledger",
+      "why": "Duplicate of the same reconciler cluster; kept t1-3r6y reconcile_personal_state. The substance here is comparing recorded assumptions against fresh observations and flagging the divergence, which is exactly the conflict detection t1 returns, so add assumptions and observations to t1 rather than standing up a second ledger. This input_schema is also prose (operation: string enum: create, observe, classify, ...), and the resolver parses only real enums and types. Where the persistence already lives: POST /memory/facts, POST /context-graph/entities and /context-graph/relations for the signed record, GET /journal/:jobId and GET /jobs/:jobId/receipts for what a job actually did, GET /machine-context and POST /machine-context/refresh for the observation side.",
+      "input_schema": {
+        "operation": "string enum: create, observe, classify, supersede, answer, get",
+        "jobId": "string",
+        "intentVersion": "string optional",
+        "goal": "string optional",
+        "allowedSideEffects": "array optional",
+        "assumptions": "array of objects {key,value,source,expiresAt} optional",
+        "observations": "array of objects {key,value,source,timestamp,sensitivity,evidenceHash} optional",
+        "ownerAnswer": "string optional",
+        "idempotencyKey": "string optional"
+      },
+      "example_call": {
+        "operation": "classify",
+        "jobId": "job_123",
+        "intentVersion": "v3",
+        "observations": [
+          {
+            "key": "total",
+            "value": "89.00",
+            "source": "authenticated-browser",
+            "timestamp": "2026-08-07T10:00:00Z",
+            "sensitivity": "normal",
+            "evidenceHash": "sha256:..."
+          }
+        ]
+      },
+      "expected_output": "Typed result {jobId,intentVersion,status:'unchanged'|'safe_drift'|'needs_owner'|'expired',materialChanges:[{key,before,after,reason}],allowedNextStep,expiresAt,redactedEvidence,receiptId}; fail closed on ledger or signature errors.",
+      "summary": "intent_continuity_ledger"
+    },
+    {
+      "id": "t12-h5kb",
+      "kind": "tool",
+      "round": 33,
+      "name": "obligation_graph_reconcile",
+      "why": "Duplicate of the reconciler cluster; kept t1-3r6y reconcile_personal_state because each of its domains resolves to a real read route. Fold the obligation scope into t1 as additional domains values, but only the ones that exist: mail is GET /mail/triage plus the triage_inbox action, authenticated_browser is GET /browser/sessions plus the browser_read_page action, local notes and reminders are write-only today (create_note, create_reminder, POST /reminders) with no read route, and there is no calendar read surface at all. Your changed_only and full_snapshot modes are the genuinely new part and are worth carrying into t1 as a mode parameter. Requesting calendar scope will resolve to nothing however it is spelled, so leave it out rather than have the whole call refused.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "scope": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "calendar",
+                "mail",
+                "local_notes",
+                "reminders",
+                "authenticated_browser"
+              ]
+            }
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "changed_only",
+              "full_snapshot",
+              "on_demand_question"
+            ]
+          },
+          "since": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "max_items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50
+          }
+        },
+        "required": [
+          "scope",
+          "mode"
+        ]
+      },
+      "example_call": {
+        "scope": [
+          "calendar",
+          "mail",
+          "local_notes",
+          "authenticated_browser"
+        ],
+        "mode": "changed_only",
+        "max_items": 20
+      },
+      "expected_output": "A typed result containing obligations[] (stable id, normalized commitment, counterparty, dueAt or dueWindow, consequence, evidence citations with source/tab/path/timestamp, confidence, staleAt, conflictIds, suggested reversible next step), conflicts[], sourceStatuses[], and a run receipt. It must never send/submit/change external state.",
+      "summary": "obligation_graph_reconcile"
+    },
+    {
+      "id": "t14-47wd",
+      "kind": "tool",
+      "round": 38,
+      "name": "deadline_risk_scan",
+      "why": "Duplicate of the reconciler cluster; kept t1-3r6y reconcile_personal_state. Fold horizonHours and knownGoalIds into t1 as parameters, and add only the scopes that are backed: action_receipts is GET /jobs/:jobId/receipts plus GET /journal, browser_tabs is the browser_list_tabs action plus GET /browser/sessions, local_files is list_directory and search_file, mail is GET /mail/triage. Calendar and tasks have no read surface, so including them guarantees an unresolved call. The deadline ranking itself is the valuable idea and t1 has no notion of time-to-due, so that is the concrete thing to add.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "scope": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "calendar",
+                "mail",
+                "tasks",
+                "local_files",
+                "browser_tabs",
+                "action_receipts"
+              ]
+            }
+          },
+          "horizonHours": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 720
+          },
+          "includeSensitiveContent": {
+            "type": "boolean",
+            "default": false
+          },
+          "knownGoalIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "scope",
+          "horizonHours"
+        ]
+      },
+      "example_call": {
+        "scope": [
+          "calendar",
+          "mail",
+          "tasks",
+          "local_files",
+          "action_receipts"
+        ],
+        "horizonHours": 168,
+        "includeSensitiveContent": false
+      },
+      "expected_output": "JSON object {ok, generatedAt, items:[{riskId,summary,deadlineAt,urgency,confidence,blockedBy:[{kind,id,summary}],recommendedReversibleStep,sourceRefs:[{surface,sourceId,timestamp,expiresAt}],sensitivity}], suppressed:[{reason,count}], errors:[{surface,code,message}]}; must not return raw mail/page body when includeSensitiveContent=false, must be read-only, and must be safe to retry.",
+      "summary": "deadline_risk_scan"
+    },
+    {
+      "id": "t19-dltk",
+      "kind": "tool",
+      "round": 58,
+      "name": "reconcile_evidence_claims",
+      "why": "Duplicate on two axes. The cross-source fan-out is t1-3r6y reconcile_personal_state, which was kept; the citation, conflict and revocation chain is t13-5tzh explain_action_provenance, which was granted this round and lands directly on the real evidence surface (GET /evidence, GET /evidence/:capsuleId, POST /evidence/revoke, POST /evidence/sweep). Between those two nothing distinct remains here. If topic scoping is the part you care about, add a topic filter to t1 rather than a third tool. Of your sources enum, mac_mail is GET /mail/triage, browser_authenticated is GET /browser/sessions plus browser_read_page, browser_public is the research routes (POST /research, GET /research/briefings); mac_calendar and mac_notes have no read route, so those values would resolve to nothing.",
+      "input_schema": {
+        "type": "object",
+        "required": [
+          "topic"
+        ],
+        "properties": {
+          "topic": {
+            "type": "string"
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "mac_mail",
+                "mac_calendar",
+                "mac_notes",
+                "browser_authenticated",
+                "browser_public",
+                "pendant_notes"
+              ]
+            }
+          },
+          "freshness": {
+            "type": "string",
+            "enum": [
+              "cached",
+              "refresh_stale",
+              "refresh_all"
+            ],
+            "default": "refresh_stale"
+          },
+          "sensitivity_max": {
+            "type": "string",
+            "enum": [
+              "normal",
+              "sensitive",
+              "secret"
+            ],
+            "default": "sensitive"
+          },
+          "action_context": {
+            "type": "string"
+          },
+          "include_raw_quotes": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "example_call": {
+        "topic": "my flight next Tuesday",
+        "sources": [
+          "mac_calendar",
+          "browser_authenticated",
+          "mac_mail"
+        ],
+        "freshness": "refresh_stale",
+        "action_context": "prepare, but do not send, a reminder"
+      },
+      "expected_output": "JSON with topic, claims grouped as confirmed/uncertain/contradicted, each claim carrying source references, observedAt, freshness, confidence, sensitivity, and a recommended next question or safe reversible action; no raw secret values unless explicitly authorized.",
+      "summary": "reconcile_evidence_claims"
+    },
+    {
+      "id": "t22-gmuh",
+      "kind": "tool",
+      "round": 81,
+      "name": "decision_slate_compile",
+      "why": "Duplicate, and the compile half already ships. Ranked next-actions is GET /day-plan plus the plan_my_day action; turning a selection into a reviewable plan is POST /plan and POST /preview plus the preview_plan action; and the reversible apply-with-undo pattern you describe exists as POST /sweep/:planId/apply with POST /sweep/:planId/undo, and the same pair under /tidy, with POST /jobs/:jobId/undo and POST /jobs/undo-last as the general reversal. The evidence gathering underneath is t1-3r6y reconcile_personal_state, which was kept. Also note this input_schema is a bare properties map with no type or object wrapper: the field types and enums inside it are real, so re-wrapping it correctly costs one line, but as submitted it is not a valid input_schema.",
+      "why_existing_tools_insufficient": "POST /plan and POST /execute execute an already-described plan; get_mac_status, browser_run_actions, web_search, read_web_page, and relay_job_status are surface-specific and return no shared evidence ledger. Existing jobs/receipts cover execution after the fact, not a time-bounded decision slate. mac_delegate is for ambiguous Mac work, not cross-surface judgment.",
+      "input_schema": {
+        "request": {
+          "type": "string",
+          "description": "Natural-language goal, usually 'what should I do next?' or a constraint such as 'I have 45 minutes'"
+        },
+        "horizonMinutes": {
+          "type": "integer",
+          "minimum": 15,
+          "maximum": 1440,
+          "default": 60
+        },
+        "maxOptions": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 3,
+          "default": 3
+        },
+        "includeSources": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "pendant",
+              "mac",
+              "browser",
+              "relay"
+            ]
+          },
+          "default": [
+            "pendant",
+            "mac",
+            "browser",
+            "relay"
+          ]
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "read_only",
+            "prepare_selected"
+          ],
+          "default": "read_only"
+        },
+        "selectedOptionId": {
+          "type": "string",
+          "description": "Required when mode=prepare_selected"
+        },
+        "confirmationToken": {
+          "type": "string",
+          "description": "Required for any irreversible action; reminders and notes may be prepared without it"
+        }
+      },
+      "example_call": {
+        "request": "What should I do next?",
+        "horizonMinutes": 60,
+        "maxOptions": 3,
+        "mode": "read_only"
+      },
+      "expected_output": "{\"slateId\":\"...\",\"generatedAt\":\"...\",\"expiresAt\":\"...\",\"options\":[{\"id\":\"...\",\"title\":\"...\",\"whyRanked\":\"...\",\"estimatedMinutes\":25,\"claims\":[{\"text\":\"...\",\"source\":\"calendar|mail|browser|pendant\",\"observedAt\":\"...\",\"confidence\":0.0,\"citation\":\"...\"}],\"reversibleSteps\":[],\"requiresConfirmation\":false}],\"omittedUrgent\":[...],\"sourceHealth\":{...},\"contradictions\":[...]}",
+      "summary": "decision_slate_compile"
+    },
+    {
+      "id": "t4-b4ht",
+      "kind": "tool",
+      "round": 8,
+      "name": "resume_packet",
+      "why": "Prose schema. Every field is a free-text description (operation: string enum: create|get|list|transition|delete, source.kind as a bare literal list), and the resolver parses only real JSON Schema enums and types, so this would refuse on every call. Re-request with type: object, properties, and concrete enums for operation, transition and source.kind. Two corrections to make in the re-request. First, there is no resume in this system: the decision engine that would drive one exists and nothing calls it, and POST /execute captures no exit code, no argv and no environment, so do not build a schema around a promise to restore browser or Mac context. Second, the durable half is not missing: POST /context-graph/entities and /context-graph/relations, POST /memory/facts, POST /capture with GET /capture and DELETE /capture/:key, and POST /watches for a pending condition. Scope the re-request to staging and recalling an intention over those, and fold the lifecycle into t1-3r6y reconcile_personal_state, which was kept as the reconciler for this cluster.",
+      "input_schema": {
+        "operation": "string enum: create|get|list|transition|delete",
+        "packet_id": "string optional",
+        "intent": "string optional",
+        "return_at": "ISO-8601 timestamp or condition optional",
+        "source": {
+          "kind": "browser|mac_file|mac_window|voice_only",
+          "stable_id": "string",
+          "title": "string optional",
+          "url_or_path": "string optional",
+          "excerpt_hash": "string optional"
+        },
+        "sensitivity": "string enum: normal|sensitive|secret optional",
+        "transition": "string enum: staged|reminded|snoozed|completed|cancelled optional",
+        "snooze_until": "ISO-8601 timestamp optional",
+        "idempotency_key": "string optional"
+      },
+      "example_call": {
+        "operation": "create",
+        "intent": "review the insurance form",
+        "return_at": "2026-08-08T14:00:00-05:00",
+        "source": {
+          "kind": "browser",
+          "stable_id": "tab:abc123",
+          "title": "Insurance form",
+          "url_or_path": "https://example.test/form",
+          "excerpt_hash": "sha256:..."
+        },
+        "sensitivity": "sensitive",
+        "idempotency_key": "voice-turn-123"
+      },
+      "expected_output": "For create: packet_id, normalized intent, source binding, status, and scheduled time. For get/list: packets with lifecycle and revalidation state. For transition/delete: idempotent success, prior and new status, and any source invalidation or permission error.",
+      "summary": "resume_packet"
+    },
+    {
+      "id": "t5-tkcm",
+      "kind": "tool",
+      "round": 15,
+      "name": "cross_surface_recovery",
+      "why": "Duplicate. t5, t6-raqo, t11-xyom and t20-n326 are one idea. Kept t6 cross_surface_preflight because its enums are concrete, it is read-only, and each of its targets maps to a live route: GET /health, GET /ops/status, GET /ops/snapshot, GET /browser/status and GET /browser/sessions, GET /jobs, GET /capabilities. Fold allow_reversible_repairs and retry_budget into t6 as fields so one call answers can-this-surface-act and what-is-the-safe-retry. The repair leg needs no new tool at all: POST /jobs/:jobId/undo, POST /jobs/undo-last, POST /jobs/:jobId/cancel, POST /sweep/:planId/undo and POST /tidy/:planId/undo are the reversible repairs this system actually has, and DELETE /browser/sessions/:id plus POST /browser/sessions is how a stale browser session is reset.",
+      "input_schema": {
+        "type": "object",
+        "required": [
+          "intent_id",
+          "original_request",
+          "attempted_surfaces"
+        ],
+        "properties": {
+          "intent_id": {
+            "type": "string"
+          },
+          "original_request": {
+            "type": "string"
+          },
+          "attempted_surfaces": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "pendant",
+                "relay",
+                "mac",
+                "browser"
+              ]
+            }
+          },
+          "allow_reversible_repairs": {
+            "type": "boolean"
+          },
+          "retry_budget": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2
+          }
+        }
+      },
+      "example_call": {
+        "intent_id": "req_123",
+        "original_request": "read my calendar",
+        "attempted_surfaces": [
+          "pendant",
+          "relay",
+          "mac",
+          "browser"
+        ],
+        "allow_reversible_repairs": true,
+        "retry_budget": 1
+      },
+      "expected_output": "A typed result containing status (recovered, needs_owner, blocked, or succeeded), failure class, evidence summary, remediation steps, resume token, data accessed, and whether confirmation is required.",
+      "summary": "cross_surface_recovery"
+    },
+    {
+      "id": "t11-xyom",
+      "kind": "tool",
+      "round": 25,
+      "name": "cross_surface_impact_scan",
+      "why": "Duplicate of the cross-surface cluster; kept t6-raqo cross_surface_preflight. The consequence preview you are asking for is also already a shipped pattern rather than a hole: POST /preview and the preview_plan action, POST /sweep/preview with GET /sweep/:planId, and POST /tidy/preview all return what an action would change before it changes it, and GET /jobs/:jobId/receipts shows what a completed one did. Fold your candidate.actionKind enum into t6 so a preflight answer can be given per action class. Of the scopes enum only browser, files and jobs are readable today; mail is GET /mail/triage and nothing finer; calendar and reminders have no read route, so including them guarantees an unresolved call.",
+      "input_schema": {
+        "type": "object",
+        "required": [
+          "candidate"
+        ],
+        "properties": {
+          "candidate": {
+            "type": "object",
+            "required": [
+              "summary"
+            ],
+            "properties": {
+              "summary": {
+                "type": "string"
+              },
+              "sourceUrl": {
+                "type": "string"
+              },
+              "proposedFields": {
+                "type": "object"
+              },
+              "timeRange": {
+                "type": "object"
+              },
+              "estimatedCost": {
+                "type": "number"
+              },
+              "audience": {
+                "type": "string"
+              },
+              "actionKind": {
+                "type": "string",
+                "enum": [
+                  "accept",
+                  "send",
+                  "purchase",
+                  "schedule",
+                  "delete",
+                  "edit",
+                  "other"
+                ]
+              }
+            }
+          },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "browser",
+                "calendar",
+                "mail",
+                "files",
+                "reminders",
+                "jobs"
+              ]
+            }
+          },
+          "maxSeconds": {
+            "type": "integer",
+            "minimum": 5,
+            "maximum": 120
+          },
+          "freshnessSeconds": {
+            "type": "integer",
+            "minimum": 30,
+            "maximum": 86400
+          }
+        }
+      },
+      "example_call": {
+        "candidate": {
+          "summary": "Accept the proposed Tuesday 3pm appointment",
+          "actionKind": "accept",
+          "timeRange": {
+            "start": "2026-08-11T15:00:00-05:00",
+            "end": "2026-08-11T16:00:00-05:00"
+          }
+        },
+        "scopes": [
+          "browser",
+          "calendar",
+          "reminders",
+          "jobs"
+        ],
+        "maxSeconds": 45,
+        "freshnessSeconds": 3600
+      },
+      "expected_output": "A typed JSON object with candidateId, impacts[] (severity, kind, explanation, entity, source, sourceSnippetHash, observedAt, confidence, reversible), unknowns[], scopeUsed[], and a safeToProceed tri-state. Read-only; it must never submit, send, buy, delete, or modify anything.",
+      "summary": "cross_surface_impact_scan"
+    },
+    {
+      "id": "t20-n326",
+      "kind": "tool",
+      "round": 77,
+      "name": "cross_surface_failure_diagnose",
+      "why": "Duplicate of the cross-surface cluster; kept t6-raqo cross_surface_preflight, which expresses the diagnose case by being called with the failed intent. Correlating one specific failure needs no new tool: GET /jobs/:jobId, GET /jobs/:jobId/receipts, GET /journal/:jobId, GET /logs, GET /ops/snapshot and GET /browser/status are the real correlation inputs, and GET /thinking with GET /thinking/latest carries the reasoning trail. Drop the retry token from any re-request: POST /execute captures no exit code, no argv and no environment and has no join to the action ledger, and there is no resume, so a token promising to replay a failed call cannot be honored and the honest move is to return the original intent text for the owner to reissue.",
+      "why_existing_tools_insufficient": "get_mac_status, browser_run_actions, relay_job_status, GET /jobs and GET /browser/status are separate, mostly operational reads. They do not share an intent ID, normalize errors, run bounded parallel probes, redact evidence, classify likely cause, or issue a safe retry token. mac_delegate is for execution, not diagnosis.",
+      "input_schema": {
+        "type": "object",
+        "required": [
+          "intent_or_job_id"
+        ],
+        "properties": {
+          "intent_or_job_id": {
+            "type": "string",
+            "description": "Original intent fingerprint, job ID, or command ID."
+          },
+          "include_probes": {
+            "type": "boolean",
+            "default": true,
+            "description": "Run only read-only health/session probes."
+          },
+          "max_wait_ms": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000,
+            "default": 2000
+          },
+          "retain_retry": {
+            "type": "boolean",
+            "default": true,
+            "description": "Issue a short-lived retry token without retaining sensitive arguments."
+          }
+        }
+      },
+      "example_call": {
+        "intent_or_job_id": "job_abc123",
+        "include_probes": true,
+        "max_wait_ms": 2000,
+        "retain_retry": true
+      },
+      "expected_output": "{status:'failed|partial|blocked|transient|unknown', cause:{class,confidence,evidenceRefs[]}, unchanged:true|false, probes:[{surface,observed}], safe_next_step:string, retryToken:string|null, expiresAt:string|null, redactedReceiptId:string}",
+      "summary": "cross_surface_failure_diagnose"
+    },
+    {
+      "id": "t21-35y1",
+      "kind": "tool",
+      "round": 80,
+      "name": "source_health_snapshot",
+      "why": "Duplicate, and prose schema. Is-this-source-usable-right-now is t6-raqo cross_surface_preflight, which was kept; max_age_seconds, attempt_budget and the freshness verdict belong there as fields rather than in a second tool. Independently, this schema spells its parameters in free text (sources: array of {id: string, kind: mail|calendar|github|...}), which the resolver cannot parse and will refuse, so even without the duplication it would need real JSON Schema types. The health and freshness signals that exist are GET /health, GET /ops/status, GET /ops/snapshot, GET /browser/status, GET /browser/sessions, GET /machine-context with POST /machine-context/refresh, and GET /mail/triage plus GET /mail/triage/:runId for whether a triage run actually succeeded. There is no calendar source to health-check and no github route, so those kinds would resolve to nothing.",
+      "why_existing_tools_insufficient": "get_mac_status, mac_run_actions, browser_run_actions, and mac_delegate can attempt reads, while relay_job_status can report dispatched jobs, but none yields one typed per-source state with authentication, last-success time, freshness, retry-after, and evidence locator. Building this in the model would make false reassurance likely.",
+      "input_schema": {
+        "sources": "array of {id: string, kind: 'mail'|'calendar'|'github'|'browser_page'|'filesystem', max_age_seconds?: number}",
+        "attempt_budget": "integer, default 2",
+        "include_evidence": "boolean, default true"
+      },
+      "example_call": {
+        "sources": [
+          {
+            "id": "gmail",
+            "kind": "mail",
+            "max_age_seconds": 86400
+          },
+          {
+            "id": "github",
+            "kind": "github",
+            "max_age_seconds": 86400
+          },
+          {
+            "id": "calendar",
+            "kind": "calendar",
+            "max_age_seconds": 86400
+          }
+        ],
+        "attempt_budget": 2,
+        "include_evidence": true
+      },
+      "expected_output": "{observedAt, sources:[{id,status:'fresh'|'stale'|'empty'|'unauthenticated'|'unreachable'|'unknown',lastSuccessAt?,ageSeconds?,attempts, retryAfter?, evidence:{surface,jobId?,tabId?,url?,locator?,contentHash?}}], aggregate:'complete'|'partial'|'none', safeToSummarize:boolean}",
+      "summary": "source_health_snapshot"
+    },
+    {
+      "id": "t7-wopx",
+      "kind": "tool",
+      "round": 17,
+      "name": "attention_event_submit",
+      "why": "Duplicate. t7, t10-jg00 and t18-8ylu are one idea. Kept t18 attention_arbitrate because it is fully typed down to the per-event object, states its expected output, and carries an example call. The events array item in t18 is this submit payload field for field (source, summary, urgency, sensitivity, dedupe_key, expires_at, evidence_ref), so this request adds a second name for the same object rather than a second capability. If a distinct write path is still wanted once t18 exists, the ingestion points that are real are GET /notifications and the triage_notifications action, POST /watches with POST /watches/:watchId/check and POST /watches/:watchId/ack for a durable pending condition, and POST /pipeline/events for device-side events.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "pendant",
+              "relay",
+              "mac",
+              "browser",
+              "schedule"
+            ]
+          },
+          "subject": {
+            "type": "string",
+            "description": "Minimal human-readable subject; never include full private body unless explicitly allowed."
+          },
+          "evidence_ref": {
+            "type": "string",
+            "description": "Opaque pointer to source evidence retained on its originating surface."
+          },
+          "urgency": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "sensitivity": {
+            "type": "string",
+            "enum": [
+              "public",
+              "normal",
+              "private",
+              "secret"
+            ]
+          },
+          "required_action": {
+            "type": "string",
+            "enum": [
+              "inform",
+              "review",
+              "reply",
+              "submit",
+              "none"
+            ]
+          },
+          "dedupe_key": {
+            "type": "string"
+          },
+          "expires_at": {
+            "type": "string",
+            "description": "ISO-8601 expiry; event must not be delivered after this time."
+          },
+          "owner_policy_hint": {
+            "type": "string",
+            "description": "Optional source-specific hint, not an override."
+          }
+        },
+        "required": [
+          "source",
+          "subject",
+          "urgency",
+          "sensitivity",
+          "required_action",
+          "dedupe_key"
+        ]
+      },
+      "example_call": {
+        "source": "browser",
+        "subject": "Appointment time changed",
+        "evidence_ref": "tab:7:hash:abc",
+        "urgency": 78,
+        "sensitivity": "private",
+        "required_action": "review",
+        "dedupe_key": "appointment:123",
+        "expires_at": "2026-08-07T18:00:00-05:00"
+      },
+      "expected_output": "{event_id, disposition: 'speak_now'|'haptic_only'|'queue_until_open'|'suppress', reason, delivery_id, expires_at}",
+      "summary": "attention_event_submit"
+    },
+    {
+      "id": "t10-jg00",
+      "kind": "tool",
+      "round": 22,
+      "name": "decision_window",
+      "why": "Duplicate, and prose schema. The tentative-decision, defer-and-resume idea was kept as t18-8ylu attention_arbitrate, whose per-event typing is the version the resolver can act on. This request also spells every parameter in free text (operation: create|append_evidence|..., status: tentative|gathering|ready|..., allowedActionClass: read_only|draft|...), which the resolver cannot parse, so it would refuse regardless of the duplication. The tentative-state persistence you describe already has homes: POST /watches with GET /watches/:watchId and DELETE /watches/:watchId for a durable pending condition with a TTL, POST /capture and GET /capture for the owner wording, GET /evidence with GET /evidence/:capsuleId and POST /evidence/revoke for scoped evidence with revocation, and POST /sessions with PATCH /sessions/:sessionId for per-conversation state.",
+      "input_schema": {
+        "operation": "create|append_evidence|set_status|get|list|expire|redact",
+        "windowId": "string, required for all operations except create/list",
+        "ownerWording": "string, required on create",
+        "source": "pendant|voice|mac|browser|system",
+        "confidence": "number 0..1",
+        "missingDecision": "string or null",
+        "evidenceRequirements": "array of {surface, query, allowedSources, freshnessSeconds}",
+        "evidence": "array of {sourceRef, capturedAt, excerpt, sensitivity, confidence}",
+        "status": "tentative|gathering|ready|awaiting_owner|confirmed|rejected|expired",
+        "ttlSeconds": "integer",
+        "allowedActionClass": "read_only|draft|reversible|irreversible",
+        "idempotencyKey": "string",
+        "redact": "boolean"
+      },
+      "example_call": {
+        "operation": "create",
+        "ownerWording": "Maybe move Friday's appointment if the train is delayed",
+        "source": "pendant",
+        "confidence": 0.86,
+        "missingDecision": "Whether delay exceeds the owner's threshold and which alternate slot is acceptable",
+        "evidenceRequirements": [
+          {
+            "surface": "browser",
+            "query": "check authenticated rail status",
+            "allowedSources": [
+              "rail-site"
+            ],
+            "freshnessSeconds": 900
+          },
+          {
+            "surface": "mac",
+            "query": "find calendar event and free alternate slots",
+            "allowedSources": [
+              "calendar"
+            ],
+            "freshnessSeconds": 3600
+          }
+        ],
+        "status": "tentative",
+        "ttlSeconds": 86400,
+        "allowedActionClass": "draft",
+        "idempotencyKey": "dw-demo-1"
+      },
+      "expected_output": "A typed JSON result containing windowId, status, nextQuestion (or null), evidence summary with provenance, actionManifestId (or null), expiresAt, and redaction/deletion receipt when applicable.",
+      "summary": "decision_window"
+    },
+    {
+      "id": "t16-iybw",
+      "kind": "tool",
+      "round": 43,
+      "name": "delegation_contract_compile_and_check",
+      "why": "Duplicate. This and t17-1jsi autonomy_policy_evaluate both compile owner constraints and check a proposed action against them before any mutation. Kept t17 because its action and context are real typed objects with named fields (kind, target, reversible, external_side_effect, spend_cents, audience, deadline), while the action here is an untyped object described only in prose, which is exactly the half a deterministic checker most needs. Fold contract_id, the signed contract, expiry and your compile step into t17 as a policy_version plus a compile value in its existing mode enum. The enforcement points that already exist and should be what the verdict gates: POST /preview and the preview_plan action before acting, POST /plan for the plan itself, POST /execute for the mutation, and POST /jobs/:jobId/undo with POST /jobs/undo-last for reversibility.",
+      "input_schema": {
+        "type": "object",
+        "required": [
+          "mode",
+          "request_or_contract",
+          "action"
+        ],
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "compile",
+              "check",
+              "revoke"
+            ]
+          },
+          "request_or_contract": {
+            "type": "string",
+            "description": "For compile: owner's transcribed request. For check/revoke: signed contract JSON or contract ID."
+          },
+          "action": {
+            "type": "object",
+            "description": "For check: proposed action with target surface, account scope, amount, data classes, reversibility, and evidence references."
+          },
+          "contract_id": {
+            "type": "string"
+          },
+          "now": {
+            "type": "string",
+            "description": "ISO timestamp used for expiry and freshness checks."
+          }
+        }
+      },
+      "example_call": {
+        "mode": "compile",
+        "request_or_contract": "Rebook my flight to arrive before six, under $300, same airline if possible, ask me if neither works.",
+        "now": "2026-08-07T12:00:00Z"
+      },
+      "expected_output": "Compile returns a signed contract with normalized hard/soft predicates, expiration, allowed action classes, confirmation requirements, ambiguity warnings, and read-back text. Check returns allowed|needs_confirmation|refused with exact violated predicates, evidence freshness, and a receipt correlation ID. Revoke invalidates the contract and returns affected jobs.",
+      "summary": "delegation_contract_compile_and_check"
+    },
+    {
+      "id": "t24-vgln",
+      "kind": "tool",
+      "round": 92,
+      "name": "conditional_followup_watch",
+      "why": "Prose schema, and most of the surface it wants already exists. None of the fields are typed: condition.kind, onDeadline.action and notify.surface are bare literals with no enum and the whole object has no type or properties, so the resolver cannot parse it and will refuse the call. Re-request it as an extension of the watch surface that is already live: POST /watches, GET /watches, GET /watches/:watchId, PATCH /watches/:watchId, POST /watches/:watchId/check, POST /watches/:watchId/ack, DELETE /watches/:watchId and GET /watches/reports. What watches genuinely lack is your condition-and-deadline semantics, so ask for exactly that and nothing more, with a real enum for condition.kind (values such as no_genuine_reply, no_change, threshold_crossed) and for onDeadline.action (draft_followup, notify_only, cancel). Two constraints for the re-request: reading the thread is a browser-session read (GET /browser/sessions plus the browser_read_page action) or GET /mail/triage, not a mail API, and send stays false, since send_email is an executor action behind POST /execute that the owner confirms.",
+      "why_existing_tools_insufficient": "browser_run_actions and the existing watch/job routes can poll or act, but they cannot atomically bind thread identity + deadline + cancellation condition + timezone, nor guarantee that a draft is prepared exactly once after no reply. commitment_ledger and deadline_risk_scan were requested elsewhere but are not available to this agent and do not expose a concrete browser-thread watcher contract.",
+      "input_schema": {
+        "accountSessionId": "string",
+        "threadId": "string",
+        "threadUrl": "string",
+        "contactIdentity": "string",
+        "deadline": "ISO-8601 timestamp",
+        "timezone": "IANA timezone",
+        "condition": {
+          "kind": "no_genuine_reply",
+          "ignoreAutomated": true
+        },
+        "onDeadline": {
+          "action": "draft_followup",
+          "send": false,
+          "tone": "string"
+        },
+        "notify": {
+          "surface": "pendant",
+          "leadMinutes": 0
+        },
+        "retentionDays": "number"
+      },
+      "example_call": {
+        "accountSessionId": "safari-work",
+        "threadId": "abc123",
+        "threadUrl": "https://mail.example/thread/abc123",
+        "contactIdentity": "person@example.com",
+        "deadline": "2026-08-14T17:00:00-05:00",
+        "timezone": "America/Chicago",
+        "condition": {
+          "kind": "no_genuine_reply",
+          "ignoreAutomated": true
+        },
+        "onDeadline": {
+          "action": "draft_followup",
+          "send": false,
+          "tone": "brief"
+        },
+        "notify": {
+          "surface": "pendant",
+          "leadMinutes": 0
+        },
+        "retentionDays": 30
+      },
+      "expected_output": "{\"watchId\":\"string\",\"status\":\"active\",\"boundIdentity\":{\"accountSessionId\":\"string\",\"threadId\":\"string\"},\"nextCheckAt\":\"ISO-8601\",\"deadline\":\"ISO-8601\",\"cancelledBy\":null,\"draftId\":null,\"audit\":{\"sourceFreshAt\":\"ISO-8601\",\"checks\":0}}",
+      "summary": "conditional_followup_watch"
+    },
+    {
+      "id": "t25-p9ni",
+      "kind": "tool",
+      "round": 121,
+      "name": "audio_profile_apply_verify",
+      "why": "Prose schema. target: mac_system|browser_tab|both, applyAt: now|utterance_boundary and the expected block are free text rather than JSON Schema enums and types, so the resolver cannot parse them and would refuse every call. The idea is sound and the audio surface is real, so re-request with concrete enums against what exists: POST /pipeline/audio, GET /pipeline, GET /pipeline/:pipelineId/audio/:direction, POST /pipeline/events and GET /pipeline/stream on the pipeline side, and the get_volume, set_volume, set_mute and get_mac_status executor actions on the Mac side. One correction: there is no per-browser-tab audio route, so a browser_tab target resolves to nothing and both is therefore unsatisfiable; scope the re-request to the Mac and pipeline legs, keep sampleRateHz and the verify-then-rollback pair, and carry rollbackProfileId and idempotencyKey through the same call so the transition stays atomic.",
+      "why_existing_tools_insufficient": "mac_run_actions can set volume and run allowlisted intents, but it cannot apply a versioned input/output DSP profile, identify the active call route, verify measured effect, or atomically roll back. browser_run_actions can act in tabs but cannot verify OS-level audio.",
+      "input_schema": {
+        "profileId": "string",
+        "profileVersion": "string",
+        "target": "mac_system|browser_tab|both",
+        "expected": {
+          "sampleRateHz": "number",
+          "inputRoute": "string|null",
+          "outputRoute": "string|null",
+          "maxInputLevelDbfs": "number|null",
+          "minSpeechScore": "number|null"
+        },
+        "applyAt": "now|utterance_boundary",
+        "rollbackProfileId": "string|null",
+        "idempotencyKey": "string"
+      },
+      "example_call": {
+        "profileId": "street_voice_24k",
+        "profileVersion": "1",
+        "target": "both",
+        "expected": {
+          "sampleRateHz": 24000,
+          "inputRoute": "pendant",
+          "outputRoute": "mac_speakers",
+          "maxInputLevelDbfs": -3,
+          "minSpeechScore": 0.8
+        },
+        "applyAt": "utterance_boundary",
+        "rollbackProfileId": "quiet_voice_24k",
+        "idempotencyKey": "audio-transition-2026-08-07T12:00:00Z"
+      },
+      "expected_output": "Typed receipt containing requestId, appliedProfile, previousProfile, verification measurements, active call/tab identity if applicable, appliedAt, rollbackAvailable, and a failure reason with automatic rollback status.",
+      "summary": "audio_profile_apply_verify"
     }
   ],
   "findings": [
