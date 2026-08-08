@@ -11,8 +11,8 @@
         "mac-planner"
       ],
       "round": 121,
-      "status": "proposed",
-      "note": "",
+      "status": "implemented",
+      "note": "Delivered by the browser reading path, reachable both as HTTP and through the planner. POST /browser/inspect (local-agent/browserInspect.js + browserBridge.js, browserInspect.test.js) reads a page and reports what it says WITH QUOTES AND CITATIONS plus ONE proposed next step, stored at GET /browser/inspections/:inspectionId; browser_inspect, browser_read_page, browser_snapshot and browser_list_tabs are all planner-advertised action types in GET /capabilities (99 types, zero drift). For the Mac screen rather than a page, the screenshot and zoom actions plus GET /observe answer the same question. Wired by registerBrowserBridgeRoutes(app) at local-agent/server.js:1394. Surviving id for the whole \"what am I looking at / read this page\" cluster.",
       "agents": 2,
       "timesProposed": 2
     },
@@ -27,8 +27,8 @@
         "mac-terminal"
       ],
       "round": 153,
-      "status": "proposed",
-      "note": "",
+      "status": "implemented",
+      "note": "Delivered by the execution journal and receipts, all reachable on the live agent: GET /journal and GET /journal/:jobId (local-agent/executionJournal.js, executionJournal.test.js) narrate every step in order with what it touched, which planner tier chose it and whether it can still be undone; GET /jobs/:jobId/receipts (local-agent/jobTracker.js) gives the per-action receipt; GET /catchup/refusals (local-agent/catchupDigest.js + catchupSources.js) names the sources that could NOT be read and the claims it declined to make - the honest 'why not'; GET /routing (local-agent/routingStats.js) says which tier answered and what it cost. All five appear in GET /capabilities (225 routes).",
       "agents": 2,
       "timesProposed": 2
     },
@@ -42,8 +42,8 @@
         "relay-realtime"
       ],
       "round": 56,
-      "status": "proposed",
-      "note": "",
+      "status": "implemented",
+      "note": "Delivered on both surfaces. Mac: GET /jobs, GET /jobs/:jobId and GET /jobs/:jobId/receipts (local-agent/jobTracker.js, jobTracker.test.js) - 'the record of everything planned or run, newest first'. By voice from the pendant: cloud-relay/jobRecall.js recallJobStatus() is passed in as the lookupJobStatus tool of the Realtime session at cloud-relay/server.js:1413, and it deliberately excludes the job the current utterance dispatched so 'that thing earlier' resolves to earlier work. cloud-relay/jobRecall.test.js covers it. GET /v1/mac/jobs/:jobId is the HTTP equivalent on the relay.",
       "agents": 1,
       "timesProposed": 3
     },
@@ -72,8 +72,8 @@
         "mac-terminal"
       ],
       "round": 34,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of cap-596ec5d7 (implemented). The \"and what should I do next\" half is the same feature: POST /browser/inspect returns exactly ONE proposed next step alongside the reading, and POST /browser/inspections/:inspectionId/act is the only way to carry it out.",
       "agents": 1,
       "timesProposed": 2
     },
@@ -102,8 +102,8 @@
         "relay-realtime"
       ],
       "round": 102,
-      "status": "proposed",
-      "note": "",
+      "status": "implemented",
+      "note": "Delivered end to end and exercised by the two-agent harness. From the pendant the Realtime session dispatches to the Mac through the relay work queue (GET /v1/bridge/work, POST /v1/bridge/work/:jobId/result in cloud-relay/server.js, polled by local-agent/bridge.js) or over POST /v1/mac/plan and POST /v1/mac/execute with status at GET /v1/mac/jobs/:jobId; \"tell me when it is done\" is the completion wait at cloud-relay/server.js:1396-1411, which polls the job until it reports executed and then speaks the trimmed result. Which surface a clause belongs to is decided by POST /goal-router/route and GET /goal-router/surfaces (local-agent/goalRouter.js + goalRouterSurfaces.js, goalRouter.test.js, registerGoalRouterRoutes(app) at local-agent/server.js:1437) rather than by whichever body the request arrived on.",
       "agents": 1,
       "timesProposed": 2
     },
@@ -117,8 +117,8 @@
         "unified"
       ],
       "round": 108,
-      "status": "proposed",
-      "note": "",
+      "status": "implemented",
+      "note": "Delivered by the workbench transaction layer: GET /workbench/jobs/:jobId/handoff packages what an interrupted run already finished so another machine can pick it up, and POST /workbench/handoff adopts work another machine produced without ever lowering a status that is further along locally (local-agent/workbenchRoutes.js + workbenchTransaction.js + executionContext.js, workbenchTransaction.test.js). POST /workbench/plan first answers whether the work is fresh, a retry, already complete or in need of repair, so continuing does not redo it. Wired by registerWorkbenchRoutes(app) at local-agent/server.js:1457 and visible in GET /capabilities. The relay half is POST /v1/context/resume (cloud-relay/server.js:684).",
       "agents": 1,
       "timesProposed": 2
     },
@@ -267,8 +267,8 @@
         "browser-extension"
       ],
       "round": 16,
-      "status": "proposed",
-      "note": "",
+      "status": "implemented",
+      "note": "Delivered by local-agent/browserProvenance.js, wired by registerBrowserProvenanceRoutes(app) at local-agent/server.js:1478 and live in GET /capabilities. Every extraction and field mutation is recorded with its host, url, kind and whether the fill is still undoable (GET /browser/provenance, filterable); one record reads back at GET /browser/provenance/:recordId with what was extracted or filled and from where; POST /browser/provenance/:recordId/check compares a stored claim against fresh page text and reports that the page moved rather than silently refreshing; POST /browser/provenance/trace answers 'where did you get that' for a single claim. Tabs are grouped into a task session by POST /browser/sessions (a session name bound to a tab and url, listed at GET /browser/sessions). The 'ready to submit' review artifact is POST /form-previews - it returns exactly what would be sent - and the non-chaining rule the proposal asks for is enforced structurally, not by convention: approval (POST /form-previews/:id/approve) hands back only arguments at GET /form-previews/:id/handoff, and the submit is a separate POST /execute. Tests: evidenceCapsules.test.js, formPreview.test.js, browserSessions.test.js.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -3342,8 +3342,8 @@
         "browser-extension"
       ],
       "round": 12,
-      "status": "proposed",
-      "note": "GENUINELY NEW — kept open with the remaining gaps named. Covered today: authenticated reads of up to 4 ALREADY-OPEN tabs merged into one cited brief (POST /research {mode:\"page\"}, local-agent/research.js readOpenTabs), and staged-not-sent form fill (POST /forms/fill). GAP (1) CLOSED 2026-08-07 — local-agent/originFanOut.js readOrigins() (POST /origins/read): several authenticated origins read for one question, per-origin results with provenance, evidence age and partial success. It addresses pages by URL rather than only seeing tabs the owner already has open, so the readOpenTabs cap of 4 no longer bounds this. MISSING: (2) no account/origin registry — nothing enumerates \"my logged-in accounts\", so the caller still supplies the origin list; (3) no urgency scorer over web content — local-agent/notificationTriage.js scores Mail.app envelopes only and has no page-text input; (4) no draft-reply generator — fillForm requires caller-supplied values and send_email a caller-supplied body; nothing composes either from page content; (5) no drafts store to hold \"drafted but not sent\".",
+      "status": "implemented",
+      "note": "Delivered by briefing triage: POST /briefing/triage reads across the owner's mail AND their logged-in web accounts under the interruption policy, says only what actually needs them, and leaves everything else as findings in a review queue at GET /briefing/review, settled one at a time by POST /briefing/review/:id. It never replies, sends or archives. Modules local-agent/briefingTriage.js + briefingQueue.js (briefingTriage.test.js), wired by registerBriefingTriageRoutes(app) at local-agent/server.js:1406; reachable by voice as the planner-advertised action types briefing_triage and review_queue. Surviving id for the \"check my logged-in accounts, tell me only what is urgent, draft but do not send\" cluster.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -3357,8 +3357,8 @@
         "browser-extension"
       ],
       "round": 12,
-      "status": "proposed",
-      "note": "GENUINELY NEW — kept open with the remaining gaps named. Covered today: daily cadence (local-agent/routines.js, POST /routines); routines can emit browser_* actions, all 14 browser types being in the planner registry. GAP (2) CLOSED 2026-08-07 — local-agent/originFanOut.js readOrigins() (POST /origins/read): several authenticated origins read for one question, per-origin results with provenance, evidence age and partial success, so calendar + task board + reservations is now one batch instead of three unmerged jobs. MISSING: (1) no weekday-only cadence — routines.nextRunAt supports interval and daily only, with no day-of-week branch and no cron; (3) no cross-source ranking — local-agent/dayPlan.js ranks native Calendar and Reminders and accepts no web input, so \"the three things that matter\" across heterogeneous authenticated sources still has no reducer; (4) a routine re-plans through the LLM on every fire, so a fixed \"check these three sites\" is non-deterministic. Nothing calls readOrigins from a routine yet — the fan-out exists, the morning trigger does not.",
+      "status": "duplicate",
+      "note": "Duplicate of cap-bff5f829 (implemented), plus GET /day-plan for the suggested plan (events ahead, what is next, tight transitions, double-bookings, tasks ranked).",
       "agents": 1,
       "timesProposed": 1
     },
@@ -3387,8 +3387,8 @@
         "browser-extension"
       ],
       "round": 13,
-      "status": "proposed",
-      "note": "GENUINELY NEW — kept open with the remaining gaps named. Covered today: daily routines fire, and POST /briefing composes the artifact and never sends it (sinks are file / speech / macnote / reminder). GAP (2) CLOSED 2026-08-07 — local-agent/originFanOut.js readOrigins() (POST /origins/read): several authenticated origins read for one question, per-origin results with provenance, evidence age and partial success, covering the three named site classes in one call. MISSING: (1) local-agent/briefing.js still has NO browser source — its kinds draw on calendar, mail, files, notes and system, all osascript against native apps, so \"in Safari\" needs a briefing adapter that calls readOrigins and feeds the composer; (3) same routine non-determinism as cap-8c36c70a.",
+      "status": "duplicate",
+      "note": "Duplicate of cap-bff5f829 (implemented). The spoken-briefing-with-links half is what POST /briefing/triage already composes and speaks; the schedule is POST /routines.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -3417,8 +3417,8 @@
         "browser-extension"
       ],
       "round": 13,
-      "status": "proposed",
-      "note": "HALF SHIPPED — kept open for the half that does not exist. The \"fill it in and show exactly what will be sent\" half is covered well by local-agent/formFill.js (cap-1e04349c / cap-75ee1730 / cap-28eaa582, implemented): POST /forms/fill returns a manifest with willSend {method, submitsTo, enctype, fields}, a literal rendered request preview, submit.clicked:false, missingRequired, and password fields structurally left unfilled. MISSING: (1) the \"from information on this private webpage\" half does not exist — fillForm requires caller-supplied values and there is no read-page-A then compose-values-for-form-B step anywhere; (2) no email or support-request variant — parseFormHtml walks <form> markup only, so a web-mail contenteditable compose surface will not parse, and send_email is Mail.app-only; (3) not reachable outside HTTP — there is no fill_form executor action and no planner entry, so neither voice nor a routine can invoke it.",
+      "status": "implemented",
+      "note": "Delivered by form previews: POST /form-previews reads the page, fills the reversible fields and returns exactly what would be sent as text that can be read aloud; GET /form-previews/:id reads it back verbatim; POST /form-previews/:id/approve records the yes against the digest of the bytes actually read plus a spoken code; POST /form-previews/:id/recheck re-reads the page and revokes the approval if the content moved; GET /form-previews/:id/handoff hands back the submit arguments, and the submit itself is a separate POST /execute. Module local-agent/formPreview.js (formPreview.test.js), wired by registerFormPreviewRoutes(app) at local-agent/server.js:1429. Nothing in the family submits.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -3432,8 +3432,8 @@
         "browser-extension"
       ],
       "round": 13,
-      "status": "proposed",
-      "note": "PER-PAGE HALF COVERED by cap-c18a0fce (implemented, local-agent/pageWatch.js); kept open for the plural, change-only form this entry asks for. GAP (1) HALF CLOSED 2026-08-07 — local-agent/originFanOut.js readOrigins() (POST /origins/read): several authenticated origins read for one question, per-origin results with provenance, evidence age and partial success. That is grouping for a one-shot read, NOT for watches: pageWatch.createWatch still takes a single url with no bundle id, no shared cadence and no joint digest, and GET /watches/reports still concatenates per-report summary strings at read time. MISSING: (1b) no watch bundles built on readOrigins; (2) \"meaningful\" is still literal string inequality in pageWatch.diffValues, so a re-rendered timestamp or cart count fires a report — no significance threshold, no ignore-list; (3) no voice or planner path to create a watch.",
+      "status": "duplicate",
+      "note": "Duplicate of cap-56f6a5f9 (implemented). \"Never pollute my briefing with unchanged pages\" is exactly the threshold plus GET /watches/:watchId/suppressed behaviour in local-agent/pageWatchSignal.js.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -3462,8 +3462,8 @@
         "browser-extension"
       ],
       "round": 15,
-      "status": "proposed",
-      "note": "Kept open with the gaps named (note first written 2026-08-07). Covered today: per-page watching with change-only reporting and cited before/after evidence (local-agent/pageWatch.js, cap-c18a0fce); nothing anywhere submits a form, so the \"without sending or submitting anything\" clause holds structurally — pageWatch and originFanOut are both handed read-only allow-sets that make click and type unreachable rather than merely unused. NEW 2026-08-07: local-agent/originFanOut.js readOrigins() (POST /origins/read): several authenticated origins read for one question, per-origin results with provenance, evidence age and partial success, so \"the authenticated pages I choose\" is one call. MISSING: (1) the briefing is not sourced from either — local-agent/briefing.js has no browser kind, so a \"concise, sourced briefing\" over watched pages has no composer; (2) no suggested next steps from a change — browserInspect.proposeAction proposes for one inspected page and is not reachable from a watch report; (3) \"meaningful\" is literal string inequality in pageWatch.diffValues, with no significance threshold.",
+      "status": "duplicate",
+      "note": "Duplicate of cap-56f6a5f9 (implemented). The sourced briefing is GET /watches/reports and the suggested next steps are GET /watches/drafts, which local-agent/pageWatchDrafts.js structurally cannot submit (it imports no browser or form module, and a test fails if one appears).",
       "agents": 1,
       "timesProposed": 1
     },
@@ -3477,8 +3477,8 @@
         "browser-extension"
       ],
       "round": 15,
-      "status": "proposed",
-      "note": "",
+      "status": "implemented",
+      "note": "Delivered by the multi-lens reading pair, both wired and both tested. POST /crosscheck (local-agent/crossCheck.js, crossCheck.test.js, registerCrossCheckRoutes(app) at local-agent/server.js:1474) asks one question of a page behind the owner's login several different ways and surfaces the DISAGREEMENT between readings rather than resolving it; POST /handle-this and POST /handle-this/investigate (local-agent/handleThis.js + handleThisRoutes.js + handleThisPanel.js + handleThisReconcile.js, registerHandleThisRoutes(app) at local-agent/server.js:1465) do the same across several open logged-in tabs at once through the lenses at GET /handle-this/lenses and report what they agree and disagree on. The evidence backing is local-agent/evidenceCapsules.js (GET /evidence/:capsuleId) and local-agent/browserProvenance.js; the prepared-not-sent action is POST /form-previews.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -3492,8 +3492,8 @@
         "browser-extension"
       ],
       "round": 15,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of cap-b875c138 (implemented), with the before/after evidence coming from POST /preview (local-agent/planPreview.js - which apps, files and URLs an action list would touch and what could not be undone) and the group-commit-or-roll-back from POST /workbench/plan and /workbench/contexts (local-agent/workbenchTransaction.js). Approve is POST /form-previews/:id/approve; discard is DELETE /form-previews/:id.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -3507,8 +3507,8 @@
         "browser-extension"
       ],
       "round": 16,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of cap-bff5f829 (implemented). Same triage-plus-routine composition; the portal is read through the owner's own logged-in session by the browser bridge.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -3522,8 +3522,8 @@
         "browser-extension"
       ],
       "round": 16,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of cap-391cae82 (implemented). Literally the \"handle this\" phrasing: POST /handle-this gathers the question across the owner's open logged-in tabs, and POST /form-previews fills the reversible fields and returns exactly what would be sent without submitting anything.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -3777,8 +3777,8 @@
         "browser-extension"
       ],
       "round": 27,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of cap-596ec5d7 (implemented). Read the important parts plus what to do = the inspection narrative plus its one proposed next step.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -3822,8 +3822,8 @@
         "browser-extension"
       ],
       "round": 29,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of cap-596ec5d7 (implemented). The pendant button opens the ordinary Realtime conversation, from which the same browser_* action types are dispatchable through the relay work queue to POST /execute.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -3852,8 +3852,8 @@
         "browser-extension"
       ],
       "round": 30,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of cap-e8f33de2 (implemented). Reconnecting the session is POST /browser/sessions (open or adopt a tab and bind it to a session name); \"what was completed, what is waiting, what needs me\" is GET /browser-jobs.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -4122,8 +4122,8 @@
         "browser-extension"
       ],
       "round": 40,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of cap-bff5f829 (implemented). The \"every morning\" half is POST /routines (daily or weekday schedules, local-agent/routines.js) or the schedule_routine action, which installs briefing_triage as a standing command.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -4662,8 +4662,8 @@
         "browser-extension"
       ],
       "round": 59,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of cap-e8f33de2 (implemented). The task stays alive as a queued browser job with a claim lease; POST /browser-jobs/sweep releases claims rather than replaying work.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -4962,8 +4962,8 @@
         "browser-extension"
       ],
       "round": 70,
-      "status": "proposed",
-      "note": "",
+      "status": "implemented",
+      "note": "Delivered by the browser job queue: POST /browser-jobs queues work to run later against the owner's logged-in browser (queued is the default - the answer comes from a later drain, not from the call), POST /browser-jobs/drain and POST /browser-jobs/:jobId/run work through it when the browser is back, GET /browser-jobs/:jobId reports the steps, the outcome and WHAT IT READ, and POST /browser-jobs/sweep expires stale jobs and releases their claims. When a drain is worth doing is decided by local-agent/sessionNeedSignal.js behind GET and POST /browser-jobs/signals rather than by a blind timer, and GET /browser/status says whether the extension is actually online. Module local-agent/browserJobRunner.js + sessionNeedSignal.js (browserJobRunner.test.js, sessionNeedSignal.test.js), wired by registerBrowserJobRoutes(app) at local-agent/server.js:1469. Surviving id for the \"remember this browser request and run it when Safari comes back\" cluster.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -5682,8 +5682,8 @@
         "browser-extension"
       ],
       "round": 95,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of cap-e8f33de2 (implemented). \"Tell me if anything changed\" on resume is GET /browser-jobs/:jobId plus POST /browser/provenance/:recordId/check, which compares a stored claim against the page as it reads now.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -6852,8 +6852,8 @@
         "browser-extension"
       ],
       "round": 125,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of cap-596ec5d7 (implemented). The \"exact section or link you used\" is the citations POST /browser/inspect already stores with every reading, backed by an evidence capsule (GET /evidence/:capsuleId).",
       "agents": 1,
       "timesProposed": 1
     },
@@ -7002,8 +7002,8 @@
         "browser-extension"
       ],
       "round": 127,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of cap-596ec5d7 (implemented). Behind-the-login is the normal case for this path: the inspection runs inside the owner's own logged-in browser profile through the extension bridge.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -7077,8 +7077,8 @@
         "browser-extension"
       ],
       "round": 128,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of cap-596ec5d7 (implemented). POST /browser/inspect reads the page and answers from it; browser_read_page (modes text/main_text/forms/landmarks) is the planner-level equivalent.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -7317,8 +7317,8 @@
         "browser-extension"
       ],
       "round": 131,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of cap-391cae82 (implemented). Comparing details across open logged-in tabs and surfacing conflicts is exactly POST /handle-this (one question read off several tabs through different lenses, reporting what they agree and disagree on) and POST /crosscheck (which surfaces disagreement rather than resolving it); the exact evidence per mismatch is the evidence capsule id each reading carries (GET /evidence/:capsuleId).",
       "agents": 1,
       "timesProposed": 1
     },
@@ -7407,8 +7407,8 @@
         "browser-extension"
       ],
       "round": 132,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of cap-596ec5d7 (implemented). The voice follow-up is the ordinary Realtime session on the relay (cloud-relay/openaiRealtimeVoice.js), which can call the same browser_* action types.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -9012,8 +9012,8 @@
         "faculty-action"
       ],
       "round": 47,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of cap-6e3756e0 (implemented). Exactly-once under retries is what POST /workbench/contexts provides: the claim is durable and idempotent on (job, intent), so a reconnecting pendant, relay or Mac re-opening the same work gets the same context back instead of creating a second one.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -9252,8 +9252,8 @@
         "faculty-action"
       ],
       "round": 55,
-      "status": "proposed",
-      "note": "",
+      "status": "implemented",
+      "note": "Delivered by the workbench transaction layer plus the intent ledger, both wired and tested. POST /workbench/plan answers - before anything runs again - whether this piece of work is fresh, a retry, already complete, in need of repair or a deliberate re-run; POST /workbench/contexts claims work durably before producing it so a restart can tell a retry from a second attempt, and re-opening the same job and intent returns the same context rather than a duplicate; GET /workbench/contexts/:contextId compares what a context claims to have committed against what is actually on disk. GET /ledger/interrupted lists runs that stopped part-way and GET /ledger/:ledgerId/resume decides which steps provably finished, which to skip, which to re-run, and the one question to put to the owner about the first step whose outcome cannot be established. Modules local-agent/workbenchTransaction.js + executionContext.js + workbenchRoutes.js (workbenchTransaction.test.js) wired at local-agent/server.js:1457, and local-agent/actionLedger.js + actionLedgerRoutes.js + actionLedgerVerify.js wired at local-agent/server.js:1398. Surviving id for the \"resume without doing anything twice\" cluster.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -9402,8 +9402,8 @@
         "faculty-action"
       ],
       "round": 59,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of cap-6e3756e0 (implemented). \"Show me why\" is GET /journal/:jobId plus GET /jobs/:jobId/receipts; \"a safe way to retry without explaining again\" is GET /ledger/:ledgerId/resume, which returns the skip/re-run decision per step rather than restarting the command.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -11202,8 +11202,8 @@
         "faculty-action"
       ],
       "round": 120,
-      "status": "proposed",
-      "note": "",
+      "status": "implemented",
+      "note": "Delivered by POST /jobs/undo-last (local-agent/undo.js + jobTracker.js, undo is exercised in jobTracker.test.js): it picks the newest run that can be undone itself and reverses it in reverse order - restore the snapshot, move the file back, delete the copy, put volume and brightness back. The \"only if it is still safe\" half is real and enforced: shell, keyboard, email and browser steps are declared irreversible and are refused rather than faked, and GET /jobs/:jobId/receipts reports per action whether an undo is possible before anything is attempted. Both routes are live in GET /capabilities.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -13017,8 +13017,8 @@
         "faculty-judgement"
       ],
       "round": 10,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of cap-4aab3adb (implemented). GET /catchup covers both what the agent did and what changed; GET /catchup/needs-me ranks what is left.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -13047,8 +13047,8 @@
         "faculty-judgement"
       ],
       "round": 11,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of cap-4aab3adb (implemented).",
       "agents": 1,
       "timesProposed": 1
     },
@@ -14832,8 +14832,8 @@
         "faculty-judgement"
       ],
       "round": 65,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of cap-4aab3adb (implemented). Not repeating what was already heard is what local-agent/catchupClock.js tracks, and the watch equivalent is POST /watches/:watchId/ack.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -15897,8 +15897,8 @@
         "faculty-judgement"
       ],
       "round": 98,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of cap-4aab3adb (implemented). The chronological account across pendant conversations, Mac/browser work and routines is local-agent/catchupSources.js; \"since I last checked\" is local-agent/catchupClock.js.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -17442,8 +17442,8 @@
         "faculty-judgement"
       ],
       "round": 133,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of cap-4aab3adb (implemented). GET /catchup is explicitly ordered rather than listed.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -19017,8 +19017,8 @@
         "faculty-perception"
       ],
       "round": 20,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of cap-4aab3adb (implemented). \"What still needs my attention\" is GET /catchup/needs-me.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -19227,8 +19227,8 @@
         "faculty-perception"
       ],
       "round": 27,
-      "status": "proposed",
-      "note": "",
+      "status": "implemented",
+      "note": "Delivered by the catch-up digest: GET /catchup gathers what happened while the owner was away from every local store and puts it in order (what ran, what failed, what was announced, what is still waiting), GET /catchup/needs-me is the screenless subset that still needs them with counts of what was left out, and GET /catchup/refusals names the sources that could not be read and the claims it declined to make. Modules local-agent/catchupDigest.js + catchupSources.js + catchupClock.js (catchupDigest.test.js, catchupSources.test.js), wired by registerCatchupRoutes(app) at local-agent/server.js:1426. Nothing in it is retried or replayed. Surviving id for the \"what did I miss / catch me up\" cluster.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -19272,8 +19272,8 @@
         "faculty-perception"
       ],
       "round": 28,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of cap-4aab3adb (implemented). Ordered account plus GET /catchup/needs-me.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -19692,8 +19692,8 @@
         "faculty-perception"
       ],
       "round": 43,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of cap-4aab3adb (implemented). Separating what definitely happened from what was only inferred is precisely what GET /catchup/refusals exists for: it names the claims the digest declined to make.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -19812,8 +19812,8 @@
         "faculty-perception"
       ],
       "round": 47,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of cap-4aab3adb (implemented). \"What did we miss\" is GET /catchup/refusals - the blind spots, which sources could not be read.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -21657,8 +21657,8 @@
         "faculty-perception"
       ],
       "round": 110,
-      "status": "proposed",
-      "note": "",
+      "status": "implemented",
+      "note": "Delivered by browser provenance: POST /browser/provenance/trace traces one claim back to the pages it came from (\"prove it, where did you get that\"), GET /browser/provenance lists where every claim and filled field came from filterable by host and url, and POST /browser/provenance/:recordId/check re-verifies a stored claim against fresh page text. Which tab was read is not inferred - GET /browser/sessions names the tab and url each session is bound to, and every reading mints an evidence capsule (GET /evidence/:capsuleId) carrying the source url and expiry. Module local-agent/browserProvenance.js, wired by registerBrowserProvenanceRoutes(app) at local-agent/server.js:1478, plus local-agent/evidenceCapsules.js (evidenceCapsules.test.js). All six provenance routes are live in GET /capabilities.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -24102,8 +24102,8 @@
         "mac-planner"
       ],
       "round": 23,
-      "status": "proposed",
-      "note": "",
+      "status": "implemented",
+      "note": "Delivered by GET /meeting-prep: the calendar entry for the NEXT meeting, the documents worth having open, the mail threads that belong to it, and the decisions and questions pulled out of them, with a spoken summary. POST /meeting-prep/brief does the same for a meeting the owner names instead. Modules local-agent/meetingPrep.js + meetingPrepQueue.js + meetingPrepThreads.js (meetingPrep.test.js), wired by registerMeetingPrepRoutes(app) at local-agent/server.js:1442; prepare_for_meeting is a planner-advertised action type. It copies and reads only - it sends nothing. Surviving id for the \"get me ready for my next meeting\" cluster.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -27102,8 +27102,8 @@
         "mac-planner"
       ],
       "round": 122,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of cap-e8f33de2 (implemented). Not repeating anything is POST /workbench/plan (fresh vs retry vs already complete) applied to the queued job before the drain re-runs it.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -29997,8 +29997,8 @@
         "mac-terminal"
       ],
       "round": 29,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of cap-596ec5d7 (implemented).",
       "agents": 1,
       "timesProposed": 1
     },
@@ -33357,8 +33357,8 @@
         "mac-terminal"
       ],
       "round": 133,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of cap-596ec5d7 (implemented).",
       "agents": 1,
       "timesProposed": 1
     },
@@ -40017,8 +40017,8 @@
         "relay-realtime"
       ],
       "round": 32,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of cap-51c2dc88 (implemented). Who it is with, the history and open decisions, and the short spoken summary are all part of the GET /meeting-prep assembly; local-agent/meetingPrepThreads.js supplies the mail threads and local-agent/meetingPrepQueue.js is the shelf of prepared briefs with a count of how many have not been heard.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -40797,8 +40797,8 @@
         "relay-realtime"
       ],
       "round": 52,
-      "status": "proposed",
-      "note": "",
+      "status": "implemented",
+      "note": "Delivered by page watches: POST /watches puts a standing watch on one page including one behind the owner's login, POST /watches/:watchId/check diffs against the baseline and reports only what cleared the threshold, GET /watches/reports is the spoken summary of unacknowledged change, and GET /watches/:watchId/suppressed shows what it deliberately stayed quiet about so a quiet watch is distinguishable from a broken one. Meaningfulness is decided by local-agent/pageWatchSignal.js with no per-site rules. Modules local-agent/pageWatch.js + pageWatchRoutes.js + pageWatchSignal.js + pageWatchDrafts.js (pageWatch.test.js), wired by registerPageWatchRoutes(app) at local-agent/server.js:1432; watch_page is a planner-advertised action type. Surviving id for the \"watch this page and tell me when it meaningfully changes\" cluster.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -40992,8 +40992,8 @@
         "relay-realtime"
       ],
       "round": 57,
-      "status": "proposed",
-      "note": "",
+      "status": "implemented",
+      "note": "Delivered by the derived capability manifest and the gap report. GET /capabilities (local-agent/capabilityManifest.js, capabilityManifest.test.js) lists 225 live routes and 99 action types with real descriptions, and it is DERIVED - routes come from the live Express router stack and action types are parsed out of the executor switch at import, so it cannot drift into describing things that do not exist (it reports actions.drift and http.undocumentedRoutes, both currently empty). GET /capabilities/gaps (local-agent/capabilityGaps.js, capabilityGaps.test.js, registerCapabilityGapsRoutes(app) at local-agent/server.js:1461) is the other half: what it cannot do and why. The answer is reachable by voice as well as HTTP because local-agent/capabilityGapsActions.js registers the gap actions into the planner (CAPABILITY_GAP_ACTIONS in llmPlanner.js), the risk classifier (capabilityGapHandsFree in actionRisk.js), the fast-path router (CAPABILITY_GAP_MATCHERS in policyRouter.js) and the executor (runCapabilityGapAction in computerControl.js).",
       "agents": 1,
       "timesProposed": 1
     },
@@ -41292,8 +41292,8 @@
         "relay-realtime"
       ],
       "round": 65,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of cap-596ec5d7 (implemented). \"What is on my Mac right now\" is GET /observe; \"read the page I left open\" is browser_list_tabs then browser_read_page.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -42777,8 +42777,8 @@
         "relay-realtime"
       ],
       "round": 106,
-      "status": "proposed",
-      "note": "",
+      "status": "implemented",
+      "note": "Delivered by the two audit surfaces together. On the Mac: GET /journal is the narrated timeline of what the agent actually did to the machine - each step in order, what it touched, how long it took, which planner tier chose it and whether it can still be undone - and GET /jobs/:jobId/receipts is the per-action proof of what was written. In the browser: GET /browser/provenance says where each claim and filled field came from and whether the fill is still undoable, and POST /browser/provenance/trace backs a specific claim to its pages. Modules local-agent/executionJournal.js (executionJournal.test.js), local-agent/jobTracker.js, local-agent/browserProvenance.js - all three wired and live in GET /capabilities.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -43902,8 +43902,8 @@
         "relay-realtime"
       ],
       "round": 135,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of cap-596ec5d7 (implemented). For the computer rather than a web page this is the screenshot action plus GET /observe (foreground app, running apps, open browser sessions).",
       "agents": 1,
       "timesProposed": 1
     },
@@ -45117,8 +45117,8 @@
         "relay-realtime"
       ],
       "round": 150,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of cap-51c2dc88 (implemented).",
       "agents": 1,
       "timesProposed": 1
     },
@@ -45567,8 +45567,8 @@
         "relay-realtime"
       ],
       "round": 156,
-      "status": "proposed",
-      "note": "",
+      "status": "implemented",
+      "note": "Delivered by the voice-note pipeline: POST /voice-notes takes the note once the transcript exists, POST /voice-notes/:noteId/remind turns it into a reminder, POST /voice-notes/:noteId/place files it and GET /voice-notes/context reports what it was attached to. The time-and-repetition parsing out of ordinary speech is local-agent/remindMe.js behind POST /reminders and the remind_me action, and create_reminder writes the item into Apple Reminders. Modules local-agent/voiceNotes.js (voiceNotes.test.js) wired by registerVoiceNotesRoutes(app) at local-agent/server.js:1447, plus local-agent/remindMe.js (remindMe.test.js). All eleven /voice-notes routes are live in GET /capabilities.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -53982,8 +53982,8 @@
         "mac-vision"
       ],
       "round": 24,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -54237,8 +54237,8 @@
         "mac-vision"
       ],
       "round": 107,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -54267,8 +54267,8 @@
         "mac-vision"
       ],
       "round": 116,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -54762,8 +54762,8 @@
         "browser-extension"
       ],
       "round": 22,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -54777,8 +54777,8 @@
         "browser-extension"
       ],
       "round": 24,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -54792,8 +54792,8 @@
         "browser-extension"
       ],
       "round": 32,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -54807,8 +54807,8 @@
         "browser-extension"
       ],
       "round": 75,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -54822,8 +54822,8 @@
         "faculty-action"
       ],
       "round": 38,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -54837,8 +54837,8 @@
         "faculty-action"
       ],
       "round": 46,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -54852,8 +54852,8 @@
         "faculty-action"
       ],
       "round": 48,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -54867,8 +54867,8 @@
         "faculty-action"
       ],
       "round": 56,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -54897,8 +54897,8 @@
         "faculty-action"
       ],
       "round": 62,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -54912,8 +54912,8 @@
         "faculty-action"
       ],
       "round": 74,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -54927,8 +54927,8 @@
         "faculty-action"
       ],
       "round": 76,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -54942,8 +54942,8 @@
         "faculty-action"
       ],
       "round": 78,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -54957,8 +54957,8 @@
         "faculty-action"
       ],
       "round": 84,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -54972,8 +54972,8 @@
         "faculty-action"
       ],
       "round": 92,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -54987,8 +54987,8 @@
         "faculty-action"
       ],
       "round": 97,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55002,8 +55002,8 @@
         "faculty-action"
       ],
       "round": 101,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55017,8 +55017,8 @@
         "faculty-action"
       ],
       "round": 113,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55032,8 +55032,8 @@
         "faculty-action"
       ],
       "round": 118,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55062,8 +55062,8 @@
         "faculty-action"
       ],
       "round": 123,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55107,8 +55107,8 @@
         "faculty-judgement"
       ],
       "round": 5,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55122,8 +55122,8 @@
         "faculty-judgement"
       ],
       "round": 8,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55137,8 +55137,8 @@
         "faculty-judgement"
       ],
       "round": 11,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55152,8 +55152,8 @@
         "faculty-judgement"
       ],
       "round": 14,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55167,8 +55167,8 @@
         "faculty-judgement"
       ],
       "round": 16,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55182,8 +55182,8 @@
         "faculty-judgement"
       ],
       "round": 18,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55197,8 +55197,8 @@
         "faculty-judgement"
       ],
       "round": 23,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55212,8 +55212,8 @@
         "faculty-judgement"
       ],
       "round": 25,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55227,8 +55227,8 @@
         "faculty-judgement"
       ],
       "round": 26,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55242,8 +55242,8 @@
         "faculty-judgement"
       ],
       "round": 27,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55287,8 +55287,8 @@
         "faculty-judgement"
       ],
       "round": 44,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55302,8 +55302,8 @@
         "faculty-judgement"
       ],
       "round": 45,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55317,8 +55317,8 @@
         "faculty-judgement"
       ],
       "round": 46,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55332,8 +55332,8 @@
         "faculty-judgement"
       ],
       "round": 47,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55347,8 +55347,8 @@
         "faculty-judgement"
       ],
       "round": 49,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55362,8 +55362,8 @@
         "faculty-judgement"
       ],
       "round": 51,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55392,8 +55392,8 @@
         "faculty-judgement"
       ],
       "round": 55,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55407,8 +55407,8 @@
         "faculty-judgement"
       ],
       "round": 61,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55422,8 +55422,8 @@
         "faculty-judgement"
       ],
       "round": 62,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55437,8 +55437,8 @@
         "faculty-judgement"
       ],
       "round": 63,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55452,8 +55452,8 @@
         "faculty-judgement"
       ],
       "round": 66,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55467,8 +55467,8 @@
         "faculty-judgement"
       ],
       "round": 73,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55482,8 +55482,8 @@
         "faculty-judgement"
       ],
       "round": 73,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55497,8 +55497,8 @@
         "faculty-judgement"
       ],
       "round": 75,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55512,8 +55512,8 @@
         "faculty-judgement"
       ],
       "round": 79,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55527,8 +55527,8 @@
         "faculty-judgement"
       ],
       "round": 79,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55542,8 +55542,8 @@
         "faculty-judgement"
       ],
       "round": 80,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55557,8 +55557,8 @@
         "faculty-judgement"
       ],
       "round": 82,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55572,8 +55572,8 @@
         "faculty-judgement"
       ],
       "round": 83,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55602,8 +55602,8 @@
         "faculty-judgement"
       ],
       "round": 93,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55617,8 +55617,8 @@
         "faculty-judgement"
       ],
       "round": 94,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55632,8 +55632,8 @@
         "faculty-judgement"
       ],
       "round": 94,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55647,8 +55647,8 @@
         "faculty-judgement"
       ],
       "round": 96,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55662,8 +55662,8 @@
         "faculty-judgement"
       ],
       "round": 98,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55677,8 +55677,8 @@
         "faculty-judgement"
       ],
       "round": 101,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55692,8 +55692,8 @@
         "faculty-judgement"
       ],
       "round": 102,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55707,8 +55707,8 @@
         "faculty-judgement"
       ],
       "round": 102,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55722,8 +55722,8 @@
         "faculty-judgement"
       ],
       "round": 106,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55737,8 +55737,8 @@
         "faculty-judgement"
       ],
       "round": 107,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55767,8 +55767,8 @@
         "faculty-judgement"
       ],
       "round": 110,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55782,8 +55782,8 @@
         "faculty-judgement"
       ],
       "round": 110,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55797,8 +55797,8 @@
         "faculty-judgement"
       ],
       "round": 111,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55812,8 +55812,8 @@
         "faculty-judgement"
       ],
       "round": 114,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55827,8 +55827,8 @@
         "faculty-judgement"
       ],
       "round": 114,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55842,8 +55842,8 @@
         "faculty-judgement"
       ],
       "round": 115,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55857,8 +55857,8 @@
         "faculty-judgement"
       ],
       "round": 116,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55872,8 +55872,8 @@
         "faculty-judgement"
       ],
       "round": 117,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55887,8 +55887,8 @@
         "faculty-judgement"
       ],
       "round": 119,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55902,8 +55902,8 @@
         "faculty-judgement"
       ],
       "round": 121,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55917,8 +55917,8 @@
         "faculty-judgement"
       ],
       "round": 122,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55932,8 +55932,8 @@
         "faculty-judgement"
       ],
       "round": 124,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55947,8 +55947,8 @@
         "faculty-judgement"
       ],
       "round": 125,
-      "status": "proposed",
-      "note": "",
+      "status": "rejected",
+      "note": "REJECTED — needs hardware that does not exist. A 6-axis IMU, haptic actuator (ERM/LRA), capacitive skin-contact/wear electrode, extra buttons or a fuel gauge cannot be added in software; the pendant is a fixed nRF9160 DK with one button (sw0) and one LED, and the I2C bus is unpopulated. Nothing in local-agent/ or cloud-relay/ can synthesize these signals. Surviving id for the whole sensors/actuators cluster: chg-e13db47f.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55962,8 +55962,8 @@
         "faculty-judgement"
       ],
       "round": 125,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55977,8 +55977,8 @@
         "faculty-judgement"
       ],
       "round": 130,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -55992,8 +55992,8 @@
         "faculty-judgement"
       ],
       "round": 131,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56007,8 +56007,8 @@
         "faculty-judgement"
       ],
       "round": 134,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56022,8 +56022,8 @@
         "faculty-judgement"
       ],
       "round": 135,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56052,8 +56052,8 @@
         "faculty-judgement"
       ],
       "round": 137,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56067,8 +56067,8 @@
         "faculty-judgement"
       ],
       "round": 140,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56082,8 +56082,8 @@
         "faculty-judgement"
       ],
       "round": 141,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56097,8 +56097,8 @@
         "faculty-judgement"
       ],
       "round": 143,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56112,8 +56112,8 @@
         "faculty-judgement"
       ],
       "round": 145,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56127,8 +56127,8 @@
         "faculty-judgement"
       ],
       "round": 146,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56157,8 +56157,8 @@
         "faculty-perception"
       ],
       "round": 5,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56172,8 +56172,8 @@
         "faculty-perception"
       ],
       "round": 6,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56187,8 +56187,8 @@
         "faculty-perception"
       ],
       "round": 9,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56202,8 +56202,8 @@
         "faculty-perception"
       ],
       "round": 10,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56217,8 +56217,8 @@
         "faculty-perception"
       ],
       "round": 12,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56232,8 +56232,8 @@
         "faculty-perception"
       ],
       "round": 13,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56247,8 +56247,8 @@
         "faculty-perception"
       ],
       "round": 14,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56262,8 +56262,8 @@
         "faculty-perception"
       ],
       "round": 17,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56292,8 +56292,8 @@
         "faculty-perception"
       ],
       "round": 25,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56307,8 +56307,8 @@
         "faculty-perception"
       ],
       "round": 28,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56352,8 +56352,8 @@
         "faculty-perception"
       ],
       "round": 47,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56367,8 +56367,8 @@
         "faculty-perception"
       ],
       "round": 58,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56382,8 +56382,8 @@
         "faculty-perception"
       ],
       "round": 65,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56397,8 +56397,8 @@
         "faculty-perception"
       ],
       "round": 72,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56427,8 +56427,8 @@
         "faculty-perception"
       ],
       "round": 117,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56472,8 +56472,8 @@
         "mac-planner"
       ],
       "round": 21,
-      "status": "proposed",
-      "note": "",
+      "status": "rejected",
+      "note": "REJECTED — needs hardware that does not exist. An nRF9161-class module, nRF5340 audio bridge, BLE-Audio bridge, 24/32/48 kHz digital MEMS microphone or codec/DSP, bone-conduction transducer or beamforming array all require new silicon; the prototype is a fixed nRF9160 DK (15,625 Hz I2S capture) plus an ESP32 HUZZAH32 A2DP bridge. The software half that COULD be done was done: 24 kHz superwideband decode/playback end to end (commit 5afcc53) and the anti-alias downsampler (4043ba5). Surviving id for the whole production-audio-front-end / new-silicon cluster: chg-f5d3b820.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56487,8 +56487,8 @@
         "mac-planner"
       ],
       "round": 22,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56502,8 +56502,8 @@
         "mac-planner"
       ],
       "round": 26,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56517,8 +56517,8 @@
         "mac-planner"
       ],
       "round": 28,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56532,8 +56532,8 @@
         "mac-planner"
       ],
       "round": 30,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56547,8 +56547,8 @@
         "mac-planner"
       ],
       "round": 32,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56562,8 +56562,8 @@
         "mac-planner"
       ],
       "round": 34,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56577,8 +56577,8 @@
         "mac-planner"
       ],
       "round": 35,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56592,8 +56592,8 @@
         "mac-planner"
       ],
       "round": 36,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56607,8 +56607,8 @@
         "mac-planner"
       ],
       "round": 47,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56622,8 +56622,8 @@
         "mac-planner"
       ],
       "round": 82,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56637,8 +56637,8 @@
         "mac-planner"
       ],
       "round": 89,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56652,8 +56652,8 @@
         "mac-planner"
       ],
       "round": 90,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56667,8 +56667,8 @@
         "mac-planner"
       ],
       "round": 95,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56682,8 +56682,8 @@
         "mac-planner"
       ],
       "round": 102,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56697,8 +56697,8 @@
         "mac-planner"
       ],
       "round": 109,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56712,8 +56712,8 @@
         "mac-planner"
       ],
       "round": 128,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56727,8 +56727,8 @@
         "mac-planner"
       ],
       "round": 138,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56742,8 +56742,8 @@
         "mac-planner"
       ],
       "round": 145,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56757,8 +56757,8 @@
         "mac-planner"
       ],
       "round": 151,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56787,8 +56787,8 @@
         "mac-planner"
       ],
       "round": 157,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56802,8 +56802,8 @@
         "mac-planner"
       ],
       "round": 158,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56847,8 +56847,8 @@
         "mac-terminal"
       ],
       "round": 21,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56862,8 +56862,8 @@
         "mac-terminal"
       ],
       "round": 22,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56877,8 +56877,8 @@
         "mac-terminal"
       ],
       "round": 67,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56892,8 +56892,8 @@
         "mac-terminal"
       ],
       "round": 67,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56907,8 +56907,8 @@
         "mac-terminal"
       ],
       "round": 69,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56922,8 +56922,8 @@
         "mac-terminal"
       ],
       "round": 71,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56937,8 +56937,8 @@
         "mac-terminal"
       ],
       "round": 73,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56952,8 +56952,8 @@
         "mac-terminal"
       ],
       "round": 95,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56967,8 +56967,8 @@
         "mac-terminal"
       ],
       "round": 107,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -56982,8 +56982,8 @@
         "mac-terminal"
       ],
       "round": 127,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57012,8 +57012,8 @@
         "mac-terminal"
       ],
       "round": 132,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57027,8 +57027,8 @@
         "mac-terminal"
       ],
       "round": 133,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57042,8 +57042,8 @@
         "mac-vision"
       ],
       "round": 13,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57057,8 +57057,8 @@
         "mac-vision"
       ],
       "round": 17,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57072,8 +57072,8 @@
         "mac-vision"
       ],
       "round": 19,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57102,8 +57102,8 @@
         "mac-vision"
       ],
       "round": 21,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57117,8 +57117,8 @@
         "mac-vision"
       ],
       "round": 22,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57132,8 +57132,8 @@
         "mac-vision"
       ],
       "round": 23,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57162,8 +57162,8 @@
         "mac-vision"
       ],
       "round": 26,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57177,8 +57177,8 @@
         "mac-vision"
       ],
       "round": 27,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57192,8 +57192,8 @@
         "mac-vision"
       ],
       "round": 28,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57222,8 +57222,8 @@
         "mac-vision"
       ],
       "round": 31,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57282,8 +57282,8 @@
         "mac-vision"
       ],
       "round": 35,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57297,8 +57297,8 @@
         "mac-vision"
       ],
       "round": 36,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57312,8 +57312,8 @@
         "mac-vision"
       ],
       "round": 37,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57327,8 +57327,8 @@
         "mac-vision"
       ],
       "round": 38,
-      "status": "proposed",
-      "note": "",
+      "status": "rejected",
+      "note": "REJECTED — needs hardware that does not exist. A dedicated vision co-processor / neural engine / secure enclave on the pendant or the MacBook cannot be added in software: the pendant is a fixed nRF9160 DK and the Mac is stock Apple silicon. The software half is already built and reachable: screenshot/zoom/screen capture actions, computer_use_task (local-agent/computerUseLoop.js) and GET/POST /vision-loop/* (local-agent/visionLoopRoutes.js). Surviving id for this whole cluster: chg-6604f04b.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57357,8 +57357,8 @@
         "mac-vision"
       ],
       "round": 40,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57387,8 +57387,8 @@
         "mac-vision"
       ],
       "round": 42,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57402,8 +57402,8 @@
         "mac-vision"
       ],
       "round": 43,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57417,8 +57417,8 @@
         "mac-vision"
       ],
       "round": 45,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57432,8 +57432,8 @@
         "mac-vision"
       ],
       "round": 46,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57447,8 +57447,8 @@
         "mac-vision"
       ],
       "round": 47,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57462,8 +57462,8 @@
         "mac-vision"
       ],
       "round": 48,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57492,8 +57492,8 @@
         "mac-vision"
       ],
       "round": 50,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57507,8 +57507,8 @@
         "mac-vision"
       ],
       "round": 51,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57522,8 +57522,8 @@
         "mac-vision"
       ],
       "round": 51,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57567,8 +57567,8 @@
         "mac-vision"
       ],
       "round": 54,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57582,8 +57582,8 @@
         "mac-vision"
       ],
       "round": 55,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57597,8 +57597,8 @@
         "mac-vision"
       ],
       "round": 56,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57627,8 +57627,8 @@
         "mac-vision"
       ],
       "round": 59,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57642,8 +57642,8 @@
         "mac-vision"
       ],
       "round": 60,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57657,8 +57657,8 @@
         "mac-vision"
       ],
       "round": 61,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57672,8 +57672,8 @@
         "mac-vision"
       ],
       "round": 62,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57702,8 +57702,8 @@
         "mac-vision"
       ],
       "round": 64,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57732,8 +57732,8 @@
         "mac-vision"
       ],
       "round": 66,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57792,8 +57792,8 @@
         "mac-vision"
       ],
       "round": 71,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57807,8 +57807,8 @@
         "mac-vision"
       ],
       "round": 72,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57822,8 +57822,8 @@
         "mac-vision"
       ],
       "round": 73,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57837,8 +57837,8 @@
         "mac-vision"
       ],
       "round": 74,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57852,8 +57852,8 @@
         "mac-vision"
       ],
       "round": 75,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57882,8 +57882,8 @@
         "mac-vision"
       ],
       "round": 77,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57927,8 +57927,8 @@
         "mac-vision"
       ],
       "round": 83,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57942,8 +57942,8 @@
         "mac-vision"
       ],
       "round": 84,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57957,8 +57957,8 @@
         "mac-vision"
       ],
       "round": 86,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57972,8 +57972,8 @@
         "mac-vision"
       ],
       "round": 87,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -57987,8 +57987,8 @@
         "mac-vision"
       ],
       "round": 88,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58002,8 +58002,8 @@
         "mac-vision"
       ],
       "round": 91,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58017,8 +58017,8 @@
         "mac-vision"
       ],
       "round": 92,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58047,8 +58047,8 @@
         "mac-vision"
       ],
       "round": 95,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58077,8 +58077,8 @@
         "mac-vision"
       ],
       "round": 97,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58092,8 +58092,8 @@
         "mac-vision"
       ],
       "round": 98,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58107,8 +58107,8 @@
         "mac-vision"
       ],
       "round": 99,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58122,8 +58122,8 @@
         "mac-vision"
       ],
       "round": 100,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58137,8 +58137,8 @@
         "mac-vision"
       ],
       "round": 102,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58152,8 +58152,8 @@
         "mac-vision"
       ],
       "round": 105,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58167,8 +58167,8 @@
         "mac-vision"
       ],
       "round": 106,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58197,8 +58197,8 @@
         "mac-vision"
       ],
       "round": 109,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58212,8 +58212,8 @@
         "mac-vision"
       ],
       "round": 110,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58227,8 +58227,8 @@
         "mac-vision"
       ],
       "round": 113,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58242,8 +58242,8 @@
         "mac-vision"
       ],
       "round": 115,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58257,8 +58257,8 @@
         "mac-vision"
       ],
       "round": 117,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58347,8 +58347,8 @@
         "mac-vision"
       ],
       "round": 128,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58362,8 +58362,8 @@
         "mac-vision"
       ],
       "round": 129,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58407,8 +58407,8 @@
         "mac-vision"
       ],
       "round": 134,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58422,8 +58422,8 @@
         "mac-vision"
       ],
       "round": 135,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58437,8 +58437,8 @@
         "mac-vision"
       ],
       "round": 137,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58452,8 +58452,8 @@
         "mac-vision"
       ],
       "round": 140,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58467,8 +58467,8 @@
         "mac-vision"
       ],
       "round": 141,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-6604f04b (rejected: needs a vision co-processor / neural engine / secure enclave that does not exist on either the nRF9160 DK pendant or stock Apple silicon). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58482,8 +58482,8 @@
         "relay-realtime"
       ],
       "round": 27,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58512,8 +58512,8 @@
         "relay-realtime"
       ],
       "round": 33,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58527,8 +58527,8 @@
         "relay-realtime"
       ],
       "round": 40,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58542,8 +58542,8 @@
         "relay-realtime"
       ],
       "round": 50,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58557,8 +58557,8 @@
         "relay-realtime"
       ],
       "round": 52,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58572,8 +58572,8 @@
         "relay-realtime"
       ],
       "round": 55,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58587,8 +58587,8 @@
         "relay-realtime"
       ],
       "round": 55,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58602,8 +58602,8 @@
         "relay-realtime"
       ],
       "round": 57,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58617,8 +58617,8 @@
         "relay-realtime"
       ],
       "round": 58,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58632,8 +58632,8 @@
         "relay-realtime"
       ],
       "round": 59,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58647,8 +58647,8 @@
         "relay-realtime"
       ],
       "round": 63,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58662,8 +58662,8 @@
         "relay-realtime"
       ],
       "round": 81,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58677,8 +58677,8 @@
         "relay-realtime"
       ],
       "round": 86,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58692,8 +58692,8 @@
         "relay-realtime"
       ],
       "round": 87,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58707,8 +58707,8 @@
         "relay-realtime"
       ],
       "round": 89,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58722,8 +58722,8 @@
         "relay-realtime"
       ],
       "round": 92,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58752,8 +58752,8 @@
         "relay-realtime"
       ],
       "round": 107,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58767,8 +58767,8 @@
         "relay-realtime"
       ],
       "round": 111,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58782,8 +58782,8 @@
         "relay-realtime"
       ],
       "round": 117,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58812,8 +58812,8 @@
         "relay-realtime"
       ],
       "round": 145,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58842,8 +58842,8 @@
         "relay-realtime"
       ],
       "round": 146,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58857,8 +58857,8 @@
         "relay-realtime"
       ],
       "round": 147,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58872,8 +58872,8 @@
         "relay-realtime"
       ],
       "round": 150,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58887,8 +58887,8 @@
         "relay-realtime"
       ],
       "round": 156,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58902,8 +58902,8 @@
         "unified"
       ],
       "round": 21,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58917,8 +58917,8 @@
         "unified"
       ],
       "round": 22,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58932,8 +58932,8 @@
         "unified"
       ],
       "round": 24,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58947,8 +58947,8 @@
         "unified"
       ],
       "round": 24,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58962,8 +58962,8 @@
         "unified"
       ],
       "round": 26,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58977,8 +58977,8 @@
         "unified"
       ],
       "round": 27,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -58992,8 +58992,8 @@
         "unified"
       ],
       "round": 29,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59007,8 +59007,8 @@
         "unified"
       ],
       "round": 30,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59022,8 +59022,8 @@
         "unified"
       ],
       "round": 32,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59037,8 +59037,8 @@
         "unified"
       ],
       "round": 33,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59052,8 +59052,8 @@
         "unified"
       ],
       "round": 34,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59082,8 +59082,8 @@
         "unified"
       ],
       "round": 39,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59097,8 +59097,8 @@
         "unified"
       ],
       "round": 41,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59127,8 +59127,8 @@
         "unified"
       ],
       "round": 45,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59142,8 +59142,8 @@
         "unified"
       ],
       "round": 46,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59157,8 +59157,8 @@
         "unified"
       ],
       "round": 49,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59172,8 +59172,8 @@
         "unified"
       ],
       "round": 50,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59187,8 +59187,8 @@
         "unified"
       ],
       "round": 51,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59202,8 +59202,8 @@
         "unified"
       ],
       "round": 55,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59217,8 +59217,8 @@
         "unified"
       ],
       "round": 58,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59247,8 +59247,8 @@
         "unified"
       ],
       "round": 61,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59262,8 +59262,8 @@
         "unified"
       ],
       "round": 64,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59277,8 +59277,8 @@
         "unified"
       ],
       "round": 65,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59292,8 +59292,8 @@
         "unified"
       ],
       "round": 66,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59307,8 +59307,8 @@
         "unified"
       ],
       "round": 68,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59322,8 +59322,8 @@
         "unified"
       ],
       "round": 71,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59337,8 +59337,8 @@
         "unified"
       ],
       "round": 73,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59352,8 +59352,8 @@
         "unified"
       ],
       "round": 76,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59367,8 +59367,8 @@
         "unified"
       ],
       "round": 78,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59382,8 +59382,8 @@
         "unified"
       ],
       "round": 80,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59412,8 +59412,8 @@
         "unified"
       ],
       "round": 82,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59427,8 +59427,8 @@
         "unified"
       ],
       "round": 84,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59442,8 +59442,8 @@
         "unified"
       ],
       "round": 85,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59457,8 +59457,8 @@
         "unified"
       ],
       "round": 88,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59472,8 +59472,8 @@
         "unified"
       ],
       "round": 89,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59487,8 +59487,8 @@
         "unified"
       ],
       "round": 92,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59502,8 +59502,8 @@
         "unified"
       ],
       "round": 92,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59517,8 +59517,8 @@
         "unified"
       ],
       "round": 94,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59532,8 +59532,8 @@
         "unified"
       ],
       "round": 96,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59547,8 +59547,8 @@
         "unified"
       ],
       "round": 97,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59562,8 +59562,8 @@
         "unified"
       ],
       "round": 97,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59577,8 +59577,8 @@
         "unified"
       ],
       "round": 98,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59592,8 +59592,8 @@
         "unified"
       ],
       "round": 98,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59607,8 +59607,8 @@
         "unified"
       ],
       "round": 99,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59622,8 +59622,8 @@
         "unified"
       ],
       "round": 100,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59637,8 +59637,8 @@
         "unified"
       ],
       "round": 102,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59652,8 +59652,8 @@
         "unified"
       ],
       "round": 103,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59667,8 +59667,8 @@
         "unified"
       ],
       "round": 104,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59697,8 +59697,8 @@
         "unified"
       ],
       "round": 106,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59727,8 +59727,8 @@
         "unified"
       ],
       "round": 108,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59742,8 +59742,8 @@
         "unified"
       ],
       "round": 109,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59757,8 +59757,8 @@
         "unified"
       ],
       "round": 110,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59772,8 +59772,8 @@
         "unified"
       ],
       "round": 111,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59787,8 +59787,8 @@
         "unified"
       ],
       "round": 111,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59802,8 +59802,8 @@
         "unified"
       ],
       "round": 113,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59817,8 +59817,8 @@
         "unified"
       ],
       "round": 115,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59832,8 +59832,8 @@
         "unified"
       ],
       "round": 115,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59847,8 +59847,8 @@
         "unified"
       ],
       "round": 116,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59862,8 +59862,8 @@
         "unified"
       ],
       "round": 117,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59877,8 +59877,8 @@
         "unified"
       ],
       "round": 119,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59892,8 +59892,8 @@
         "unified"
       ],
       "round": 120,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59907,8 +59907,8 @@
         "unified"
       ],
       "round": 120,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59922,8 +59922,8 @@
         "unified"
       ],
       "round": 121,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59937,8 +59937,8 @@
         "unified"
       ],
       "round": 122,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59952,8 +59952,8 @@
         "unified"
       ],
       "round": 124,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59967,8 +59967,8 @@
         "unified"
       ],
       "round": 125,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59982,8 +59982,8 @@
         "unified"
       ],
       "round": 126,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -59997,8 +59997,8 @@
         "unified"
       ],
       "round": 127,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -60012,8 +60012,8 @@
         "unified"
       ],
       "round": 131,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -60027,8 +60027,8 @@
         "unified"
       ],
       "round": 133,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -60042,8 +60042,8 @@
         "unified"
       ],
       "round": 134,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -60057,8 +60057,8 @@
         "unified"
       ],
       "round": 135,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-e13db47f (rejected: needs an IMU / haptic actuator / capacitive wear sensor / extra physical control that the nRF9160 DK pendant does not have). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -60087,8 +60087,8 @@
         "unified"
       ],
       "round": 136,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-f5d3b820 (rejected: needs a production audio front end or new silicon - nRF9161/nRF5340-class module, 24-48 kHz digital microphone or codec/DSP, BLE-Audio bridge - none of which exist on the nRF9160 DK + ESP32 HUZZAH32 prototype). Same capability, different wording.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -79572,8 +79572,8 @@
         "relay-realtime"
       ],
       "round": 21,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-0b83ced8 (implemented). The Durable-Object framing is the one part that was deliberately not taken: see wrangler.jsonc:69-84 for why Cron Triggers were chosen instead. Everything else - delayed execution, recurring rules, enqueue, a cron runner, delegation to the Mac via createPlanJob - shipped.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -79587,8 +79587,8 @@
         "relay-realtime"
       ],
       "round": 22,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-0b83ced8 (implemented). The durable queue is D1-backed rather than a Durable Object; retries and the receipt log are cloud-relay/routines.js reapDispatchedRuns() and GET /v1/routines/:routineId/runs.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -79602,8 +79602,8 @@
         "relay-realtime"
       ],
       "round": 23,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-0b83ced8 (implemented). Cloudflare Cron is the mechanism that shipped (\"* * * * *\" in wrangler.jsonc), and digests/retries ride the same tick.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -79617,8 +79617,8 @@
         "relay-realtime"
       ],
       "round": 28,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-0b83ced8 (implemented). Per-job cadence and the wake/dispatch to the Mac planner are cloud-relay/routineSchedule.js and runDueRoutines(); quiet hours are the interruption policy at GET and POST /briefing/policy on the Mac side.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -79632,8 +79632,8 @@
         "relay-realtime"
       ],
       "round": 29,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-0b83ced8 (implemented). The shared job schema is real and deliberate: cloud-relay/routineSchedule.js keeps the {kind:'daily'} and {kind:'interval'} shapes byte-compatible with local-agent/routines.js so a routine declared once is understood by either side.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -79647,8 +79647,8 @@
         "relay-realtime"
       ],
       "round": 31,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-0b83ced8 (implemented). Status and receipts persist in D1 and are read at GET /v1/routines/:routineId/runs; the notification mechanism is cloud-relay/announce.js.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -79677,8 +79677,8 @@
         "relay-realtime"
       ],
       "round": 34,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-0b83ced8 (implemented). Page watches have their own schedule and threshold per watch (PATCH /watches/:watchId, local-agent/pageWatch.js) driven by the same routine mechanism.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -79692,8 +79692,8 @@
         "relay-realtime"
       ],
       "round": 36,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-0b83ced8 (implemented). Idempotency is POST /workbench/plan and POST /workbench/contexts on the Mac side; the relay-visible status feed is GET /v1/routines and GET /v1/routines/:routineId/runs.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -79707,8 +79707,8 @@
         "relay-realtime"
       ],
       "round": 57,
-      "status": "proposed",
-      "note": "",
+      "status": "implemented",
+      "note": "Built on Worker Cron Triggers, not Durable Object alarms - and the choice is written down: wrangler.jsonc:69-84 sets \"crons\": [\"* * * * *\"] and explains that DO alarms were rejected because the docs give them no precision guarantee while adding a second storage backend beside D1. cloudflare-worker/worker.js:17 is the scheduled() handler; cloud-relay/scheduler.js is the tick, deliberately the smallest file in the repo because a Free-plan cron invocation gets 10 ms of CPU (nothing heavy imported at module scope, every statement is I/O). cloud-relay/routines.js owns the policy - runDueRoutines() dispatches through createPlanJob (i.e. to the Mac) and reapDispatchedRuns() handles runs that never came back; cloud-relay/routineSchedule.js does the wall-clock arithmetic in the OWNER'S IANA timezone rather than the Worker's UTC, supporting daily, weekly (\"every weekday at 5\"), interval and once. Ownership of what runs where is explicit: background work runs on the tick, and the relay only speaks results. Reported back via GET /v1/routines, GET /v1/routines/:routineId/runs (registerSchedulerRoutes(app) at cloud-relay/server.js:2335) and POST /v1/routines/tick, with the result queued as an announcement. Tests: scheduler.test.js, routines.test.js, routineSchedule.test.js. The Mac-side equivalent is POST /routines (local-agent/routines.js, routines.test.js, live in GET /capabilities). Surviving id for the whole \"add a real scheduler\" cluster.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -79722,8 +79722,8 @@
         "relay-realtime"
       ],
       "round": 62,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-0b83ced8 (implemented). The \"relay only orchestrates and speaks\" split is exactly the constraint cloud-relay/scheduler.js is built around - no audio is rendered on the tick, because the 10 ms CPU budget forbids it and only the WebSocket invocation knows whether anyone is listening.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -79737,8 +79737,8 @@
         "relay-realtime"
       ],
       "round": 70,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-0b83ced8 (implemented). Backoff and the compact summary are cloud-relay/routines.js plus cloud-relay/announce.js, which carries text and renders audio at delivery time.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -79752,8 +79752,8 @@
         "relay-realtime"
       ],
       "round": 84,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-0b83ced8 (implemented). Both halves of the voice interface exist as planner-advertised action types: remind_me (local-agent/remindMe.js) and schedule_routine (\"install a STANDING scheduled task that runs a spoken command later and repeatedly - every morning...\").",
       "agents": 1,
       "timesProposed": 1
     },
@@ -79767,8 +79767,8 @@
         "relay-realtime"
       ],
       "round": 124,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-0b83ced8 (implemented). The unified job definition (task type, cadence, last run, next run, state) is the routine record read back at GET /routines on the Mac and GET /v1/routines on the relay.",
       "agents": 1,
       "timesProposed": 1
     },
@@ -79782,8 +79782,8 @@
         "relay-realtime"
       ],
       "round": 142,
-      "status": "proposed",
-      "note": "",
+      "status": "duplicate",
+      "note": "Duplicate of chg-0b83ced8 (implemented). Cleanup jobs ride the same tick: cloud-relay/scheduler.js runRetentionSweeps() rate-limits itself to once an hour against a shared durable timestamp, which is how the announcement retention sweep finally got a clock.",
       "agents": 1,
       "timesProposed": 1
     },

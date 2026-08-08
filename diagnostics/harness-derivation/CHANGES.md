@@ -4,7 +4,7 @@ Written by `scripts/harness-ledger.mjs`. Status is owned by this file and
 survives re-runs — refreshing adds new proposals, it never resets what you
 have already marked done.
 
-**5180 open · 69 implemented · 71 other**
+**4813 open · 89 implemented · 418 other**
 
 The `×` column counts how many times a proposal was made. Anything above 1
 was arrived at independently more than once, which is the strongest signal
@@ -14,19 +14,12 @@ in here.
 
 | id | layer | proposed by | agents | rounds | change |
 | --- | --- | --- | --- | --- | --- |
-| `cap-596ec5d7` | capability | browser-extension, mac-planner | 2 | 2 | “What am I looking at?” |
-| `cap-a3776f29` | capability | mac-planner, mac-terminal | 2 | 2 | “Why didn’t that happen?” |
-| `cap-db73a705` | capability | relay-realtime | 1 | 3 | What happened to the thing I asked you to do earlier? |
 | `cap-4137378d` | capability | browser-extension | 1 | 2 | “Save this page for my commute.” |
-| `cap-8fc0ee3d` | capability | mac-terminal | 1 | 2 | “What am I looking at, and what should I do next?” |
 | `cap-7db5f062` | capability | relay-realtime | 1 | 2 | Keep working on that after I walk away, and tell me what happened when it finishes. |
-| `cap-1c225ed3` | capability | relay-realtime | 1 | 2 | Route this to my Mac and tell me when it’s done. |
-| `cap-453b2214` | capability | unified | 1 | 2 | “Continue this on my Mac.” |
 | `chg-16bc5dee` | browser-harness | browser-extension | 1 | 1 | Add a durable browser job runner with two backends: the authenticated Safari bridge for owner-private pages and Cloudflare Browser Run for public page |
 | `chg-14accc01` | browser-harness | browser-extension | 1 | 1 | Add a reliable browser command queue with request IDs, idempotency keys, tab/session affinity, typed results (page metadata, extracted text, screensho |
 | `chg-e767dfc0` | browser-harness | browser-extension | 1 | 1 | Build a first-class authenticated page-watch service: each watch stores URL/tab context, extraction selectors or semantic regions, a normalized baseli |
 | `chg-5284a6ce` | browser-harness | browser-extension | 1 | 1 | Build a durable authenticated page-watch service: named watch definitions store URL/tab/session binding, extraction selectors or an agentic extraction |
-| `chg-e14fff33` | browser-harness | browser-extension | 1 | 1 | Add a provenance-aware browser workbench: every extraction and field mutation gets a tabId, URL, timestamp, DOM locator, source snippet hash, action p |
 | `chg-fa84f9a7` | browser-harness | browser-extension | 1 | 1 | Build a durable authenticated page-watch layer: named browser sessions with tab/window reattachment, per-watch cadence and quiet hours, DOM-region ext |
 | `chg-9ffe4cd1` | browser-harness | browser-extension | 1 | 1 | Add a browser-bridge self-healing lease protocol: each Safari heartbeat carries a device nonce, extension version, tab inventory, and last-applied com |
 | `chg-834ffef2` | browser-harness | browser-extension | 1 | 1 | Add an in-extension privacy boundary before browser results leave Safari: classify DOM regions and form fields (credentials, payment, health, private  |
@@ -217,16 +210,6 @@ in here.
 | `chg-748ff05f` | browser-harness | unified | 1 | 1 | Add an evidence-driven browser failure circuit breaker and resumable handoff. For each requestId/idempotencyKey, classify timeout, tab-disconnect, nav |
 | `chg-0d673791` | browser-harness | unified | 1 | 1 | Insert a Mac-local Context Firewall as the mandatory serialization boundary for browser inspection, research, capture enrichment, screenshots, clipboa |
 | `chg-a873074a` | browser-harness | unified | 1 | 1 | Add an offline-command quarantine and recovery protocol on top of the browser queue: every queued command gets an expiry, retry budget, and dependency |
-| `cap-bff5f829` | capability | browser-extension | 1 | 1 | Check my logged-in web accounts for anything urgent, summarize it, and draft (but do not send) any replies that need my attention. |
-| `cap-8c36c70a` | capability | browser-extension | 1 | 1 | Every weekday morning, check my logged-in calendar, task board, and travel reservations, then tell me the three things I need to know and prepare a su |
-| `cap-a624ca3e` | capability | browser-extension | 1 | 1 | Every morning, check my private calendar, travel reservations, and important account notifications in Safari, then give me a concise spoken briefing w |
-| `cap-b875c138` | capability | browser-extension | 1 | 1 | Draft a form, email, or support request from information on this private webpage, fill it in, and show me exactly what will be submitted before I appr |
-| `cap-a09b223f` | capability | browser-extension | 1 | 1 | Watch my authenticated order, appointment, and account pages for changes, and tell me only when a meaningful change happens—never pollute my daily bri |
-| `cap-0c8c5dfe` | capability | browser-extension | 1 | 1 | Watch the authenticated pages I choose, detect meaningful changes, and leave me a concise, sourced briefing with suggested next steps—without sending  |
-| `cap-391cae82` | capability | browser-extension | 1 | 1 | When I ask about something on a logged-in site, have several agents inspect it in parallel, reconcile their findings, and give me an evidence-backed a |
-| `cap-7217b17c` | capability | browser-extension | 1 | 1 | Prepare a browser transaction for me: gather the relevant logged-in data, fill the form or draft the message, show me exactly what will change with be |
-| `cap-0d11cf82` | capability | browser-extension | 1 | 1 | Every weekday morning, check my authenticated work portal for new high-priority items and tell me only what needs my attention. |
-| `cap-df9ec55e` | capability | browser-extension | 1 | 1 | When I say 'handle this' about something I found in Safari, gather the needed details across my logged-in tabs, fill the reversible parts, and show me |
 | `cap-302a8868` | capability | browser-extension | 1 | 1 | “Every morning, check my logged-in work dashboards and tell me only what changed or needs my attention; keep watching the important pages and alert me |
 | `cap-951c7f45` | capability | browser-extension | 1 | 1 | “Check my logged-in accounts for inconsistent personal details, upcoming expirations, or duplicate subscriptions, and prepare a concise fix list witho |
 | `cap-a189465a` | capability | browser-extension | 1 | 1 | Find upcoming renewals, deadlines, and commitments across my logged-in services, explain which ones matter, and prepare the changes or cancellation fo |
@@ -243,12 +226,9 @@ in here.
 | `cap-a1629da4` | capability | browser-extension | 1 | 1 | “I’m looking at this page—tell me what matters, and if I say ‘the second option’ or ‘fill that in,’ use the thing I’m pointing at.” |
 | `cap-b3ff8b4a` | capability | browser-extension | 1 | 1 | “When I’m on a private website, hand the useful facts to my pendant and Mac without making me explain or copy anything—and let me ask follow-up questi |
 | `cap-08a1de0d` | capability | browser-extension | 1 | 1 | “If I lose Wi‑Fi or leave my Mac, keep the private page I’m viewing available for a voice question later, and sync the answer when the connection retu |
-| `cap-a8e02eeb` | capability | browser-extension | 1 | 1 | “I’m looking at this—read the important parts and tell me what I should do.” |
 | `cap-952aa6b8` | capability | browser-extension | 1 | 1 | “What am I looking at?” or “remember this page and remind me what it said later.” |
 | `cap-4cd9061d` | capability | browser-extension | 1 | 1 | “Read this page to me as I walk,” or “When I press the pendant button, read the paragraph I’m currently viewing and let me ask follow-up questions.” |
-| `cap-09a5c165` | capability | browser-extension | 1 | 1 | “What am I looking at?” (or press the pendant button while a Safari page is open) |
 | `cap-87bd05b1` | capability | browser-extension | 1 | 1 | “Reconcile this with my records.” (while viewing a logged-in order, invoice, appointment, or account page) |
-| `cap-7a82364d` | capability | browser-extension | 1 | 1 | If my browser session is unavailable, reconnect it and continue the private-page job when Safari comes back; tell me what was completed, what is waiti |
 | `cap-42d09372` | capability | browser-extension | 1 | 1 | When I say “what am I looking at?”, use the Safari tab I’m currently viewing to give me a short spoken explanation, and let me say “that one” or “open |
 | `cap-66fb2179` | capability | browser-extension | 1 | 1 | “Find the exact information I saw recently—whether it was in Safari, a Mac document, or something I told you—and show me where it came from.” |
 | `cap-a4515508` | capability | browser-extension | 1 | 1 | “While I’m looking at this page, tell me whether it fits my real constraints—my calendar, existing commitments, budget, or preferences—and point out w |
@@ -266,7 +246,6 @@ in here.
 | `cap-848cbd9a` | capability | browser-extension | 1 | 1 | “Point out exactly where that is on the page.” |
 | `cap-fd68fb5d` | capability | browser-extension | 1 | 1 | If a private-site task hits a login or 2FA wall, pause it safely, tell me which site needs attention, and resume the exact task automatically after I  |
 | `cap-c8b92237` | capability | browser-extension | 1 | 1 | When I say “save this for later” while I’m on a logged-in webpage, preserve only the specific passage or fields I indicate—with its source, date, and  |
-| `cap-8a486e65` | capability | browser-extension | 1 | 1 | Every morning, check my logged-in Gmail, GitHub, and calendar web accounts, tell me only what is urgent, and prepare replies or actions without sendin |
 | `cap-89599d81` | capability | browser-extension | 1 | 1 | When I ask, 'What am I on the hook for?', search my logged-in web pages and Mac documents, connect the same issue or person across them, and give me a |
 | `cap-8e532b32` | capability | browser-extension | 1 | 1 | “Pin this page for me.” Later: “What was the deadline and contact from the page I pinned?” |
 | `cap-a963e8e3` | capability | browser-extension | 1 | 1 | “Verify that my booking details agree everywhere.” |
@@ -302,7 +281,6 @@ in here.
 | `cap-75560a5d` | capability | browser-extension | 1 | 1 | While I’m in a browser meeting, listen for decisions, questions addressed to me, and commitments I make; quietly tell me when I need to respond, then  |
 | `cap-68faf478` | capability | browser-extension | 1 | 1 | “While I have this logged-in page open, tell me immediately if something important changes—and if I’m offline, catch me up when I reconnect.” |
 | `cap-93d9eaa0` | capability | browser-extension | 1 | 1 | “Use my logged-in pages to answer this, but show me exactly which private fields left Safari, keep the answer useful, and forget the raw page afterwar |
-| `cap-726852c3` | capability | browser-extension | 1 | 1 | “If Safari goes offline while you’re checking my logged-in pages, keep the task alive and tell me when it resumes—without doing any step twice.” |
 | `cap-f48081d6` | capability | browser-extension | 1 | 1 | “Give the Mac and my pendant only the parts of this logged-in page they need, keep the rest inside Safari, and let me revoke that handoff later.” |
 | `cap-abe4e595` | capability | browser-extension | 1 | 1 | When a logged-in page I care about changes in a way that may need me soon, interrupt me briefly on the pendant, open a sourced review card on my Mac,  |
 | `cap-5b89f0ee` | capability | browser-extension | 1 | 1 | When I say “what changed since I last looked?” while I have a logged-in page open, compare it with the last page state I personally saw, tell me the o |
@@ -322,7 +300,6 @@ in here.
 | `cap-47cab0db` | capability | browser-extension | 1 | 1 | When I ask “is my browser there, and what happened to my last browser task?”, give me one truthful spoken answer: which browser device is reachable, w |
 | `cap-7af643ae` | capability | browser-extension | 1 | 1 | “When I get back to my Mac, tell me which browser tasks actually ran while Safari was disconnected, which were safely held, and continue only the ones |
 | `cap-b529ad9f` | capability | browser-extension | 1 | 1 | “Before you use a logged-in website for me, tell me which account, workspace, and permission state the page is actually in—and warn me if it has silen |
-| `cap-e8f33de2` | capability | browser-extension | 1 | 1 | If I ask you to check something in Safari while my laptop is asleep or the browser is disconnected, remember the request, run it automatically when Sa |
 | `cap-1bba5d62` | capability | browser-extension | 1 | 1 | While I’m looking at a logged-in webpage, let me ask the pendant “what am I looking at?” or “what should I notice here?” and get an answer about the c |
 | `cap-dfae4420` | capability | browser-extension | 1 | 1 | Compare information on a logged-in web page with my local Mac files and tell me what does not match—for example, reconcile a private invoice or subscr |
 | `cap-4a0b7d35` | capability | browser-extension | 1 | 1 | “What am I agreeing to here?” While I have a private webpage open, read the relevant terms, deadlines, fees, and commitments; compare them with my Cal |
@@ -370,7 +347,6 @@ in here.
 | `cap-841534e9` | capability | browser-extension | 1 | 1 | “When you tell me something from a logged-in site, prove that it was observed live just now, identify the exact account and tab it came from, and warn |
 | `cap-9aed9009` | capability | browser-extension | 1 | 1 | Read the private page I’m looking at, tell me the important points over the pendant, and give me the exact cited snippets or fields if I ask a follow- |
 | `cap-b39ac436` | capability | browser-extension | 1 | 1 | Compare these two logged-in pages privately—such as my insurance explanation of benefits and a provider bill—and tell me only the mismatches, missing  |
-| `cap-20cb39a7` | capability | browser-extension | 1 | 1 | “If Safari is unavailable, remember the private-page task and resume it when my browser reconnects—tell me if anything changed, and never run the same |
 | `cap-2e704664` | capability | browser-extension | 1 | 1 | “While I’m looking at a private webpage, let me ask the pendant questions about this exact tab; keep the context only while I’m there, and forget it w |
 | `cap-0d3862a8` | capability | browser-extension | 1 | 1 | “When I double-tap the pendant while text is selected in Safari, save that exact quote with its page title, URL, timestamp, and a short spoken label i |
 | `cap-f052aaa0` | capability | browser-extension | 1 | 1 | “If you lose my Safari connection halfway through a browser task, pause safely, remember exactly where you were, and continue when Safari returns—with |
@@ -448,7 +424,6 @@ in here.
 | `cap-60b11248` | capability | browser-extension | 1 | 1 | “What has changed across my private web accounts since last month, and what pattern should I care about?” |
 | `cap-29c4ed11` | capability | browser-extension | 1 | 1 | “Make me a private archive of my data from these logged-in sites, organized so I can actually use it.” |
 | `cap-58223bbd` | capability | browser-extension | 1 | 1 | “Are any of my logged-in accounts showing signs of compromise, and what should I do first?” |
-| `cap-95fd7942` | capability | browser-extension | 1 | 1 | When I say “what am I looking at?”, read the currently active Safari page, answer my question from that page aloud, and give me the exact section or l |
 | `cap-ded05228` | capability | browser-extension | 1 | 1 | Before I submit anything in Safari, check the filled form for accidental secrets or private data going to the wrong recipient, explain each risk aloud |
 | `cap-c18e19e4` | capability | browser-extension | 1 | 1 | Compare the private page I’m viewing with my saved rules and documents, tell me what violates or differs from them, and prepare a list of questions or |
 | `cap-21ae0a47` | capability | browser-extension | 1 | 1 | When a website asks me to accept cookies, consent to tracking, or agree to new terms, explain the practical consequences in plain language, identify w |
@@ -458,12 +433,10 @@ in here.
 | `cap-08502433` | capability | browser-extension | 1 | 1 | “Find meeting requests in my logged-in Gmail, check them against my private calendar, and give me three reply options that fit my actual availability; |
 | `cap-a76c2a61` | capability | browser-extension | 1 | 1 | “Before any subscription renews, open its logged-in account page, verify the exact price and renewal date, tell me on the pendant, and if I say ‘later |
 | `cap-8979b4fa` | capability | browser-extension | 1 | 1 | “When a site I use changes its terms, privacy policy, or subscription conditions, read the old and new versions from my logged-in browser, explain onl |
-| `cap-230d9f4f` | capability | browser-extension | 1 | 1 | “What am I looking at?” (while a private webpage is open) |
 | `cap-bd2eda32` | capability | browser-extension | 1 | 1 | “Fix the page that failed to open, but don’t change any account data.” |
 | `cap-2b9011ac` | capability | browser-extension | 1 | 1 | “Privacy pause.” (or double-press the pendant) |
 | `cap-04d087fe` | capability | browser-extension | 1 | 1 | “Remember this spot in Safari and bring it back tomorrow.” |
 | `cap-fb438f1a` | capability | browser-extension | 1 | 1 | “Read this private page to me, one useful section at a time.” |
-| `cap-33593834` | capability | browser-extension | 1 | 1 | “Read the page I’m looking at and answer my question about it.” |
 | `cap-0037bd9c` | capability | browser-extension | 1 | 1 | “Reconcile this charge or renewal across my logged-in accounts and local receipts, and tell me what I should do.” |
 | `cap-abffed4c` | capability | browser-extension | 1 | 1 | “Turn this long private webpage into an interactive audio briefing I can listen to on the pendant—pause, skip, and ask follow-up questions without los |
 | `cap-29f1a145` | capability | browser-extension | 1 | 1 | “Before I commit to this online, check it against my calendar, email, and notes, and tell me what it would conflict with.” |
@@ -479,13 +452,11 @@ in here.
 | `cap-99fe9613` | capability | browser-extension | 1 | 1 | Read this private web page to me. |
 | `cap-6ec3287d` | capability | browser-extension | 1 | 1 | Before I submit this form or send this web message, check the details against my email, calendar, and local files, then tell me in one sentence what—i |
 | `cap-165cb00a` | capability | browser-extension | 1 | 1 | Use my pendant as the physical key for private browser work: when I say “private mode,” only the Safari session paired to the pendant may be read, and |
-| `cap-de36df90` | capability | browser-extension | 1 | 1 | “Compare the details across my open logged-in tabs and tell me if anything conflicts—dates, amounts, names, or deadlines—and show me the exact evidenc |
 | `cap-72dbddcd` | capability | browser-extension | 1 | 1 | “Make a spoken, sourced explanation of the private page I’m looking at right now, focused on the part I point to, and let me ask follow-up questions w |
 | `cap-d5b150bc` | capability | browser-extension | 1 | 1 | “Save an evidence packet for this logged-in page: the relevant excerpts, timestamp, URL, and screenshot, then draft a support or dispute message from  |
 | `cap-ca1822ff` | capability | browser-extension | 1 | 1 | “Audit the security pages of my logged-in accounts, correlate recent sign-ins, recovery settings, active sessions, and forwarding rules, and tell me w |
 | `cap-c19b7aa5` | capability | browser-extension | 1 | 1 | “When I am on a private web app, make a temporary voice-controlled accessibility layer: read the controls and status aloud, let me say which labeled c |
 | `cap-9a67ec4b` | capability | browser-extension | 1 | 1 | “If I lose access to one of my logged-in devices, assemble an emergency recovery checklist from my private account pages, identify which recovery path |
-| `cap-e5cb03b9` | capability | browser-extension | 1 | 1 | “What am I looking at? Give me the important parts, and let me ask follow-up questions by voice.” |
 | `cap-b8fd97c2` | capability | browser-extension | 1 | 1 | “Find the production failures in my logged-in inbox, open the linked runs, explain the root cause, and leave me a review packet on my Mac—do not send  |
 | `cap-442e8622` | capability | browser-extension | 1 | 1 | “Before I book or buy this, check the logged-in page against my calendar and local budget, call out hidden commitments or conflicts, and fill only the |
 | `cap-c22535af` | capability | browser-extension | 1 | 1 | “Walk me through this complicated private web form one question at a time, fill my answers into Safari, validate the completed fields, and stop before |
@@ -592,7 +563,6 @@ in here.
 | `cap-e196e71c` | capability | faculty-action | 1 | 1 | “Do that in the browser, but only if you can prove the right tab is open and the result really happened; otherwise tell me exactly what blocked it.” |
 | `cap-9b5dc59e` | capability | faculty-action | 1 | 1 | “If the price drops below $X (or this appointment opens), reserve it for me, but only while the details still match what I approved.” |
 | `cap-12dac540` | capability | faculty-action | 1 | 1 | If an action is blocked because my Mac or browser is unavailable, keep it safe, tell me exactly what I need to fix, and resume automatically when the  |
-| `cap-6cba0899` | capability | faculty-action | 1 | 1 | When I ask you to create something—like a reminder, note, or draft—from my pendant, make sure it appears exactly once even if the pendant, relay, and  |
 | `cap-9ac86d12` | capability | faculty-action | 1 | 1 | “Is my pendant audio healthy?” |
 | `cap-42827dce` | capability | faculty-action | 1 | 1 | “Prepare this action on my Mac, and let me approve it from the pendant when you’re ready.” |
 | `cap-51f49dec` | capability | faculty-action | 1 | 1 | “Once you’ve decided to do it, carry the action through whichever device has the right reach, and don’t just tell me it ran—prove that the intended ch |
@@ -608,7 +578,6 @@ in here.
 | `cap-d274d49d` | capability | faculty-action | 1 | 1 | “Make sure this happens exactly once, even if I say it again or the connection drops.” |
 | `cap-1efaa4d4` | capability | faculty-action | 1 | 1 | “Approve that exact change, but don’t do it if the page or data changed since I saw the preview.” |
 | `cap-847532a7` | capability | faculty-action | 1 | 1 | “Before I approve this, show me what it will cause everywhere else.” |
-| `cap-6e3756e0` | capability | faculty-action | 1 | 1 | “If you get interrupted, pick up where you left off and finish this without doing anything twice.” |
 | `cap-0adf8176` | capability | faculty-action | 1 | 1 | “While you’re doing that, change the plan: use the other account, skip that part, and continue.” |
 | `cap-98444d73` | capability | faculty-action | 1 | 1 | “Cancel everything you’re doing right now.” |
 | `cap-39390a8b` | capability | faculty-action | 1 | 1 | “Handle this across my Mac and logged-in browser, keep going if a device disconnects, and tell me exactly what was done, what was skipped, and what I  |
@@ -618,7 +587,6 @@ in here.
 | `cap-ec198c76` | capability | faculty-action | 1 | 1 | “Finish this across my Mac and my logged-in browser, and if anything fails, put everything reversible back and tell me exactly what changed.” |
 | `cap-7b6bf125` | capability | faculty-action | 1 | 1 | “Do it, then check the real result and tell me whether it actually took effect.” |
 | `cap-dad21b0e` | capability | faculty-action | 1 | 1 | “Send this private page to the person I’m with, but only let them see exactly this one thing for the next ten minutes.” |
-| `cap-7b652137` | capability | faculty-action | 1 | 1 | “If that failed, show me why and give me a safe way to retry it—without making me explain everything again.” |
 | `cap-04846996` | capability | faculty-action | 1 | 1 | When you’ve prepared something consequential on my Mac or in a logged-in website, ask me on the pendant for a one-button approval, carry it out only o |
 | `cap-2921762b` | capability | faculty-action | 1 | 1 | Give the hive permission to do exactly this one thing in my account, for the next ten minutes, and nothing else; show me what it was allowed to touch  |
 | `cap-ade5a738` | capability | faculty-action | 1 | 1 | “When I approve a prepared change on the pendant, carry it out even if the connection briefly drops—but never twice—and tell me exactly what happened. |
@@ -738,7 +706,6 @@ in here.
 | `cap-cbd8eb24` | capability | faculty-action | 1 | 1 | “Handle this until you hit a decision only I can make; ask me that one question on the pendant, then continue from the exact step without starting ove |
 | `cap-353bc2bf` | capability | faculty-action | 1 | 1 | Do this for me, safely: carry out my spoken goal across my Mac and logged-in browser, and use a physical button press on the pendant as the final conf |
 | `cap-9591097b` | capability | faculty-action | 1 | 1 | Save what I am looking at for later. |
-| `cap-240b6659` | capability | faculty-action | 1 | 1 | Undo the last thing you did, but only if it is still safe. |
 | `cap-4bf0abef` | capability | faculty-action | 1 | 1 | Lock my private Mac and browser when I walk away, and unlock them only when my pendant is back with me and I tap its button. |
 | `cap-174f3038` | capability | faculty-action | 1 | 1 | Read whatever is currently in front of me on the Mac, one short piece at a time, and let me skip or revisit pieces with the pendant button. |
 | `cap-7978e013` | capability | faculty-action | 1 | 1 | If my pendant is lost or stolen, revoke it immediately, stop it receiving queued audio or commands, and tell me the last trustworthy place and time it |
@@ -859,9 +826,7 @@ in here.
 | `cap-b451a430` | capability | faculty-judgement | 1 | 1 | “Protect my attention. While I’m working or in a meeting, decide which incoming things truly deserve an interruption; quietly queue the rest, and tell |
 | `cap-22ba7f15` | capability | faculty-judgement | 1 | 1 | “Only interrupt me when something truly matters; otherwise keep a quiet queue and tell me at the right time.” |
 | `cap-aea9be56` | capability | faculty-judgement | 1 | 1 | “While I’m away, carry this through within the limits I set—and stop, ask, or hand it back whenever the situation exceeds those limits.” |
-| `cap-e1adf6dd` | capability | faculty-judgement | 1 | 1 | “I’m back—catch me up on anything you did or anything that changed while I was away, and tell me the one thing I should do next.” |
 | `cap-ba9f838d` | capability | faculty-judgement | 1 | 1 | “Before I commit to this, show me what it will make harder, what it displaces, and the safest alternative.” |
-| `cap-a62bcec0` | capability | faculty-judgement | 1 | 1 | “I’m back—what happened while I was away?” |
 | `cap-a6928097` | capability | faculty-judgement | 1 | 1 | “Put us in silent mode—I need to use you without speaking or taking out my phone.” |
 | `cap-a8067cdc` | capability | faculty-judgement | 1 | 1 | “Don’t interrupt me unless it’s important; if I’m busy, queue it and tell me at the right moment.” |
 | `cap-2551e0d8` | capability | faculty-judgement | 1 | 1 | “If I walk away, pause anything that could change the world, and only resume it when I’m back and the context is still valid.” |
@@ -980,7 +945,6 @@ in here.
 | `cap-4109749f` | capability | faculty-judgement | 1 | 1 | Make sure my scheduled brief actually reaches me. If the pendant cannot play it, keep a durable copy, retry when the link returns, and tell me exactly |
 | `cap-e33e540c` | capability | faculty-judgement | 1 | 1 | I’m with other people—switch to discreet mode. From now on, keep private names, message text, account details, and page contents off the speaker and s |
 | `cap-9e152f18` | capability | faculty-judgement | 1 | 1 | I lost my pendant. Lock it and revoke its access everywhere now—stop queued audio, invalidate browser and Mac control, and tell me what was successful |
-| `cap-d36e3eeb` | capability | faculty-judgement | 1 | 1 | “Give me one useful update, not five separate briefings—and if I miss it, catch me up without repeating what I already heard.” |
 | `cap-3540759d` | capability | faculty-judgement | 1 | 1 | “When you do something for me, don’t just say it ran—tell me whether the outside world actually reflects the result, and warn me if it didn’t.” |
 | `cap-f955b93a` | capability | faculty-judgement | 1 | 1 | “For anything important, have two independent parts of my system agree it happened—or keep it pending and bring me the disagreement.” |
 | `cap-9af459a3` | capability | faculty-judgement | 1 | 1 | “When I actually leave home, give me a two-minute departure check tailored to where I’m going—only interrupt me for something I can still fix, and kee |
@@ -1051,7 +1015,6 @@ in here.
 | `cap-b84223a3` | capability | faculty-judgement | 1 | 1 | Before I commit to this, can I realistically keep the promise? |
 | `cap-6599abfc` | capability | faculty-judgement | 1 | 1 | If I do this, what else will it affect? |
 | `cap-e012451d` | capability | faculty-judgement | 1 | 1 | Should I say yes to this? |
-| `cap-1a442bc7` | capability | faculty-judgement | 1 | 1 | When I ask “what did I miss?”, give me a short, chronological account of important things that happened since I last checked—my pendant conversations, |
 | `cap-10f91139` | capability | faculty-judgement | 1 | 1 | What changed in my world since [a time or event]? Compare my calendar, messages, important files, browser accounts, and ongoing work against that exac |
 | `cap-01860a97` | capability | faculty-judgement | 1 | 1 | “When I walk into a meeting, get me ready; while I’m there, remember the loose ends; when I leave, turn them into a clean follow-up queue.” |
 | `cap-8f4d0128` | capability | faculty-judgement | 1 | 1 | “Let me bring another person into a private AI-assisted conversation safely: make consent and recording state obvious, help us understand each other i |
@@ -1154,7 +1117,6 @@ in here.
 | `cap-b0edb7ce` | capability | faculty-judgement | 1 | 1 | When I say “teach me this,” turn a topic from my current browser page, Mac document, or voice question into a private learning loop: explain it briefl |
 | `cap-ffa99e5c` | capability | faculty-judgement | 1 | 1 | Let me ask “what am I avoiding?” The system should inspect unfinished projects, repeatedly postponed reminders, stale browser tabs, unsent drafts, and |
 | `cap-7615ffb4` | capability | faculty-judgement | 1 | 1 | “I’m leaving my desk—make sure I can pick up exactly where I am when I come back.” |
-| `cap-7948aed4` | capability | faculty-judgement | 1 | 1 | “I was away—tell me only what changed while I was gone, and put the important things in order.” |
 | `cap-dc2c57a9` | capability | faculty-judgement | 1 | 1 | “Give me a 25-minute focus sprint on this, and bring me back only if something truly urgent happens.” |
 | `cap-efdc773b` | capability | faculty-judgement | 1 | 1 | “While I’m talking, quietly warn me if I’m about to promise something that conflicts with my calendar or existing commitments—never speak aloud unless |
 | `cap-f1a50cfd` | capability | faculty-judgement | 1 | 1 | “I have about 40 minutes and low energy—choose one useful thing I can realistically finish, set it up, and stop me from starting something too big.” |
@@ -1259,7 +1221,6 @@ in here.
 | `cap-4142203f` | capability | faculty-perception | 1 | 1 | “Before I rely on it, run a harmless end-to-end check and tell me whether my pendant, relay, Mac, browser, and speaker can actually reach one another. |
 | `cap-65476048` | capability | faculty-perception | 1 | 1 | Before you do anything, tell me what you can actually see and control right now—my Mac app, screen, browser tabs, and any notes I made on the pendant— |
 | `cap-49e99758` | capability | faculty-perception | 1 | 1 | If your devices disagree about what happened, tell me plainly which versions conflict, what evidence each one has, and ask me only the smallest questi |
-| `cap-c731b38e` | capability | faculty-perception | 1 | 1 | “I was away or offline—what happened while I was gone, and what still needs my attention?” |
 | `cap-f524ffc0` | capability | faculty-perception | 1 | 1 | “Use the account I’m already signed into, do exactly this one thing, and prove which page/account it happened in—without giving the other machines per |
 | `cap-d7e6315e` | capability | faculty-perception | 1 | 1 | “When my pendant reconnects, catch me up on anything that happened while I was offline—what was captured, what arrived late, what actually ran on the  |
 | `cap-0da4a6ed` | capability | faculty-perception | 1 | 1 | “For anything I said to the pendant, let me ask ‘what happened to that?’ and get a single evidence-backed timeline—from audio capture through relay, p |
@@ -1273,10 +1234,8 @@ in here.
 | `cap-cf114977` | capability | faculty-perception | 1 | 1 | Run a one-minute audio health check and tell me whether my pendant is truly delivering wideband speech, not just playing 24 kHz output. |
 | `cap-eea0e0fe` | capability | faculty-perception | 1 | 1 | When you tell me something was done, tell me whether it was only planned, executed on the Mac, delivered to the pendant, and actually heard or seen by |
 | `cap-237f60a1` | capability | faculty-perception | 1 | 1 | When something I asked for silently fails or becomes ambiguous, let me press the pendant button once to capture a private recovery packet and have you |
-| `cap-4aab3adb` | capability | faculty-perception | 1 | 1 | “What happened while I was away?” |
 | `cap-38b5460d` | capability | faculty-perception | 1 | 1 | “Is the hive caught up and in sync?” |
 | `cap-3413aac2` | capability | faculty-perception | 1 | 1 | “Before you do anything, tell me what you can actually see and what is unavailable right now.” |
-| `cap-4652ef44` | capability | faculty-perception | 1 | 1 | “I was offline—tell me what happened while I was away, in order, and what still needs me.” |
 | `cap-67b01f7f` | capability | faculty-perception | 1 | 1 | “Before you act, tell me what is actually reachable right now, what is stale or queued, and what you can safely do offline; when I reconnect, reconcil |
 | `cap-f357e42e` | capability | faculty-perception | 1 | 1 | “When you tell me something happened, let me ask ‘why do you believe that?’ and hear a short, human-readable proof that connects what I said on the pe |
 | `cap-17a8f12e` | capability | faculty-perception | 1 | 1 | “What happened while I was disconnected? Give me the exact timeline, including anything that was only queued, anything that really ran, and anything t |
@@ -1304,7 +1263,6 @@ in here.
 | `cap-f4e21654` | capability | faculty-perception | 1 | 1 | “When I get back online, tell me what happened while I was away—what the pendant captured, what arrived late, and what still needs my attention—once,  |
 | `cap-14655448` | capability | faculty-perception | 1 | 1 | “If I approve something on the pendant while I’m offline, carry out exactly that approved action when the Mac reconnects—tell me if anything changed f |
 | `cap-73e3e6c0` | capability | faculty-perception | 1 | 1 | “Do it, but tell me the truth if anything could not actually reach the screen or my account.” |
-| `cap-81bc8f2d` | capability | faculty-perception | 1 | 1 | “When I come back online, tell me what I missed while I was away—and separate what definitely happened from what you only inferred.” |
 | `cap-7d8a1477` | capability | faculty-perception | 1 | 1 | When I ask the pendant, “Did that actually happen?”, give me a trustworthy yes/no answer based on independent evidence—not just an action receipt—and  |
 | `cap-98d5ae4f` | capability | faculty-perception | 1 | 1 | “When something happened through my pendant, tell me exactly what was heard, what the system understood, what reached my Mac, and what I actually rece |
 | `cap-e2f86c44` | capability | faculty-perception | 1 | 1 | “Before you do anything, tell me exactly what you can see and what you cannot reach right now.” |
@@ -1312,7 +1270,6 @@ in here.
 | `cap-2ac10a50` | capability | faculty-perception | 1 | 1 | “I’m holding this—bring up everything I need for it.” (or “Tap this object to connect it to my work.”) |
 | `cap-53523a30` | capability | faculty-perception | 1 | 1 | “Did that actually happen?” — after you work on my Mac, browser, or pendant, verify the real-world result and tell me what is proven, what is only rep |
 | `cap-e25edeae` | capability | faculty-perception | 1 | 1 | “Only interrupt me when I’m actually available.” |
-| `cap-b1a8f555` | capability | faculty-perception | 1 | 1 | “What changed while I was away, and what did we miss?” |
 | `cap-6d6cc747` | capability | faculty-perception | 1 | 1 | “What did you share about me, with which device or service, and why?” |
 | `cap-69075d46` | capability | faculty-perception | 1 | 1 | Before doing anything, tell me whether the whole system can safely carry this out right now—and if not, exactly which link, permission, session, or de |
 | `cap-f27bb9f0` | capability | faculty-perception | 1 | 1 | When something I asked the pendant to do did not happen, let me ask 'what happened?' and get a short, chronological explanation showing where it stopp |
@@ -1435,7 +1392,6 @@ in here.
 | `cap-f76f407d` | capability | faculty-perception | 1 | 1 | “Did that actually happen?” — reconcile a spoken request across my pendant, relay, Mac, and logged-in browser, and tell me what is proven, what was on |
 | `cap-5ab5cb89` | capability | faculty-perception | 1 | 1 | “Keep this private while you work.” Detect when my Mac or logged-in browser is showing sensitive material, then make the spoken pendant response safe— |
 | `cap-740e83cf` | capability | faculty-perception | 1 | 1 | Before you act on my browser or schedule anything, tell me if the live page identity and clock context are trustworthy. |
-| `cap-4138e673` | capability | faculty-perception | 1 | 1 | Read the page I mean, and prove to me which tab you read before you summarize it. |
 | `cap-1519ded3` | capability | faculty-perception | 1 | 1 | Schedule this for 9 AM my time, and tell me exactly which timezone and calendar zone you used. |
 | `cap-2b50b9f1` | capability | faculty-perception | 1 | 1 | "Before you send, buy, delete, or change anything, tell me whether you can actually verify the target and what you will observe afterward; if the brow |
 | `cap-03ebaf48` | capability | faculty-perception | 1 | 1 | "Is my pendant really connected and hearing you right now? Give me a proof, not just 'online'." |
@@ -1567,7 +1523,6 @@ in here.
 | `cap-26c609fc` | capability | mac-planner | 1 | 1 | “When I ask you to do something that takes time, keep working after I leave and tell me exactly what happened when it’s done.” |
 | `cap-a267b7e8` | capability | mac-planner | 1 | 1 | “Just give it the goal; figure out whether the Mac, browser, pendant, or server should do each part, and use whichever can.” |
 | `cap-ca6005c3` | capability | mac-planner | 1 | 1 | “While I sleep, prepare tomorrow’s brief and leave me a short audio queue I can listen to from the pendant.” |
-| `cap-51c2dc88` | capability | mac-planner | 1 | 1 | “Get me ready for my next meeting.” |
 | `cap-b522df2d` | capability | mac-planner | 1 | 1 | “The last automation may have been interrupted—inspect what it actually finished, safely continue the rest, and tell me exactly what remains.” |
 | `cap-4e9325d8` | capability | mac-planner | 1 | 1 | Keep the conversation understandable when the connection is bad: if you miss part of what I said or your reply cannot get through, recover it automati |
 | `cap-3bb55dd1` | capability | mac-planner | 1 | 1 | “Keep me focused: watch my Mac and logged-in browser notifications, suppress routine noise, and tell me on the pendant only when something genuinely u |
@@ -1767,7 +1722,6 @@ in here.
 | `cap-ac730229` | capability | mac-planner | 1 | 1 | “Only let my pendant unlock or resume sensitive Mac work when I’m physically near it.” |
 | `cap-45e616fe` | capability | mac-planner | 1 | 1 | “Verify my pendant’s 24 kHz audio path end to end, including while I’m speaking over the agent, and tell me whether it passes.” |
 | `cap-8594cf81` | capability | mac-planner | 1 | 1 | “Let me have a genuinely natural, full-duplex 24 kHz conversation from the pendant—even when the agent is speaking—without my speech disappearing or t |
-| `cap-dd772885` | capability | mac-planner | 1 | 1 | "Continue that web task when my browser comes back, without repeating anything or losing where you got to." |
 | `cap-2a91c1c4` | capability | mac-planner | 1 | 1 | "When I step away from my Mac, keep track of what changed and give me a private, spoken catch-up when I return—without reopening or replaying anything |
 | `cap-c7f642f7` | capability | mac-planner | 1 | 1 | "If you tell me something important from my Mac or a logged-in website, let me ask 'why?' and hear exactly where it came from and how fresh it is." |
 | `cap-9444da79` | capability | mac-planner | 1 | 1 | “If you’re checking something in my logged-in browser and it goes offline, keep the task safe, tell me what paused, and resume it when the right tab c |
@@ -1960,7 +1914,6 @@ in here.
 | `cap-2abc6744` | capability | mac-terminal | 1 | 1 | “Check that logged-in page for me. If my Mac or browser is unavailable, wait safely and finish when it comes back—tell me whether it is waiting, compl |
 | `cap-7898daaf` | capability | mac-terminal | 1 | 1 | “Why didn’t that work?”—give me the actual evidence from the pendant request, relay, Mac command, and browser session, explain the failure in plain la |
 | `cap-a6ca9e3c` | capability | mac-terminal | 1 | 1 | “I’m leaving my Mac—save what I’m looking at and what I was trying to do, keep working on it, and give me the result on my pendant when it’s ready.” |
-| `cap-75f89b3d` | capability | mac-terminal | 1 | 1 | “What am I looking at right now—and what’s the one thing I should notice?” |
 | `cap-59c10039` | capability | mac-terminal | 1 | 1 | “Run a health check on the Mac and pendant, fix anything safe, and tell me what still needs me.” |
 | `cap-86e0fcad` | capability | mac-terminal | 1 | 1 | “Show me exactly how that request moved through the pendant, relay, Mac, and browser, and point to the first thing that went wrong.” |
 | `cap-d28d5c27` | capability | mac-terminal | 1 | 1 | “If something I asked you to do gets stuck or fails, figure out what went wrong, try the safe alternative, and ask me on the pendant only if you truly |
@@ -2184,7 +2137,6 @@ in here.
 | `cap-05630f35` | capability | mac-terminal | 1 | 1 | “What did I decide about this, and what evidence led me there?” |
 | `cap-d9551f6d` | capability | mac-terminal | 1 | 1 | “Make this private now.” |
 | `cap-e8bd948f` | capability | mac-terminal | 1 | 1 | “Tell me when my sources disagree about something important.” |
-| `cap-51be54bf` | capability | mac-terminal | 1 | 1 | “Press the pendant button and read me what I’m looking at.” |
 | `cap-0661e898` | capability | mac-terminal | 1 | 1 | “When I’m offline, let me tap the pendant to run my usual Mac shortcuts and tell me whether each one worked.” |
 | `cap-caff5c08` | capability | mac-terminal | 1 | 1 | “When I walk away from my Mac, protect my private browser tabs automatically, and restore them when I come back with the pendant.” |
 | `cap-5ea786e9` | capability | mac-terminal | 1 | 1 | “Watch me do this once, then let me repeat the routine from the pendant without asking me to explain every step.” |
@@ -2607,7 +2559,6 @@ in here.
 | `cap-724207f2` | capability | relay-realtime | 1 | 1 | While I’m away from my Mac, let me say ‘handle this’ and then interrupt, redirect, or ask for the exact status of that task from the pendant; have the |
 | `cap-46dcd189` | capability | relay-realtime | 1 | 1 | If a browser task reaches a login challenge, CAPTCHA, device approval, or other step only I can complete, ask me on the pendant with the minimum safe  |
 | `cap-16c9778d` | capability | relay-realtime | 1 | 1 | Keep working on long tasks after I stop talking, and tell me what happened when it finishes. |
-| `cap-daf3803b` | capability | relay-realtime | 1 | 1 | “Prep me for my next meeting.” Then, wherever I am, tell me who it is with, the relevant history and open decisions from my Mac, and any authenticated |
 | `cap-34697934` | capability | relay-realtime | 1 | 1 | “Is the project build broken, and if so fix what you safely can?” From the pendant, inspect the current repository and local test/build state on my Ma |
 | `cap-1feee85e` | capability | relay-realtime | 1 | 1 | Keep working on that after I walk away, and tell me exactly what happened when it’s done. |
 | `cap-61221ab2` | capability | relay-realtime | 1 | 1 | While I’m away from my Mac, let me say “what did you find?” or “change the second one” and have the pendant continue the exact Mac/browser task that p |
@@ -2659,7 +2610,6 @@ in here.
 | `cap-e22c5dac` | capability | relay-realtime | 1 | 1 | While you are carrying out a task on my Mac or in my browser, let me say 'stop', 'skip that', or 'instead do X' into the pendant and have the current  |
 | `cap-82118dc7` | capability | relay-realtime | 1 | 1 | Remember this exact way I completed the task, turn it into a named routine, and let me invoke that routine later by voice from the pendant across the  |
 | `cap-5bba0b5d` | capability | relay-realtime | 1 | 1 | Give me a spoken privacy freeze: immediately stop all active Mac/browser work, revoke the relay's live session leases, and tell me what was paused; la |
-| `cap-56f6a5f9` | capability | relay-realtime | 1 | 1 | When I say "keep an eye on this and tell me if it changes," watch the page and summarize meaningful changes for me. |
 | `cap-8172101e` | capability | relay-realtime | 1 | 1 | “Where did I leave off, and what should I do next?” |
 | `cap-18d5111f` | capability | relay-realtime | 1 | 1 | “Check this claim against my open browser pages and Mac files, and tell me exactly where the sources disagree.” |
 | `cap-ad064772` | capability | relay-realtime | 1 | 1 | “Keep working on that across my Mac and browser, and interrupt me on the pendant only when you truly need a decision.” |
@@ -2672,7 +2622,6 @@ in here.
 | `cap-d65aaf43` | capability | relay-realtime | 1 | 1 | “Hold this for when I’m back at my Mac: reopen the exact research context I’m talking about, restore the relevant browser tabs and draft state, then t |
 | `cap-9f140f5b` | capability | relay-realtime | 1 | 1 | “If you get stuck or find two plausible things on my Mac, ask me on the pendant with the smallest useful choice, then continue the same job when I ans |
 | `cap-ba380d72` | capability | relay-realtime | 1 | 1 | “Compare the document I’m looking at in my browser with the matching file on my Mac and tell me what differs.” |
-| `cap-7c9d0bc2` | capability | relay-realtime | 1 | 1 | What can you do for me right now? |
 | `cap-9be86778` | capability | relay-realtime | 1 | 1 | “Mark this as my work checkpoint. When I’m back at my Mac, restore the exact context and tell me what changed since I left.” |
 | `cap-7ad3d27b` | capability | relay-realtime | 1 | 1 | “Privacy mode now. Don’t record or read anything sensitive until I say resume, and show me what you paused.” |
 | `cap-48aa47f4` | capability | relay-realtime | 1 | 1 | “Start this task from my pendant, keep working while I’m away, tell me when you reach a meaningful checkpoint, and let me interrupt, redirect, or ask  |
@@ -2692,7 +2641,6 @@ in here.
 | `cap-04fc6a09` | capability | relay-realtime | 1 | 1 | Check whether the information I’m looking at in the browser agrees with the source on my Mac, and tell me exactly what conflicts—for example, “does th |
 | `cap-f2374183` | capability | relay-realtime | 1 | 1 | Learn this workflow from me once: when I say “prepare the launch report,” gather the open browser dashboard, the latest project files, and the numbers |
 | `cap-8f9276a4` | capability | relay-realtime | 1 | 1 | “Remember this exactly, and when my Mac and browser are next available, carry it out across whichever app or logged-in tab is needed; tell me on the p |
-| `cap-b9911b33` | capability | relay-realtime | 1 | 1 | “What is on my Mac right now?” or “Read the page I left open and tell me the important parts.” |
 | `cap-c63a4793` | capability | relay-realtime | 1 | 1 | What happened to that thing I asked you to do earlier? |
 | `cap-ae4b250d` | capability | relay-realtime | 1 | 1 | “Compare what’s in my open browser tab with the relevant file or app on my Mac, and tell me only what conflicts or is missing.” |
 | `cap-a76ccb06` | capability | relay-realtime | 1 | 1 | “I’m leaving now. When I come back, tell me what changed on my Mac and in my open browser work since I left.” |
@@ -2791,7 +2739,6 @@ in here.
 | `cap-97c19249` | capability | relay-realtime | 1 | 1 | Read the page I’m looking at to me on the pendant, let me ask questions or say “pause/skip back,” and when I return to my Mac leave that exact tab, sc |
 | `cap-7f15b845` | capability | relay-realtime | 1 | 1 | “If I ask you to do something on my computer, keep track of it and tell me how it’s going, even if my Mac goes to sleep.” |
 | `cap-11df47c4` | capability | relay-realtime | 1 | 1 | “Take the thing I’m looking at in my browser right now, put the useful excerpt and link into a note on my Mac, and tell me when it’s done.” |
-| `cap-9b374784` | capability | relay-realtime | 1 | 1 | “What exactly did you change across my Mac and browser in the last few minutes, and show me the source for each claim?” |
 | `cap-16abd07a` | capability | relay-realtime | 1 | 1 | “Compare the deployment/status page I’m signed into with the project state on my Mac. Tell me only what disagrees, with the evidence from both sides,  |
 | `cap-0aa73376` | capability | relay-realtime | 1 | 1 | “Undo the changes you made in that last task,” or “Undo the browser and Mac changes from the email task,” spoken through the pendant. |
 | `cap-4749c0d8` | capability | relay-realtime | 1 | 1 | When I double-press the pendant, enter a temporary privacy bubble: stop sending live audio to the relay, tell my Mac to lock or hide sensitive work, p |
@@ -2866,7 +2813,6 @@ in here.
 | `cap-f4955966` | capability | relay-realtime | 1 | 1 | “Remember that ‘work inbox’ means the currently authenticated Outlook tab in my browser plus the Outlook app on my Mac; whenever I say it, use whichev |
 | `cap-5814af42` | capability | relay-realtime | 1 | 1 | “Capture what I just said as an evidence capsule and file it for me.” |
 | `cap-0a2bcd9a` | capability | relay-realtime | 1 | 1 | “What is actually current right now?” — give me one trustworthy spoken situational brief that reconciles my pendant, Mac, and authenticated browser in |
-| `cap-3a72e414` | capability | relay-realtime | 1 | 1 | “What am I looking at on my computer right now, and what are the two most important things on it?” |
 | `cap-c03c222d` | capability | relay-realtime | 1 | 1 | When I press the pendant and say “summarize what’s on my screen and tell me what matters,” do it even if my Mac is asleep. |
 | `cap-f594c14a` | capability | relay-realtime | 1 | 1 | If I say “check on that thing you sent to my Mac,” tell me its status right away. |
 | `cap-65539de8` | capability | relay-realtime | 1 | 1 | If my pendant audio stops reaching you, detect it and switch to a fallback path if available. |
@@ -2947,7 +2893,6 @@ in here.
 | `cap-7cadc398` | capability | relay-realtime | 1 | 1 | When I say “meeting mode,” have the pendant listen for the next conversation, continuously extract only decisions, commitments, and names/deadlines, t |
 | `cap-19ac60f5` | capability | relay-realtime | 1 | 1 | Let me say “make this a brief” while wearing the pendant: have the relay collect the current authenticated browser tabs and the relevant Mac project f |
 | `cap-9b9e8124` | capability | relay-realtime | 1 | 1 | When I approach my Mac wearing the pendant, let me tap its button and say “handoff,” then move the active voice task, transcript context, and browser  |
-| `cap-5b47ba80` | capability | relay-realtime | 1 | 1 | Get me ready for my next meeting. |
 | `cap-96dd29ff` | capability | relay-realtime | 1 | 1 | "Give me a spoken, evidence-backed answer about what is currently on my Mac screen and in my active browser tab, then let me say 'do it' to act on tha |
 | `cap-7e9558b4` | capability | relay-realtime | 1 | 1 | "I’m leaving my desk—snapshot the work context. When I come back and press the pendant, tell me only what changed in my editor, terminal, and authenti |
 | `cap-2ee4ce30` | capability | relay-realtime | 1 | 1 | "I found a bug—use my voice to investigate it across the project, reproduce it, make the smallest fix, run the relevant tests, and tell me what change |
@@ -2977,7 +2922,6 @@ in here.
 | `cap-c1c4f4f0` | capability | relay-realtime | 1 | 1 | “I’m leaving—give me a handoff.” The pendant should ask the Mac and browser for a fresh departure snapshot: unsaved work, running long jobs, active ca |
 | `cap-26eff00f` | capability | relay-realtime | 1 | 1 | “Check this before I send it.” Without changing anything, have the pendant inspect the focused draft on the Mac or browser, compare recipients, attach |
 | `cap-64b769c0` | capability | relay-realtime | 1 | 1 | “Can I merge this?” From the focused repository and current diff, have the Mac run the relevant tests and inspect the actual changed files, then have  |
-| `cap-b908fff4` | capability | relay-realtime | 1 | 1 | Record a quick voice note from the pendant and turn it into a reminder with a title, time, and context. |
 | `cap-81fda906` | capability | relay-realtime | 1 | 1 | “When I’m in a meeting, quietly keep track of decisions and action items, then after it ends tell me only what I personally need to do and put the tas |
 | `cap-57b81a28` | capability | relay-realtime | 1 | 1 | “If something urgent happens in any of my signed-in services, interrupt me on the pendant in the least disruptive way; otherwise hold it and give me o |
 | `cap-3046d95b` | capability | relay-realtime | 1 | 1 | “Screen calls for me: if an unknown caller rings, answer with my short introduction, ask why they’re calling, tell me a one-sentence summary on the pe |
@@ -3527,7 +3471,6 @@ in here.
 | `chg-ffe7fbea` | firmware | mac-vision | 1 | 1 | Add firmware support for low-latency local processing of vision events and UI interaction logging directly on the pendant to reduce reliance on cloud  |
 | `chg-206aece9` | firmware | mac-vision | 1 | 1 | Add a hardware button sequence on the AI Pendant device to enable emergency manual override that disables mac-vision loop's screen interactions immedi |
 | `chg-44c684a2` | firmware | mac-vision | 1 | 1 | Implement on-device real-time accessibility UI hierarchy extraction and continuous snapshot capabilities on Mac system firmware or accessibility servi |
-| `chg-cafea71e` | firmware | mac-vision | 1 | 1 | Add a dedicated onboard UI verification coprocessor on the pendant that can independently verify computer-generated UI actions before they occur by an |
 | `chg-4c43c07e` | firmware | mac-vision | 1 | 1 | Enhance the pendant firmware to provide haptic feedback signals during mac-vision controlled computer actions, confirming the reception and execution  |
 | `chg-515ce65a` | firmware | mac-vision | 1 | 1 | Upgrade MacBook agent firmware and OS integration to expose a secure, high-fidelity accessibility layer API that supports advanced UI element introspe |
 | `chg-47b0fa0f` | firmware | mac-vision | 1 | 1 | Update mac-vision firmware to support layered permission checks for UI interaction, ensuring actions that change state are logged, reversible where po |
@@ -3544,9 +3487,7 @@ in here.
 | `chg-7785356d` | firmware | mac-vision | 1 | 1 | Add secure trusted computing features in the MacBook firmware to audit and log all screen captures, UI interactions, and vision agent activity locally |
 | `chg-13341771` | firmware | mac-vision | 1 | 1 | Implement a local hardware-accelerated privacy filter and encryption module on the MacBook that controls camera, microphone, and screen capture data s |
 | `chg-be348fcb` | firmware | mac-vision | 1 | 1 | Extend the pendant firmware to locally analyze Mac screen captures and UI accessibility snapshots, detecting regions of interest and filtering sensiti |
-| `chg-9d72d763` | firmware | mac-vision | 1 | 1 | Add local encrypted image buffer and real-time vision accelerator coprocessor on the pendant to allow offloading screen pixel analysis with zero cloud |
 | `chg-df365e1e` | firmware | mac-vision | 1 | 1 | Add a dedicated hardware control and protection module on the pendant to mediate screen recording and UI control permissions, enabling selective, owne |
-| `chg-720c8c8e` | firmware | mac-vision | 1 | 1 | Add hardware-accelerated local AI vision processing coprocessor to the MacBook device to enable always-on safe UI snapshot analysis without performanc |
 | `chg-db983a2b` | firmware | mac-vision | 1 | 1 | Enhance the ESP32 audio bridge firmware to support local wake word detection and initial phrase filtering, offloaded from the cloud relay. This reduce |
 | `chg-464d9aec` | firmware | relay-realtime | 1 | 1 | Add a playback receipt protocol that is local-first and idempotent: every spoken response carries a monotonically increasing utterance id and a short  |
 | `chg-e5157afd` | firmware | relay-realtime | 1 | 1 | Upgrade the audio capture path to support a 24 kHz end-to-end mode (mic capture, encoding, transport, and relay storage), with fallback to current 16  |
@@ -3576,361 +3517,67 @@ in here.
 | `chg-41cb2613` | firmware | unified | 1 | 1 | Implement a transport-agnostic audio session state machine in the nRF9160 firmware: sequence every frame, expose LTE/USB link health, pause rather tha |
 | `chg-06fc642a` | firmware | unified | 1 | 1 | Add a USB-serial diagnostic mode to the nRF9160 pendant that emits timestamped button, VAD, PCM frame counters, link state, queue depth, and reset rea |
 | `chg-8c19e2f0` | firmware | unified | 1 | 1 | Add a local acoustic-environment governor that classifies only coarse conditions—quiet, speech-overlap, wind/noise, and likely headphone feedback—usin |
-| `chg-075021ae` | hardware | browser-extension | 1 | 1 | Design the production pendant with a low-power ERM/LRA haptic actuator and a dedicated wake-capable haptic driver, while retaining the single button a |
-| `chg-0169aee1` | hardware | browser-extension | 1 | 1 | Ship a real 24-kHz superwideband audio path as one negotiated end-to-end mode rather than only changing the relay sample-rate label: replace the fixed |
-| `chg-4c19992b` | hardware | browser-extension | 1 | 1 | Add a tiny coin vibration motor and a low-power notification controller to the pendant, with a single reserved haptic pattern for 'private browser tas |
-| `chg-3617a73f` | hardware | browser-extension | 1 | 1 | Add a low-power haptic actuator and driver to the production pendant, with firmware primitives for distinct short patterns (new private-browser item,  |
-| `chg-92974e85` | hardware | faculty-action | 1 | 1 | Design the production pendant with a small haptic actuator and a secure element alongside the button/LED. The relay issues a one-time transaction chal |
-| `chg-62715247` | hardware | faculty-action | 1 | 1 | Add a low-power coin vibration motor (or piezo haptic actuator) with a dedicated GPIO driver and a simple three-pattern status vocabulary: short pulse |
-| `chg-01338908` | hardware | faculty-action | 1 | 1 | For the product pendant, add a low-power haptic actuator and a fuel-gauge IC with an interrupt line, while retaining the single button and LED. Expose |
-| `chg-233b6838` | hardware | faculty-action | 1 | 1 | Replace the prototype's single-button/single-LED interaction with a production pendant interaction module: retain the talk button, add a distinct guar |
 | `chg-75497e40` | hardware | faculty-action | 1 | 1 | Add a hardware-backed identity and key store to the production pendant (for example a secure element on the currently free I2C bus), with per-device k |
-| `chg-b9a1d8a3` | hardware | faculty-action | 1 | 1 | Replace the provisional ESP32 classic-A2DP bridge with a BLE Audio-capable bridge (or a production codec module) whose transport and sink can preserve |
-| `chg-ddecfd72` | hardware | faculty-action | 1 | 1 | Add a secure authorization path to the pendant: a device-unique private key in protected storage (or a small secure element), monotonic anti-replay co |
-| `chg-3a03c3d6` | hardware | faculty-action | 1 | 1 | Evolve the pendant from a single-button/LED prototype into an action-confirmation interface: retain the conversation button, add a low-profile tactile |
-| `chg-a588a7c7` | hardware | faculty-action | 1 | 1 | Replace the prototype audio front end with a native 24 kHz-capable capture and playback clock domain: use a microphone/codec path whose actual sample  |
-| `chg-93872eb3` | hardware | faculty-action | 1 | 1 | Add a tiny bistable 3-color status indicator and a vibration motor to the wearable, driven by a safety-isolated local action-state controller. The rel |
-| `chg-82c44d37` | hardware | faculty-action | 1 | 1 | Add a low-power BLE central/peripheral presence channel to the pendant product, with a locally authenticated rolling token and a small nonvolatile pen |
-| `chg-359b70fa` | hardware | faculty-action | 1 | 1 | Add a low-power haptic actuator and a three-color status LED (or an RGB LED) to the next pendant revision, with a tiny event protocol from relay: acce |
-| `chg-431e96de` | hardware | faculty-action | 1 | 1 | Add a low-cost reference MEMS microphone and hardware timestamp line to the ESP32 headphone bridge, positioned near the headphone output (or provide a |
-| `chg-254a2441` | hardware | faculty-action | 1 | 1 | Add a tiny coin/LRA haptic actuator with a dedicated low-side driver and a protected, debounced action button to the pendant; expose three firmware pa |
-| `chg-a6b1dc15` | hardware | faculty-action | 1 | 1 | Replace the prototype nRF9160-only pendant interaction path with a production companion module that provides authenticated BLE plus UWB ranging to the |
 | `chg-d5250d78` | hardware | faculty-action | 1 | 1 | Add a small secure-element-backed identity and presence subsystem to the pendant: per-device signing key, monotonic anti-replay counter, challenge-res |
-| `chg-950650a4` | hardware | faculty-action | 1 | 1 | Add a low-power tactile/haptic actuator and a secure element to the pendant, with firmware-managed patterns for countdown, success, failure, waiting-f |
 | `chg-31319245` | hardware | faculty-action | 1 | 1 | Replace the prototype's implicit USB identity with a tamper-evident commissioning identity: each pendant and audio bridge gets a secure element or pro |
 | `chg-2d38df23` | hardware | faculty-judgement | 1 | 1 | For the product revision, add a physical, latching microphone-mute/privacy switch with a clearly visible two-color indicator, while retaining the exis |
-| `chg-5bb0969c` | hardware | faculty-judgement | 1 | 1 | Make the wearable product (not the current nRF9160 DK prototype) include a low-power haptic actuator, a two-color status LED, and a second physical bu |
-| `chg-ad240ba8` | hardware | faculty-judgement | 1 | 1 | Design the product pendant (not the provisional nRF9160 DK) with a low-power haptic actuator and a two-stage tactile control: short press acknowledges |
-| `chg-2c3fc9d6` | hardware | faculty-judgement | 1 | 1 | Design the wearable revision with (1) a low-power fuel-gauge IC on the currently unused I2C bus, (2) a small vibration motor with a dedicated driver,  |
-| `chg-4c5cba4f` | hardware | faculty-judgement | 1 | 1 | Add a real two-position microphone privacy switch that electrically gates the mic bias/input, plus a small vibration motor and driver on the currently |
-| `chg-023be44f` | hardware | faculty-judgement | 1 | 1 | Add a deliberate three-position hardware control (OBSERVE / PREPARE / ACT) with a tactile detent and unmistakable haptic/LED indication, plus a signed |
-| `chg-b8ad34f1` | hardware | faculty-judgement | 1 | 1 | Replace the prototype single-button development-kit interaction with a production pendant that has a physically latched microphone mute/privacy switch |
-| `chg-37bd005a` | hardware | faculty-judgement | 1 | 1 | Replace the provisional ESP32-class HUZZAH32 audio bridge for the product with a BLE Audio-capable bridge (nRF5340 Audio or equivalent) that accepts n |
-| `chg-400dd97c` | hardware | faculty-judgement | 1 | 1 | Replace the development pendant's single-button/LED interaction with a production interaction module: a low-power haptic actuator plus a capacitive th |
-| `chg-48fdb151` | hardware | faculty-judgement | 1 | 1 | Replace the prototype’s single-button interaction with a sealed, low-profile two-way tactile control: a three-position momentary rocker (left/neutral/ |
-| `chg-ef53e2d8` | hardware | faculty-judgement | 1 | 1 | Make 24 kHz superwideband a negotiated full-duplex product mode rather than a playback-only prototype: use a microphone/clock path that natively captu |
 | `chg-b6ccc543` | hardware | faculty-judgement | 1 | 1 | Add a true hardware privacy control to the pendant: a latching side switch (or mechanically distinct long-press button) that cuts microphone power/dat |
 | `chg-3d8e3bae` | hardware | faculty-judgement | 1 | 1 | Add a real, electrically enforced microphone privacy control to the product pendant: a recessed two-position mute switch that disconnects the micropho |
-| `chg-f15391f5` | hardware | faculty-judgement | 1 | 1 | Add a physically latched privacy control to the pendant: a two-position slider that electrically gates the microphone and drives a visible/tactile loc |
-| `chg-b8ac93b4` | hardware | faculty-judgement | 1 | 1 | Replace the prototype’s 15,625 Hz capture path plus 31,250 Hz bridge-clock resampling with a negotiated 24 kHz audio contract: a microphone/ADC clocke |
-| `chg-a0ce40e7` | hardware | faculty-judgement | 1 | 1 | Finish the 24 kHz superwideband path on the capture side instead of only decoding 24 kHz playback: choose a production microphone/codec and clock tree |
-| `chg-6b3b41eb` | hardware | faculty-judgement | 1 | 1 | Replace the prototype's 15,625-Hz I2S microphone/31,250-Hz playback clock arrangement with a clocked 24-kHz capture and 48-kHz playback path (or an au |
-| `chg-0a2be213` | hardware | faculty-judgement | 1 | 1 | For the product revision, replace the prototype nRF9160-plus-ESP32 audio chain with a wearable SoC/audio front end that can capture native 24 kHz mono |
-| `chg-36fbe301` | hardware | faculty-judgement | 1 | 1 | Add a fuel-gauge IC with a thermistor input (for example, a low-power I²C gauge appropriate to the final cell), expose percentage, voltage, charging s |
 | `chg-8774ca80` | hardware | faculty-judgement | 1 | 1 | Add a low-power secure element to the pendant, provisioned as the owner's revocable presence and approval key. It should sign button-confirmed approva |
-| `chg-2a4c57a4` | hardware | faculty-judgement | 1 | 1 | Replace the DK-era single-core audio path with a product audio design: a 24/32 kHz-capable digital microphone and an audio-capable dual-core MCU (or d |
-| `chg-08bbf339` | hardware | faculty-judgement | 1 | 1 | Add a low-power LRA haptic actuator with a dedicated haptic driver on the currently unused I2C bus, plus a second physical acknowledge/cancel button ( |
-| `chg-6a90f0a1` | hardware | faculty-judgement | 1 | 1 | For the product revision, add a tiny coin/LRA haptic actuator with a dedicated low-side driver and expose a wake-capable second tactile input (or capa |
-| `chg-c1864358` | hardware | faculty-judgement | 1 | 1 | Add a physical privacy control to the product pendant: a latching microphone-power cutoff or hardware mute gate, a distinct haptic motor, and a two-co |
-| `chg-0fbafd1a` | hardware | faculty-judgement | 1 | 1 | Add a low-power IMU and privacy-preserving local presence/departure detector to the wearable, with optional BLE proximity to the owner's phone or a ho |
-| `chg-1f11ba2d` | hardware | faculty-judgement | 1 | 1 | Replace the development pendant's unmeasured USB/battery supply with a production power path exposing battery voltage/current over the already-free I2 |
-| `chg-4b65ec11` | hardware | faculty-judgement | 1 | 1 | Revise the pendant enclosure/PCB to add a coin-style low-power haptic actuator with a dedicated driver and a second input modality (a capacitive touch |
-| `chg-246a90b2` | hardware | faculty-judgement | 1 | 1 | Add a secure-attention path to the pendant: a dedicated double-press gesture sampled locally with debounce and long-press cancellation, a per-device s |
-| `chg-a8187b83` | hardware | faculty-judgement | 1 | 1 | Replace the prototype HUZZAH32 SBC-only A2DP bridge with a small BLE-Audio-capable bridge (nRF5340-class, with LC3/LE Audio and SBC fallback), and add |
-| `chg-85b5744f` | hardware | faculty-judgement | 1 | 1 | Build a production wearable audio bridge around an LE-Audio-capable nRF5340-class radio, with LC3/24 kHz mono support, mandatory SBC fallback for exis |
-| `chg-6aab63de` | hardware | faculty-judgement | 1 | 1 | Replace the prototype's single-button/single-LED interaction with a production pendant interaction module: a low-power coin haptic actuator with a ded |
-| `chg-f52778d3` | hardware | faculty-judgement | 1 | 1 | Replace the provisional single-button pendant input with a two-control interaction: retain the action button and add a physically latching microphone  |
-| `chg-fc4e2a50` | hardware | faculty-judgement | 1 | 1 | Add a discreet coaching I/O path: a dedicated capacitive side strip or two-stage button with a short-range haptic motor, plus firmware support for thr |
 | `chg-ab4b3492` | hardware | faculty-judgement | 1 | 1 | Add a physically latching microphone disconnect and a separate privacy-status indicator to the pendant: a normally-open analog switch or codec power g |
-| `chg-1543e22b` | hardware | faculty-judgement | 1 | 1 | Add a low-power coin haptic actuator with a dedicated GPIO/PWM driver and a physical long-press stop path that remains local to the pendant. Keep the  |
-| `chg-9efa2916` | hardware | faculty-judgement | 1 | 1 | Replace the prototype nRF9160-plus-ESP32 audio split with a production audio front end: an nRF5340-class dual-core application MCU (or equivalent DSP- |
-| `chg-91558bda` | hardware | faculty-judgement | 1 | 1 | Add a secure-element-backed authorization button to the production pendant: generate and hold a non-exportable device key, maintain a monotonic counte |
-| `chg-2e8ed42d` | hardware | faculty-judgement | 1 | 1 | Add a sealed low-power haptic actuator (prefer an LRA for crisp short patterns) with a dedicated driver and one interrupt-capable acknowledgement butt |
-| `chg-c5608baf` | hardware | faculty-judgement | 1 | 1 | Replace the provisional single-button pendant input with two tactile controls: a primary press/hold for talk and a small acknowledge/re-entry button ( |
-| `chg-7c331a17` | hardware | faculty-judgement | 1 | 1 | Add a real low-power audio front end to the product pendant: a 24 kHz-capable digital microphone/codec with shared clock, hardware acoustic-echo cance |
-| `chg-0d74be37` | hardware | faculty-judgement | 1 | 1 | Replace the prototype audio front end with a production capture chain whose microphone/codec natively samples at 24 kHz or 32 kHz (with a documented a |
-| `chg-176d108a` | hardware | faculty-judgement | 1 | 1 | Add a sealed low-power haptic actuator and driver to the production pendant, with three firmware-owned patterns (notice, urgent, critical), a physical |
-| `chg-377e6af1` | hardware | faculty-judgement | 1 | 1 | Replace the prototype's single-button/LED interaction with a small haptic actuator and low-power IMU on the free I2C bus, plus a fuel-gauge IC. Define |
-| `chg-beac5795` | hardware | faculty-judgement | 1 | 1 | Revise the pendant from the prototype nRF9160 DK into a wearable revision with a low-power ERM/LRA haptic actuator, a proper coulomb-counting fuel gau |
 | `chg-bcef7c7a` | hardware | faculty-judgement | 1 | 1 | Add a dedicated, electrically hard-wired microphone privacy slider to the pendant with a visible red mechanical position and a firmware-readable state |
-| `chg-0c30f5fb` | hardware | faculty-judgement | 1 | 1 | Replace the provisional nRF9160-DK audio path with a product audio front end: a low-power stereo/mono 24 kHz-capable ADC/DAC (or dedicated audio DSP)  |
-| `chg-2453d45d` | hardware | faculty-judgement | 1 | 1 | Design the wearable around a privacy-capable output path instead of the current open playback assumption: add a near-ear bone-conduction or sealed dir |
-| `chg-e2d7ab05` | hardware | faculty-judgement | 1 | 1 | Replace the prototype’s single multifunction button/LED with a dedicated, physically latched microphone mute switch plus a high-visibility two-color p |
-| `chg-a6822265` | hardware | faculty-judgement | 1 | 1 | Replace the prototype’s 15,625 Hz I2S microphone/clock path with a production audio front end that captures 24 kHz (preferably a 48 kHz digital MEMS m |
-| `chg-1456b8a1` | hardware | faculty-judgement | 1 | 1 | Add a local departure-signal subsystem to the wearable: GNSS-capable location sampling with geofence evaluation and a low-power motion trigger, keepin |
-| `chg-2be6f2f4` | hardware | faculty-judgement | 1 | 1 | Replace the prototype's single LED-only notification path with a production pendant notification module: a low-power LRA haptic actuator behind the en |
-| `chg-686ca9eb` | hardware | faculty-judgement | 1 | 1 | Replace the prototype pendant’s single-button/single-LED interaction with a physical two-position microphone privacy switch that electrically disconne |
-| `chg-dad33d86` | hardware | faculty-judgement | 1 | 1 | Replace the prototype's fixed 15,625 Hz I2S microphone clock path with a clocked 24 kHz-capable digital MEMS microphone (or add an ASRC front end) and |
-| `chg-cee88693` | hardware | faculty-judgement | 1 | 1 | Add a coin vibration motor (or low-power LRA with driver), a second tactile button, and a physical microphone-mute/privacy slider to the pendant revis |
-| `chg-d463d520` | hardware | faculty-judgement | 1 | 1 | For the product revision (not the current nRF9160 DK prototype), add a matched dual-microphone pair with physical windscreen/acoustic isolation and a  |
-| `chg-1bc21c4b` | hardware | faculty-judgement | 1 | 1 | Add a low-power haptic actuator with a dedicated interrupt-capable driver and a small nonvolatile attention latch (plus a physical acknowledge/stop in |
-| `chg-3b6cb4e2` | hardware | faculty-judgement | 1 | 1 | Add a low-power LRA haptic actuator with a DRV2605-class I2C driver, plus a battery fuel gauge and (optionally) an ambient-light/proximity sensor. Res |
-| `chg-e13db47f` | hardware | faculty-judgement | 1 | 1 | Add a low-power haptic actuator and a 6-axis IMU to the pendant, with a tiny local acknowledgement state machine: distinct vibration patterns for ordi |
-| `chg-6e747d3e` | hardware | faculty-judgement | 1 | 1 | Revise the pendant enclosure to include an owner-triggered camera module with a physical shutter, a bright capture indicator, a dedicated capture/hold |
-| `chg-6d5c63ba` | hardware | faculty-judgement | 1 | 1 | Add a physically latching microphone-disconnect switch to the pendant audio path, with a high-visibility mechanical indicator and a separate low-power |
-| `chg-59a964bd` | hardware | faculty-judgement | 1 | 1 | Replace the prototype's single-button/single-LED control with a wearable control cluster: a distinct mark button plus a recessed stop/privacy button,  |
-| `chg-5bd8b607` | hardware | faculty-judgement | 1 | 1 | Add a small coin vibration motor and a second capacitive or tactile input to the wearable, with a dedicated low-power haptic driver and an explicit si |
-| `chg-979d16f0` | hardware | faculty-judgement | 1 | 1 | Replace the prototype's single LED-only feedback with a small coin haptic motor driven by a spare GPIO/PWM channel, plus a real battery fuel-gauge IC  |
 | `chg-006f70de` | hardware | faculty-judgement | 1 | 1 | Design the wearable around two independent physical controls instead of the current single sw0 button: a recessed, latching microphone privacy switch  |
-| `chg-dbd1d07a` | hardware | faculty-judgement | 1 | 1 | Revise the pendant around a secure-element-backed proximity identity and a distinct emergency control: add a low-power BLE/NFC presence channel, a tam |
-| `chg-2c6ee71e` | hardware | faculty-judgement | 1 | 1 | Add a low-current vibration motor (with a transistor driver and flyback protection) to the pendant, expose a three-pattern haptic API, and reserve one |
-| `chg-790d21fc` | hardware | faculty-judgement | 1 | 1 | Add a low-power coin vibration motor with a dedicated driver and a second tactile input (or capacitive touch strip) to the pendant, and define a small |
-| `chg-a529ba0f` | hardware | faculty-judgement | 1 | 1 | Add a low-power wear/presence sensor to the pendant—capacitive skin contact or a dedicated clasp contact, backed by an accelerometer—and expose a sign |
-| `chg-2ac5d262` | hardware | faculty-judgement | 1 | 1 | Add a low-current coin vibration motor (or equivalent haptic actuator with a protected driver) to the pendant revision, exposed as a three-level inten |
-| `chg-a02f83f6` | hardware | faculty-judgement | 1 | 1 | Revise the wearable from the current single-button/single-LED Nordic development kit to include a low-power haptic actuator and an ambient-light/proxi |
 | `chg-a9911e58` | hardware | faculty-perception | 1 | 1 | Add a small secure element plus a dedicated low-power nonvolatile queue store to the wearable product design: the secure element holds a device identi |
-| `chg-e7c34138` | hardware | faculty-perception | 1 | 1 | For the wearable revision, separate modem and audio workloads: retain an LTE-M modem but add a low-power audio MCU/DSP with native 24 kHz capture/play |
-| `chg-46cf2817` | hardware | faculty-perception | 1 | 1 | Replace the prototype's 15.625 kHz I2S microphone path plus nRF9160-side 16 kHz Opus uplink with a low-power audio front end that can deliver native 2 |
-| `chg-f3856943` | hardware | faculty-perception | 1 | 1 | Replace the prototype nRF9160-DK audio path with a production two-processor audio design: retain the LTE-M modem, add a low-power audio MCU/DSP with n |
-| `chg-880494dd` | hardware | faculty-perception | 1 | 1 | Add a low-power haptic actuator and a small nonvolatile event queue (for example,  ferroelectric RAM or wear-leveled external flash) to the wearable p |
-| `chg-625a48ef` | hardware | faculty-perception | 1 | 1 | Add a small, low-power audio codec/ADC on the bridge's I2S path with a hardware 24 kHz-capable clock and DMA buffer, while retaining the nRF9160 modem |
-| `chg-3c388c99` | hardware | faculty-perception | 1 | 1 | Add a low-power authenticated proximity channel to the pendant: use the existing ESP32 bridge’s BLE capability, or add a small BLE beacon if the bridg |
-| `chg-2a08e6f2` | hardware | faculty-perception | 1 | 1 | Add a low-power RTC crystal and a tiny monotonic-event journal (FRAM or a reserved wear-leveled microSD journal) to the pendant, with a tamper-evident |
-| `chg-2e9f2fda` | hardware | faculty-perception | 1 | 1 | Replace the prototype nRF9160-DK + ESP32 audio chain for the product with a low-power audio front end that natively samples and plays 24 kHz (or 48 kH |
 | `chg-cc7223d9` | hardware | faculty-perception | 1 | 1 | Add a small audio-front-end/clock-monitor path in the wearable revision: a shared crystal-derived sample clock for mic and speaker, a hardware loopbac |
-| `chg-d3b95c8e` | hardware | faculty-perception | 1 | 1 | Replace the prototype's 15,625 Hz I2S capture plus 16 kHz Opus uplink with a clocked 24 kHz (or 48 kHz/2) microphone path and negotiated 24 kHz Opus f |
-| `chg-d4ebed25` | hardware | faculty-perception | 1 | 1 | Replace the prototype 15,625-Hz I2S microphone/clock path with a microphone and clocking design that natively captures 24 kHz (or higher with controll |
 | `chg-17af8184` | hardware | faculty-perception | 1 | 1 | Add a low-power, battery-backed RTC with periodic LTE time calibration and a secure monotonic event counter to the pendant, and expose both wall-clock |
 | `chg-872a0c93` | hardware | faculty-perception | 1 | 1 | Add a low-power NFC reader, with BLE-tag fallback, to the pendant and expose a signed local objectId event to the relay. Keep a small encrypted associ |
-| `chg-71daa39a` | hardware | faculty-perception | 1 | 1 | Replace the prototype’s single raw I2S microphone path with a production audio front end that includes a low-power always-on voice/activity detector ( |
-| `chg-06d5308d` | hardware | faculty-perception | 1 | 1 | Replace the prototype’s single-button/single-LED pendant audio module with a production enclosure that adds a low-power 6-axis IMU and capacitive skin |
-| `chg-efcb194d` | hardware | faculty-perception | 1 | 1 | Replace the prototype's single shared I2S path plus opaque ESP32 bridge buffering with a production audio front end containing timestamped DMA on both |
-| `chg-e706385c` | hardware | faculty-perception | 1 | 1 | Add a low-power ERM/LRA haptic actuator driven by a protected GPIO, plus a tiny 3-axis accelerometer with wake-on-motion and interrupt, to the pendant |
 | `chg-0f3bf977` | hardware | faculty-perception | 1 | 1 | Add a hardware-backed identity and connection-attestation path to the pendant: each pendant ships with a per-device key in a secure element, signs boo |
-| `chg-5a22c1c3` | hardware | faculty-perception | 1 | 1 | Add a low-power BLE companion (for example an nRF52840-class module) to the pendant, with a signed proximity/presence beacon and a small local event q |
 | `chg-83cdc20f` | hardware | faculty-perception | 1 | 1 | Add a dual-chip USB diagnostic mode: when the Mac sees both configured serial paths, it sends a generated-tone challenge to the ESP32 audio bridge and |
-| `chg-f5d3b820` | hardware | mac-planner | 1 | 1 | Replace the desk-bound nRF9160 DK prototype with a jewelry-sized cellular/BLE pendant built around an nRF9161-class modem/application module plus a lo |
-| `chg-258cbe5e` | hardware | mac-planner | 1 | 1 | Build the wearable revision around the nRF9160 with an ultra-low-power 6-axis IMU on the unused I2C bus, a vibration/LRA haptic driver, and a real mic |
-| `chg-9914b3fc` | hardware | mac-planner | 1 | 1 | For the wearable revision, add a small always-on audio/transport companion (for example an nRF5340-class low-power MCU with PDM/I2S and a ring-buffere |
-| `chg-27011ab4` | hardware | mac-planner | 1 | 1 | Replace the prototype audio chain with a native 24-kHz capture/playback design: a wearable-grade MCU with DSP headroom (nRF5340-class or equivalent),  |
-| `chg-8b813226` | hardware | mac-planner | 1 | 1 | For the wearable revision, split modem and audio duties instead of pushing both Opus directions through the nRF9160: use an nRF5340 audio MCU (or equi |
-| `chg-c2a4541c` | hardware | mac-planner | 1 | 1 | Add a dedicated, physically recessed privacy-shutter button to the pendant, backed by a hardware-latched privacy state rather than a model-interpreted |
-| `chg-a2fd207f` | hardware | mac-planner | 1 | 1 | Replace the prototype's single-button interaction with a dedicated, textured “mark” button (or a distinct double-click gesture) and add a tiny confirm |
-| `chg-9ddd89ae` | hardware | mac-planner | 1 | 1 | Replace the prototype nRF9160 DK audio path with a production pendant audio front end that can capture 24 kHz (or 32 kHz) wideband I2S and provide a h |
-| `chg-41c62a77` | hardware | mac-planner | 1 | 1 | Replace the prototype audio front end with a production 24 kHz-capable path: a low-power digital microphone/audio codec clocked for 24 kHz capture and |
-| `chg-2082b300` | hardware | mac-planner | 1 | 1 | Replace the prototype 15,625 Hz microphone path with a production digital microphone/codec and clocking that supports 24 kHz (or 32 kHz) capture, then |
-| `chg-858c3aa2` | hardware | mac-planner | 1 | 1 | Replace the single nRF9160 development-kit audio/transport bottleneck in the wearable design with a two-processor audio architecture: a low-power audi |
-| `chg-e9eef2e0` | hardware | mac-planner | 1 | 1 | Replace the prototype nRF9160 DK's single LED/button feedback with a product pendant that includes a small tri-color status LED or sunlight-readable e |
-| `chg-bbf12fc5` | hardware | mac-planner | 1 | 1 | Make the wearable’s audio path genuinely 24 kHz end to end: use a microphone/ADC and I2S clocking mode that captures 24 kHz (48 kHz wire clock with 24 |
-| `chg-c0585125` | hardware | mac-planner | 1 | 1 | For the wearable revision, separate radio/control from audio timing: retain the LTE-M modem but add a small audio companion (or an SoC with a hardware |
-| `chg-e86b93e3` | hardware | mac-planner | 1 | 1 | Revise the wearable prototype with a low-power haptic actuator and a fuel-gauge/charger monitor on I2C, while retaining the single button and LED as f |
-| `chg-5005c6de` | hardware | mac-planner | 1 | 1 | Replace the prototype's single LED-only notification path with a low-power coin/LRA haptic actuator plus a tri-color LED and a GPIO-capable button con |
-| `chg-a06ac3f9` | hardware | mac-planner | 1 | 1 | Replace the prototype nRF9160-plus-ESP32 audio split with a production pendant audio front end: a low-power 24/48 kHz codec or DSP with hardware sampl |
-| `chg-f837cabe` | hardware | mac-planner | 1 | 1 | Replace the prototype 15,625-Hz I2S microphone path with a production audio front end that captures 24 kHz (preferably 32 kHz I2S/PDM with hardware de |
-| `chg-b0dfe54e` | hardware | mac-planner | 1 | 1 | Add a small tri-color status LED (or low-power RGB indicator) and vibration motor to the pendant, driven by a signed privacy-state envelope from firmw |
-| `chg-6fc03b06` | hardware | mac-planner | 1 | 1 | Revise the wearable from the dev kit into a small carrier with a low-power fuel gauge (I2C), a vibration motor with a protected driver, and a second c |
 | `chg-1a6435d0` | hardware | mac-planner | 1 | 1 | Add a secure element and a physically isolated wipeable data partition to the wearable carrier, with per-device keys generated on first boot and a boo |
-| `chg-efd3d2aa` | hardware | mac-planner | 1 | 1 | Replace the one-button nRF9160 pendant enclosure with a two-control design: retain the conversation button and add a physically latching microphone-mu |
-| `chg-9514d6f4` | hardware | mac-planner | 1 | 1 | Add a small I2C secure element and a physical recovery contact/short-range pairing interface to the production pendant, using the currently free I2C b |
 | `chg-e5b12cfc` | hardware | mac-planner | 1 | 1 | Replace the prototype-only presence assumption with a production pendant security path: add a small secure element (for example, an ATECC608-class dev |
 | `chg-548ecb56` | hardware | mac-planner | 1 | 1 | Add a small secure element to the production pendant and make the button tap produce device-signed, nonce-bound authorization attestations; keep the p |
-| `chg-b9cf6e5d` | hardware | mac-terminal | 1 | 1 | Replace the prototype HUZZAH32 bridge's 31.25→44.1 kHz path with a production Bluetooth-audio bridge that runs one explicit 24→48 kHz conversion (or 2 |
-| `chg-ff0bb424` | hardware | mac-terminal | 1 | 1 | Give the production pendant a deliberate privacy-presence control: a capacitive skin/contact or proximity sensor plus a long-press gesture, backed by  |
-| `chg-75f70d1c` | hardware | mac-terminal | 1 | 1 | Add a low-power I2C fuel-gauge IC (for example MAX17048-class, with an interrupt line) to the pendant revision, then expose battery percentage/voltage |
-| `chg-8e1b542e` | hardware | mac-terminal | 1 | 1 | Add a tiny coin vibration motor or linear resonant actuator with a dedicated driver in the next pendant revision, plus a low-power haptic event protoc |
-| `chg-b917ddf7` | hardware | mac-terminal | 1 | 1 | Add a small encrypted nonvolatile event spool dedicated to handoff intents—an I2C/QSPI FRAM or protected flash ring buffer with monotonic sequence num |
-| `chg-0cce790c` | hardware | mac-terminal | 1 | 1 | Add a low-power capacitive skin-contact/proximity sensor and a hardware-backed identity element to the pendant, while retaining the existing single bu |
-| `chg-d6fb1d10` | hardware | mac-terminal | 1 | 1 | Add a low-power I²C fuel-gauge IC and a guarded battery-voltage divider to the pendant, with firmware exposing coarse battery percentage, charging/USB |
-| `chg-3bcd1173` | hardware | mac-terminal | 1 | 1 | Add a low-power wear/presence sensor and a hardware privacy state to the pendant: detect skin contact or lanyard removal, latch a local microphone/aud |
-| `chg-e8536bb6` | hardware | mac-terminal | 1 | 1 | Add a low-power coin vibration motor and a dedicated charge/alert controller to the pendant, with firmware patterns for relay-connected, request accep |
-| `chg-e79fa659` | hardware | mac-terminal | 1 | 1 | Replace the prototype's single-button/LED interaction with a production pendant interaction module: add BLE presence beacons (or UWB if reliable room- |
 | `chg-e69dd24f` | hardware | mac-terminal | 1 | 1 | Add a low-power, cryptographically rotating BLE presence beacon to the pendant, with a companion Mac receiver/daemon and a hardware-visible privacy-st |
-| `chg-d2467f21` | hardware | mac-terminal | 1 | 1 | Replace the prototype nRF9160 pendant's single-button/single-LED interaction with a two-control safety interface: retain the primary action button, ad |
-| `chg-ba857eff` | hardware | mac-terminal | 1 | 1 | Replace the prototype nRF9160 DK’s tiny/contended application flash arrangement with a production pendant carrier that adds 8–16 MB external QSPI NOR  |
-| `chg-d9ce5471` | hardware | mac-vision | 1 | 1 | Add a dedicated low-power vision coprocessor or embedded GPU to the pendant hardware for on-device image analysis to recognize Mac screen contents and |
-| `chg-004c4df2` | hardware | mac-vision | 1 | 1 | Add a hardware privacy indicator LED on the MacBook that lights up whenever screen recording or AI vision upload is active, ensuring physical awarenes |
-| `chg-68ed35b1` | hardware | mac-vision | 1 | 1 | Add a local vision processing hardware accelerator to the AI Pendant device to enable real-time image processing and vision model inference on the dev |
 | `chg-b572d133` | hardware | mac-vision | 1 | 1 | Add a dedicated secure hardware module on the MacBook Air for trusted UI and screen capture streams, isolating screen recording and accessibility data |
-| `chg-0f329b29` | hardware | mac-vision | 1 | 1 | Equip the MacBook and pendant with a local trusted execution environment (TEE) dedicated to secure pixel capture and UI event logging that allows mac- |
-| `chg-a7d0a30f` | hardware | mac-vision | 1 | 1 | Add a dedicated high-efficiency camera sensor integrated with the Mac, optimized for capturing screen pixel data and ambient context without interferi |
-| `chg-7068a82d` | hardware | mac-vision | 1 | 1 | Add a dedicated local vision processing accelerator chip on the pendant or Mac hardware to preprocess screenshots and UI images locally, extracting ac |
 | `chg-036f9962` | hardware | mac-vision | 1 | 1 | Add dedicated secure hardware validation and consent button on the pendant for irreversible actions triggered by mac-vision during computer control lo |
-| `chg-3309acb3` | hardware | mac-vision | 1 | 1 | Add a dedicated onboard neural vision processor in the MacBook hardware specifically optimized for real-time UI context analysis and gesture recogniti |
-| `chg-25084a27` | hardware | mac-vision | 1 | 1 | Equip the pendant with enhanced local AI capabilities, including a dedicated vision processing chip and lower-latency RAM, to enable offline real-time |
-| `chg-46392d4d` | hardware | mac-vision | 1 | 1 | Upgrade the MacBook wearable pendant hardware to include a dedicated low-power edge TPU or neural engine optimized for real-time vision processing of  |
 | `chg-a451ef9c` | hardware | mac-vision | 1 | 1 | Add a privacy-preserving hardware module to the MacBook specifically designed to support secure, local UI event logging and replay for automation, wit |
-| `chg-ea8f6c08` | hardware | mac-vision | 1 | 1 | Equip the pendant device with a secure UI interaction companion chip that can perform local accessibility queries and provide token-gated UI context s |
 | `chg-f113e23c` | hardware | mac-vision | 1 | 1 | Add hardware support on the pendant for secure real-time UI snapshot streaming with privacy-preserving encryption and local preprocessing to reduce da |
 | `chg-fb697c3e` | hardware | mac-vision | 1 | 1 | Add a local hardware switch or button combo on the pendant to enable/disable mac-vision's live UI control loop with physical confirmation by the owner |
 | `chg-f49092ad` | hardware | mac-vision | 1 | 1 | Add a dedicated, secure, and user-consented hardware-level Screen Recording permission mechanism and UI action event receipt system in the Mac pendant |
-| `chg-336b23b8` | hardware | mac-vision | 1 | 1 | Add a low-power dedicated visual sensing chip in the pendant to capture simplified UI accessibility snapshot data locally, reducing need for full scre |
-| `chg-88f73c82` | hardware | mac-vision | 1 | 1 | Enhance the pendant hardware with a secondary confirmation button and haptic feedback to safely confirm mac-vision's high-impact UI actions locally wi |
-| `chg-b7bbd6c8` | hardware | mac-vision | 1 | 1 | Add a dedicated low-power vision co-processor on the pendant to locally preprocess Mac screen captures, run simple UI element recognition, and send st |
-| `chg-6604f04b` | hardware | mac-vision | 1 | 1 | Add a dedicated local AI vision co-processor or neural engine on the MacBook or pendant to offload computer vision tasks, reducing latency and privacy |
 | `chg-6933aed7` | hardware | mac-vision | 1 | 1 | Design and build a next-generation AI pendant with multi-modal input (touch, button, voice), local AI processing chip for inference, extended battery  |
-| `chg-e004b6d1` | hardware | mac-vision | 1 | 1 | Design a next-generation wearable AI pendant with enhanced CPU, memory, and native camera sensors with privacy-controlled local processing for rich co |
 | `chg-d906c4f6` | hardware | mac-vision | 1 | 1 | Upgrade MacBook and pendant hardware to allow zero-latency, encrypted, on-device pre-processing of pixel screenshots and accessibility trees, sending  |
-| `chg-5856805d` | hardware | mac-vision | 1 | 1 | Add a lightweight local camera on the Mac device focused on the screen to capture fullscreen video or images at adjustable frequencies, combined with  |
-| `chg-27c6b283` | hardware | mac-vision | 1 | 1 | Add a dedicated local vision co-processor and secure enclave on the MacBook for real-time UI snapshot processing and vision inference without sending  |
-| `chg-7e72285d` | hardware | mac-vision | 1 | 1 | Add a dedicated low-power secure coprocessor on the MacBook to handle vision input locally with privacy and security safeguards, enabling pixel-level  |
-| `chg-0176c23b` | hardware | mac-vision | 1 | 1 | Add a secondary low-power camera on the MacBook that can provide real-time, high-resolution screen capture or partial region capture for the mac-visio |
-| `chg-61ba81f2` | hardware | mac-vision | 1 | 1 | Add a dedicated, low-power image capture and preliminary vision processing unit inside the Mac pendant hardware for continuous UI screenshotting and p |
-| `chg-eb715e2a` | hardware | mac-vision | 1 | 1 | Add a dedicated MacBook accessory camera and sensor suite optimized for rapid, private, high fidelity UI state capture at the screen level without int |
 | `chg-e5336afb` | hardware | mac-vision | 1 | 1 | Add a dedicated secure hardware button or switch on the pendant specifically for the owner to instantaneously enable or disable the mac-vision compute |
-| `chg-6943edf3` | hardware | mac-vision | 1 | 1 | Add a high-resolution, low-latency camera and IR depth sensor module to the pendant to enable robust visual context capture for Mac-vision without rel |
-| `chg-c33161e3` | hardware | mac-vision | 1 | 1 | Add a dedicated hardware security LED on the AI Pendant Mac Local Agent device that lights up visibly whenever the screen recording or vision capture  |
-| `chg-49f555a3` | hardware | mac-vision | 1 | 1 | Add a dedicated hardware privacy LED on the AI Pendant Mac Local Agent device to visibly indicate when pixel-level screen capture is active. |
 | `chg-8691aeda` | hardware | mac-vision | 1 | 1 | Add a dedicated hardware security module and user interface indicator LED to the AI Pendant device to confirm when sensitive permissions like Accessib |
 | `chg-9f436879` | hardware | mac-vision | 1 | 1 | Add a dedicated hardware security module in the MacBook dedicated to managing Accessibility and Screen Recording permissions granularly and securely f |
-| `chg-35946ad0` | hardware | mac-vision | 1 | 1 | Add a hardware button or touch gesture on the pendant specifically dedicated to emergency stop/pause of ongoing mac-vision UI automation, with visual/ |
-| `chg-328501cb` | hardware | mac-vision | 1 | 1 | Add a dedicated secure co-processor in the MacBook hardware that captures, encrypts, and streams low-latency, high-resolution UI pixel data and access |
-| `chg-de3d4b0e` | hardware | mac-vision | 1 | 1 | Add a secure, user-approved screen capture and UI accessibility sharing feature embedded in the MacBook hardware and macOS kernel, with low-latency lo |
 | `chg-ae76fd33` | hardware | mac-vision | 1 | 1 | Add a dedicated secure hardware enclave on the Mac for trusted AI screen capture and UI input mediation. This enclave manages all screen recording per |
-| `chg-87305940` | hardware | mac-vision | 1 | 1 | Add a dedicated camera or sensor on the MacBook chassis or nearby to capture screen images for the mac-vision agent without relying on software screen |
-| `chg-5546fcd2` | hardware | mac-vision | 1 | 1 | Add a secure, dedicated vision co-processor and camera integration on the MacBook designed specifically for trusted local screenshot capture and real- |
-| `chg-79de44e5` | hardware | mac-vision | 1 | 1 | Add a dedicated secure enclave chip on the MacBook to store and manage vision upload consents, accessibility and screen recording authorization tokens |
-| `chg-477d3786` | hardware | mac-vision | 1 | 1 | Add a dedicated low-latency coprocessor to the MacBook hardware specifically for secure on-device AI vision processing and UI interaction synthesis. |
 | `chg-30f9968a` | hardware | mac-vision | 1 | 1 | Upgrade the pendant hardware to support local vision processing with low-power AI chips, enabling offline UI snapshotting and safe pixel capture to as |
-| `chg-ec89528a` | hardware | mac-vision | 1 | 1 | Add a local secure on-device vision processing chip and dedicated RAM in the MacBook pendant to enable fully offline and privacy-preserving pixel-base |
 | `chg-16eeff21` | hardware | mac-vision | 1 | 1 | Upgrade the pendant and MacBook integration hardware and firmware to enable secure, low-latency sharing of mac-vision's accessibility UI context snaps |
-| `chg-63086208` | hardware | mac-vision | 1 | 1 | Add a dedicated low-power AI co-processor inside the wearable pendant optimized for continuously running lightweight vision and voice models locally,  |
 | `chg-41849517` | hardware | mac-vision | 1 | 1 | Add a secure dedicated hardware encryption and sandbox module within the Mac pendant and MacBook bridge, specifically to support secure vision data up |
 | `chg-b920ce06` | hardware | mac-vision | 1 | 1 | Develop and integrate a hardware-backed secure consent token on the AI Pendant device, which the owner must physically press to authorize sensitive pe |
 | `chg-4899aa58` | hardware | mac-vision | 1 | 1 | Upgrade pendant hardware to include a secure, dedicated trust enclave chip to store user permissions and consents locally and enforce privacy policies |
-| `chg-96ebc4dc` | hardware | mac-vision | 1 | 1 | Design and build a new wearable pendant with enhanced capabilities: a dedicated camera for visual context capture, increased RAM and flash, multiple b |
-| `chg-ace65aba` | hardware | mac-vision | 1 | 1 | Add a dedicated low-power AI coprocessor to the MacBook Air for continuous vision processing and UI awareness without waking the main CPU. This coproc |
-| `chg-dbea5ecb` | hardware | mac-vision | 1 | 1 | Add a dedicated secure, privacy-preserving vision co-processor on the Mac or pendant to handle local screen capture and UI semantic analysis without n |
-| `chg-1dc97f75` | hardware | mac-vision | 1 | 1 | Add a custom secure co-processor on the pendant or bridge that can locally process UI screenshots and do lightweight image recognition and anonymizati |
-| `chg-bea54a6e` | hardware | mac-vision | 1 | 1 | Design and build a next-generation wearable pendant device with more RAM and CPU power, including a dedicated secure enclave for privacy-preserving lo |
 | `chg-4bf62241` | hardware | mac-vision | 1 | 1 | Add a dedicated physical button and LED indicator on the pendant to enable/disable mac-vision computerUse loop and vision consent states quickly and v |
-| `chg-1742246e` | hardware | mac-vision | 1 | 1 | Add a dedicated low-latency vision co-processor on the MacBook hardware to accelerate local UI screenshot analysis, element detection, and pixel manip |
 | `chg-6b116971` | hardware | mac-vision | 1 | 1 | Enhance MacBook integration with secure, low-latency screen capture and input control hardware hooks directly accessible by the AI system under strict |
 | `chg-27e07266` | hardware | mac-vision | 1 | 1 | Add a local privacy-preserving hardware module on the MacBook that intercepts and anonymizes screenshots and sensitive UI data before they leave the d |
-| `chg-af24c403` | hardware | mac-vision | 1 | 1 | Add a dedicated lightweight local vision processing co-processor on the MacBook or pendant to enable high-speed image recognition and screen understan |
-| `chg-0e755112` | hardware | mac-vision | 1 | 1 | Implement a low-power local vision processing chip on the pendant hardware to preprocess and classify UI elements visually in real time, enabling cont |
-| `chg-329ea34e` | hardware | mac-vision | 1 | 1 | Add a secure enclave coprocessor on the Mac to handle vision privacy and real-time UI capture locally, enabling pixel-level screen understanding witho |
-| `chg-0caebe46` | hardware | mac-vision | 1 | 1 | Add a dedicated secure coprocessor on the pendant to locally validate and veto autonomous UI actions proposed by the Mac vision loop before execution, |
-| `chg-b9575878` | hardware | mac-vision | 1 | 1 | Upgrade MacBook auxiliary camera and secure local storage to enable encrypted local screenshot capture, temporary caching, and on-device processing re |
-| `chg-08ed0c15` | hardware | mac-vision | 1 | 1 | Upgrade the MacBook's system to include a dedicated, isolated coprocessor for real-time visual processing and AI inference to offload pixel-level visi |
-| `chg-042ffb68` | hardware | mac-vision | 1 | 1 | Add a low-power, high-resolution front-facing camera and proximity sensor to the MacBook for continuous contextual environmental capture to assist AI  |
 | `chg-b4616392` | hardware | mac-vision | 1 | 1 | Upgrade the pendant and Mac hardware interface to support low-latency, high-fidelity streaming of UI pixel data and accessibility events with edge-bas |
-| `chg-2d7ff415` | hardware | mac-vision | 1 | 1 | Equip the pendant with a low-power vision co-processor or dedicated accelerator capable of pre-processing screen capture data, running lightweight per |
 | `chg-454790e8` | hardware | mac-vision | 1 | 1 | Upgrade the Mac pendant hardware with a dedicated secure module that enables encrypted, low-latency local processing of UI snapshots and vision data,  |
-| `chg-ec1337d3` | hardware | mac-vision | 1 | 1 | Add a dedicated secure co-processor module on the MacBook that handles all vision pixel processing and encryption locally before any data leaves the d |
-| `chg-46874fcc` | hardware | mac-vision | 1 | 1 | Add a dedicated secure coprocessor on the MacBook to handle screen capture, accessibility event logging, and replay for the AI pendant system out-of-b |
-| `chg-cb246cec` | hardware | mac-vision | 1 | 1 | Equip the MacBook Air or equivalent device with a low-latency, high-resolution dedicated camera designed and integrated for continuous screen capture  |
-| `chg-121fe874` | hardware | mac-vision | 1 | 1 | Add a dedicated secure enclave or TPM-like hardware module to the MacBook and wearable pendant for encrypted storage and processing of sensitive UI sn |
-| `chg-f516f036` | hardware | mac-vision | 1 | 1 | Add a dedicated low-latency vision coprocessor and secure screen capture hardware in the Mac or pendant to accelerate UI image processing and enable f |
-| `chg-9c89b362` | hardware | mac-vision | 1 | 1 | Add a local dedicated AI coprocessor in the MacBook hardware to run mac-vision's pixel-level computer use loop offline securely, avoiding any necessit |
-| `chg-fc0ea62a` | hardware | mac-vision | 1 | 1 | Add a dedicated hardware button or gesture sensor on the wearable pendant to allow the owner to instantly interrupt or pause all mac-vision computer a |
 | `chg-7de226f6` | hardware | mac-vision | 1 | 1 | Add dedicated local neural vision acceleration hardware on the Mac device or companion accessory to enable efficient, low-latency on-device vision pro |
-| `chg-02a05563` | hardware | mac-vision | 1 | 1 | Integrate a dedicated onboard AI vision co-processor into the pendant or MacBook to accelerate real-time UI scene analysis and pixel-level decision ma |
-| `chg-2ce0f0b4` | hardware | mac-vision | 1 | 1 | Enhance the wearable pendant hardware with low-power dedicated vision processing chip and secure enclave for privacy-preserving real-time UI interacti |
-| `chg-18c0a186` | hardware | mac-vision | 1 | 1 | Add a local secure enclave chip to the MacBook to handle sensitive screen recording and input automation securely with owner-overwatch and encrypted t |
-| `chg-2f102f61` | hardware | mac-vision | 1 | 1 | Equip the pendant with a dedicated local AI accelerator chip and secure UI snapshot redactor that preprocesses screen captures to anonymize sensitive  |
-| `chg-228db794` | hardware | mac-vision | 1 | 1 | Add a dedicated secure vision processing chip on the MacBook that can analyze screen pixels locally without sending raw screen data off the device, en |
 | `chg-b4d4a85d` | hardware | mac-vision | 1 | 1 | Add dedicated hardware-grade secure video capture with local encryption on the Mac to allow real-time pixel-level UI state streaming to mac-vision wit |
 | `chg-8e382968` | hardware | mac-vision | 1 | 1 | Add a dedicated hardware security module on the pendant to securely store user consent tokens and biometric confirmations for sensitive Mac control an |
 | `chg-295daf6f` | hardware | mac-vision | 1 | 1 | Add hardware-level secure input and screenshot control features to the pendant and Mac bridge chips, enabling mac-vision to run an effective and safe  |
 | `chg-00b90c1f` | hardware | mac-vision | 1 | 1 | Upgrade the Mac pendant and bridge firmware to support secure, low-latency screen capture and UI context feeds to the local AI vision model without in |
 | `chg-e96572fb` | hardware | mac-vision | 1 | 1 | Add a hardware signal line from the pendant's user button directly to the Mac Bridge to enable ultra-low-latency and secure detection of button hold w |
-| `chg-1d3241a4` | hardware | mac-vision | 1 | 1 | Add a specialized low-power coprocessor on the pendant or nearby device dedicated to fast local pixel vision inference and UI snapshot processing to o |
-| `chg-87eb53f8` | hardware | mac-vision | 1 | 1 | Add an integrated low-power AI vision co-processor on the wearable pendant capable of pre-processing and extracting semantic UI elements and user inte |
 | `chg-6129a54e` | hardware | mac-vision | 1 | 1 | Upgrade the pendant and Mac connectivity with a dedicated high-bandwidth, low-latency wireless link in addition to USB, enabling the Mac-vision agent  |
 | `chg-69e1c0cb` | hardware | mac-vision | 1 | 1 | Add a dedicated secure local hardware encryption module to the pendant to safeguard AI model context and action commands locally, enabling cryptograph |
-| `chg-b3aae8b7` | hardware | mac-vision | 1 | 1 | Integrate an on-pendant neural inference accelerator specialized for real-time vision processing to offload the Mac and reduce latency in UI understan |
-| `chg-c2948759` | hardware | mac-vision | 1 | 1 | Design and build a next-generation wearable pendant with expanded sensors including a small high-resolution camera, inertial measurement unit (IMU), a |
-| `chg-0a88a6af` | hardware | mac-vision | 1 | 1 | Add visual processing hardware accelerator on the pendant or Mac to speed up real-time computer vision tasks for the mac-vision agent, reducing latenc |
-| `chg-c60527d6` | hardware | mac-vision | 1 | 1 | Add a dedicated low-power vision coprocessor on the pendant to assist mac-vision by preprocessing UI screenshots for semantic element recognition and  |
-| `chg-bfed5d03` | hardware | mac-vision | 1 | 1 | Add a dedicated AI vision coprocessor to the pendant or Mac device to enable low-latency, private computer vision processing for mac-vision automation |
-| `chg-449b5b79` | hardware | relay-realtime | 1 | 1 | Add a low-power audio front end between the pendant microphone/speaker path and the nRF9160: an external I2S/PCM codec with DMA-backed ring buffers an |
 | `chg-30990de1` | hardware | relay-realtime | 1 | 1 | Make the pendant’s single button a locally handled, fail-safe global halt control when held for a configurable interval (for example, 2 seconds): firm |
-| `chg-d4c30cc4` | hardware | relay-realtime | 1 | 1 | Add a coin vibration motor with a low-side driver and expose three firmware patterns (acknowledged, needs-answer, completed/failed) to the relay task  |
-| `chg-8a2e6083` | hardware | relay-realtime | 1 | 1 | Add a tiny coin haptic motor (or linear resonant actuator), dedicated low-side driver, and a firmware notification queue to the pendant. Expose three  |
-| `chg-51f14c42` | hardware | relay-realtime | 1 | 1 | Add a low-power haptic actuator and a second input gesture (for example, a squeeze/side button) to the pendant, with firmware support for distinct pat |
-| `chg-354280dd` | hardware | relay-realtime | 1 | 1 | Add a tiny coin vibration motor with a low-side driver and a dedicated wake-capable GPIO to the nRF9160 pendant, plus firmware patterns for question-a |
-| `chg-13b6c566` | hardware | relay-realtime | 1 | 1 | Add a low-power coin vibration motor and a dedicated haptic driver to the nRF9160 pendant, with firmware patterns for capture accepted, task completed |
-| `chg-9d4d76dd` | hardware | relay-realtime | 1 | 1 | Add a simple capacitive/proximity wear sensor and a hardware microphone-mute indicator path to the pendant, with firmware publishing worn/removed tran |
-| `chg-0b7f2964` | hardware | relay-realtime | 1 | 1 | Add a low-power 3-axis accelerometer/proximity-orientation sensor and a small haptic actuator to the nRF9160 pendant, with firmware exposing signed wo |
-| `chg-17efa0dc` | hardware | relay-realtime | 1 | 1 | Add a tiny coin-cell haptic motor (with a dedicated low-side driver and firmware notification patterns) to the pendant, and expose a relay notificatio |
-| `chg-b075f233` | hardware | relay-realtime | 1 | 1 | Add a low-power haptic actuator and an audio-path interrupt line to the pendant, alongside the existing single button/LED. Firmware should expose shor |
-| `chg-815a9c88` | hardware | relay-realtime | 1 | 1 | Add a low-power vibration actuator and a capacitive touch strip to the pendant, with firmware events exposed to relay task leases: distinct short patt |
-| `chg-8350113d` | hardware | relay-realtime | 1 | 1 | Add a tiny coin vibration motor driven by a low-side transistor and a low-power 3-axis accelerometer with interrupt wake, while keeping the existing b |
-| `chg-64965f75` | hardware | relay-realtime | 1 | 1 | Add a low-power coin vibration motor and a second capacitive/tactile input zone (or a distinct double-click-capable button) to the pendant, with firmw |
-| `chg-876edf43` | hardware | relay-realtime | 1 | 1 | Add a tiny coin vibration motor with a low-side driver and a dedicated firmware GPIO to the pendant, plus a sealed tactile isolation mount. Define thr |
-| `chg-53ff66ba` | hardware | relay-realtime | 1 | 1 | Add a coin-ERM or LRA vibration motor with a dedicated low-side driver and local duty-cycle limiter to the nRF9160 pendant, exposing three short tacti |
-| `chg-f7a5fd17` | hardware | relay-realtime | 1 | 1 | Add a low-power coin ERM/LRA haptic actuator and a tiny driver to the pendant, with firmware patterns for listening, task accepted, task completed, ne |
 | `chg-7a573f7f` | hardware | relay-realtime | 1 | 1 | Add a coin-size low-power vibration actuator with a dedicated tactile acknowledgement pattern, plus a hardware microphone-disconnect switch whose stat |
-| `chg-a0b45d04` | hardware | relay-realtime | 1 | 1 | Add a low-power vibration motor and a simple haptic driver to the pendant, paired with a firmware notification queue. Define three short patterns (job |
-| `chg-6f9293e4` | hardware | relay-realtime | 1 | 1 | Add a low-power haptic actuator (coin ERM or LRA) and a dedicated local alert driver to the pendant, with firmware patterns for queued, completed, fai |
-| `chg-c448f600` | hardware | relay-realtime | 1 | 1 | Add a low-power vibration motor with a simple driver and expose three firmware patterns (urgent, acknowledged, queued-digest). Keep the existing one-b |
 | `chg-27df5f5f` | hardware | relay-realtime | 1 | 1 | Add a hardware secure element to the pendant and ESP32 bridge, with device-unique keys and signed challenge-response over both USB serial links. Bind  |
-| `chg-88f890ae` | hardware | relay-realtime | 1 | 1 | Add a low-power bone-conduction or open-ear earpiece path to the ESP32 audio bridge, with a hardware mute/arming switch and independent volume control |
 | `chg-b1b08a0c` | hardware | relay-realtime | 1 | 1 | On the pendant, add a low-power ‘task heartbeat’ LED pattern and a single-button status query: short press asks relay for the current job status and s |
-| `chg-94b73f84` | hardware | relay-realtime | 1 | 1 | Add a tiny low-power vibration motor and driver to the pendant, with firmware patterns for acknowledgement, urgent result, failure, and incoming compl |
-| `chg-f89937d7` | hardware | relay-realtime | 1 | 1 | Add a low-power coin vibration motor and a protected driver to the nRF9160 pendant, with firmware patterns for acknowledgement, private notification,  |
-| `chg-7f3b06cf` | hardware | relay-realtime | 1 | 1 | Add a low-power coin vibration motor and a single capacitive touch strip to the nRF9160 pendant enclosure, driven by a tiny local event queue. Use dis |
-| `chg-fa944afa` | hardware | relay-realtime | 1 | 1 | Add a low-power haptic actuator and a physical three-position privacy switch to the pendant, with firmware events for silent-alert, active-listening,  |
-| `chg-d6471ebd` | hardware | unified | 1 | 1 | Revise the wearable from the development kit to a low-power product board with a small haptic motor and a secure element connected on the currently un |
-| `chg-e12b884c` | hardware | unified | 1 | 1 | Replace the prototype's 15,625 Hz I2S microphone path with a production audio front end that can capture 48 kHz (or 32 kHz minimum if the acceptance t |
-| `chg-2b68f2b2` | hardware | unified | 1 | 1 | Add a low-power I2C fuel-gauge IC and a small vibration/alert actuator to the production pendant, with the firmware exposing battery percentage, estim |
-| `chg-9859ba5c` | hardware | unified | 1 | 1 | Revise the production pendant with a normally-open physical microphone privacy switch that removes microphone power or gates the I2S data line before  |
-| `chg-7b88f6e1` | hardware | unified | 1 | 1 | Replace the prototype nRF9160 + ESP32 classic SBC bridge audio chain with a product audio front end: a low-power 24 kHz-capable stereo codec/mic inter |
-| `chg-a298c142` | hardware | unified | 1 | 1 | For the wearable revision, replace the nRF9160-DK-style single-chip audio path with a modem-plus-audio architecture: a modem MCU for LTE-M and a dedic |
-| `chg-30e56c15` | hardware | unified | 1 | 1 | Move the wearable audio design from the nRF9160 DK prototype to a production board with a native 24 kHz (or 48 kHz decimated) digital microphone path, |
-| `chg-05970cfa` | hardware | unified | 1 | 1 | Replace the prototype pendant enclosure with a production board that adds a low-power haptic actuator on an I2C GPIO expander or dedicated driver, plu |
-| `chg-26a74c35` | hardware | unified | 1 | 1 | Replace the prototype’s single-button/LED-only interaction with a production pendant interaction module: a recessed, physically latched microphone/spe |
-| `chg-4eacc8aa` | hardware | unified | 1 | 1 | For the wearable revision, replace the DK's single 64 MHz nRF9160 audio workload with a small audio-capable companion (DSP/codec or higher-performance |
-| `chg-9f6fc3db` | hardware | unified | 1 | 1 | Replace the prototype HUZZAH32 SBC-only A2DP bridge with a production audio bridge that supports Bluetooth LE Audio/LC3 (or a wired USB-C digital-audi |
 | `chg-e7d7362b` | hardware | unified | 1 | 1 | Design the production pendant as a transport-agnostic audio endpoint with a BLE 5.x companion path to the owner’s phone, while retaining LTE-M for sta |
-| `chg-69136842` | hardware | unified | 1 | 1 | Add a normally-open, hardware-controlled microphone power/data disconnect and a bi-color privacy LED to the pendant audio front end. The disconnect is |
-| `chg-de6e02d5` | hardware | unified | 1 | 1 | Replace the prototype’s single LED-only feedback with a production pendant input/output package: a low-power coin haptic motor plus a distinct confirm |
 | `chg-18611886` | hardware | unified | 1 | 1 | Add a small secure element (for example, an I2C Ed25519/ECDSA device) to the production pendant and bind each pendant identity to a relay pairing reco |
-| `chg-0f348920` | hardware | unified | 1 | 1 | Add a low-power secure element to the production pendant, with a dedicated approval input path: generate and retain a non-exportable device key, sign  |
-| `chg-c04771f3` | hardware | unified | 1 | 1 | Add a low-power fuel-gauge IC (I²C, e.g. MAX17048-class) and a second RGB status indicator or haptic driver to the pendant, with firmware telemetry fi |
-| `chg-c0695796` | hardware | unified | 1 | 1 | Replace the HUZZAH32 SBC-only A2DP source in the production audio path with a BLE Audio-capable bridge (for example an nRF5340 Audio DK-class design o |
-| `chg-2e6c1ba7` | hardware | unified | 1 | 1 | Replace the prototype nRF9160 DK wearable I/O with a product pendant that adds a fuel-gauge IC over the currently unused I2C bus, a low-power haptic m |
-| `chg-db942c37` | hardware | unified | 1 | 1 | Revise the product pendant (not the current DK) to add a small ERM/LRA haptic actuator with a dedicated low-side driver and a fuel-gauge/charger telem |
-| `chg-2465f243` | hardware | unified | 1 | 1 | Add a low-power secure element with device-unique key and monotonic counter, plus a clearly tactile two-stage approval control (or force-sensitive lon |
-| `chg-6d024e56` | hardware | unified | 1 | 1 | Replace the prototype's split nRF9160-plus-ESP32 audio chain with a product audio front end: a low-power audio codec/DSP with native 24 kHz voice supp |
 | `chg-25a6b08c` | hardware | unified | 1 | 1 | Add a discrete secure element (for example an ATECC608-class device) on the currently unused I2C bus, provisioned at manufacture with a non-exportable |
-| `chg-9121b4a4` | hardware | unified | 1 | 1 | For the wearable revision, replace the development-kit audio chain with a dedicated low-power full-duplex audio codec and a cellular MCU/module with h |
-| `chg-75f35bf1` | hardware | unified | 1 | 1 | For the product revision, replace the prototype's 15,625 Hz I2S microphone/clock path with a microphone and audio front end that natively captures 24  |
-| `chg-10e51acf` | hardware | unified | 1 | 1 | Add a tiny low-power haptic actuator with a dedicated driver (or a piezo/buzzer fallback) to the production pendant, and define a local tactile status |
-| `chg-c4b19a28` | hardware | unified | 1 | 1 | On the product pendant, add a low-power haptic motor with a driver on the currently-unused I2C bus, plus a fuel-gauge IC on the same bus; retain the e |
-| `chg-e0bdacac` | hardware | unified | 1 | 1 | Replace the HUZZAH32 classic-Bluetooth audio bridge with a product bridge built around an nRF5340 Audio-class module (LC3/LE Audio, 24 kHz mono path)  |
-| `chg-eea4e179` | hardware | unified | 1 | 1 | Replace the prototype single-I2S-mic nRF9160/ESP32 audio arrangement with a production pendant audio front end: a low-power audio DSP or application S |
-| `chg-17e77c6b` | hardware | unified | 1 | 1 | Replace the prototype nRF9160 DK audio runtime with a production pendant architecture that gives audio its own compute headroom: an nRF5340-class appl |
-| `chg-4727f4c9` | hardware | unified | 1 | 1 | Add a small fixed-point audio codec/DSP (or use the existing ESP32 HUZZAH32 as a dedicated audio worker) between the nRF9160 and the speaker path. Kee |
-| `chg-1496c224` | hardware | unified | 1 | 1 | Add a low-power I2C fuel-gauge and a temperature-compensated RTC (with coin-cell or supercap backup) to the production pendant, exposing battery state |
-| `chg-73bc6419` | hardware | unified | 1 | 1 | Replace the current ESP32 A2DP-source-only bridge with a bidirectional local audio bridge: BLE LE Audio/ISO or USB Audio Class to the Mac/phone, with  |
 | `chg-0be7abfd` | hardware | unified | 1 | 1 | Design the production pendant with a hardware-backed device identity and tamper-evident capture path: a secure element for per-device keys and monoton |
-| `chg-ad1a9888` | hardware | unified | 1 | 1 | Replace the prototype's single nRF9160 audio workload with a production audio front end: add a low-power full-duplex 24 kHz audio codec/DSP on the exi |
-| `chg-a4d76cf6` | hardware | unified | 1 | 1 | Add a tiny ERM/LRA haptic actuator with a dedicated low-side driver and reserve one GPIO (or an I2C haptic driver) for four short patterns: recording, |
-| `chg-6d0c8e4e` | hardware | unified | 1 | 1 | Replace the nRF9160-DK prototype audio core in the product pendant with a two-domain design: retain a certified LTE-M/NB-IoT modem, but add a low-powe |
-| `chg-716270af` | hardware | unified | 1 | 1 | Add a tiny ERM/LRA haptic actuator with a dedicated low-side driver and one capacitive or side button to the pendant revision; expose a three-level ta |
-| `chg-8ce3df6b` | hardware | unified | 1 | 1 | Replace the single-microphone prototype with a production acoustic front end: a two- or three-microphone near-field array on the pendant, a dedicated  |
-| `chg-e9d5bfc0` | hardware | unified | 1 | 1 | Add a low-power vibration motor (or linear resonant actuator) with a dedicated driver and a second capacitive/gesture input in the production pendant, |
-| `chg-67b4798e` | hardware | unified | 1 | 1 | Add a dedicated wear-presence sensor to the production pendant (skin-contact capacitive electrode or optical/IR proximity sensor), with a tamper/stale |
-| `chg-f3263970` | hardware | unified | 1 | 1 | Replace the prototype ESP32 HUZZAH32 Bluetooth bridge's fixed, RAM-starved audio path with a production bridge module that has a hardware audio clock  |
-| `chg-917dbed3` | hardware | unified | 1 | 1 | Replace the prototype HUZZAH32 ESP32-classic bridge with an ESP32-WROVER-class Bluetooth Classic module (external PSRAM, at least 4 MB) and add a smal |
-| `chg-41a7ec62` | hardware | unified | 1 | 1 | Replace the prototype's ESP32 classic-A2DP bridge with a low-power LE Audio companion (nRF5340 Audio DK-class design or production equivalent) connect |
-| `chg-288bb014` | hardware | unified | 1 | 1 | Design the production pendant with a small haptic actuator and a two-zone capacitive touch surface (or a second sealed tactile control), alongside the |
-| `chg-3f28d416` | hardware | unified | 1 | 1 | For the production pendant, add a low-power 24 kHz-capable mono audio codec/ADC-DAC on the existing audio bus (or replace the current microphone/playb |
-| `chg-4479e894` | hardware | unified | 1 | 1 | Add a low-power bone-conduction or near-ear private-output transducer to the production pendant, with an independent amplifier, hard local mute, and a |
-| `chg-670f9387` | hardware | unified | 1 | 1 | Replace the prototype nRF9160-DK audio front end for the product with a low-power application MCU/DSP plus an external 24 kHz-capable audio codec (or  |
-| `chg-1c5fb59c` | hardware | unified | 1 | 1 | Replace the prototype's 15,625 Hz I2S microphone plus ESP32 bridge arrangement with a product audio front end that natively captures 24 kHz (or 32 kHz |
-| `chg-f3d9d6a8` | hardware | unified | 1 | 1 | Use the existing ESP32 HUZZAH32 bridge as a dedicated audio coprocessor: move Opus decode and 24 kHz→31.25 kHz resampling off the nRF9160 application  |
-| `chg-46e763fb` | hardware | unified | 1 | 1 | Replace the prototype nRF9160-DK-plus-ESP32 audio arrangement in the product design with an LTE-M/NB-IoT module paired to an audio-capable MCU/codec t |
-| `chg-4892d4e3` | hardware | unified | 1 | 1 | For the production pendant, replace the prototype nRF9160-DK audio arrangement with a cellular/audio architecture that has independent DSP headroom an |
 | `chg-1360664a` | hardware | unified | 1 | 1 | Add a secure element to the production pendant and bridge, with a device-unique non-exportable key, monotonic counter, and signed attestation for conv |
-| `chg-8213a18f` | hardware | unified | 1 | 1 | Replace the prototype HUZZAH32 A2DP/SBC bridge with a production Bluetooth LE Audio companion (LC3, mono 24 kHz) and give the pendant a purpose-built  |
 | `chg-424ec206` | hardware | unified | 1 | 1 | Add a secure element with monotonic counters and a tamper-evident button event path to the production pendant. The secure element should mint and revo |
-| `chg-dc441e67` | hardware | unified | 1 | 1 | For the production pendant, replace the nRF9160-DK prototype's single-SoC audio arrangement with a modem plus dedicated low-power audio front-end (I2S |
-| `chg-9f246f87` | hardware | unified | 1 | 1 | For the production pendant, replace the prototype nRF9160-DK audio arrangement with a codec/DSP path that natively captures and plays 24 kHz mono (or  |
-| `chg-b4f75df5` | hardware | unified | 1 | 1 | Replace the current ESP32 HUZZAH32 SBC-only A2DP source with a production companion that supports Bluetooth LE Audio (LC3) and a hardware-clocked 24 k |
-| `chg-400ecb1a` | hardware | unified | 1 | 1 | For the product revision, replace the HUZZAH32 Classic-Bluetooth A2DP bridge plus nRF9160 audio burden with a dedicated low-power audio companion (nRF |
-| `chg-5736bf86` | hardware | unified | 1 | 1 | Add a two-microphone near-field array and a dedicated vibration/bone-conduction output transducer to the product pendant, with a small always-on audio |
-| `chg-8cc507c9` | hardware | unified | 1 | 1 | Add a low-power wearer/output-presence subsystem to the product design: a capacitive skin-contact or strap sensor plus a small IMU on the pendant, and |
-| `chg-98ab4382` | hardware | unified | 1 | 1 | Replace the nRF9160 DK + ESP32 audio prototype for the product audio path with a cellular SoC/audio design that has a dedicated 24 kHz-capable I2S cod |
-| `chg-2cafe326` | hardware | unified | 1 | 1 | Add a sealed low-power haptic actuator and a small ambient-light/proximity sensor to the production pendant, with a dedicated hardware mute/status sta |
-| `chg-0b2506ef` | hardware | unified | 1 | 1 | Replace the prototype nRF9160 audio path for the product with a modem/SoC architecture that has a dedicated audio DSP (or second application core), a  |
-| `chg-e2e28bf5` | hardware | unified | 1 | 1 | Replace the prototype audio front end with a production split: a 24/48 kHz digital I2S microphone and low-power audio codec/DSP on the pendant/bridge, |
-| `chg-85dbab30` | hardware | unified | 1 | 1 | For the production pendant, split audio processing from LTE/control: retain the cellular MCU for modem and orchestration, add a low-power audio compan |
-| `chg-c88eb46c` | hardware | unified | 1 | 1 | Replace the ESP32 A2DP-only bridge with a dual-role USB-C audio bridge: USB Audio Class 2.0 full-duplex to the Mac, Bluetooth output retained as an op |
-| `chg-5a0ddd34` | hardware | unified | 1 | 1 | Add a low-power 6-axis IMU and a dedicated capacitive emergency strip to the wearable product, with a hardware debounced trigger path that can wake th |
-| `chg-9542da81` | hardware | unified | 1 | 1 | Add a low-power 6-axis IMU and a small haptic actuator to the product pendant, with a local privacy/removal state machine: detect wrist-off/body-off,  |
-| `chg-3111e104` | hardware | unified | 1 | 1 | Add a low-power haptic actuator and a second tactile control to the production pendant, with a local event vocabulary: short pulse for listening, doub |
-| `chg-e7f0bb3c` | hardware | unified | 1 | 1 | Add a low-power haptic actuator and a capacitive wear/contact sensor to the pendant, with firmware-owned patterns for transport truth, urgent alert, c |
-| `chg-f297e110` | hardware | unified | 1 | 1 | Add a low-power skin/proximity sensor and a hardware-gated audio path to the next pendant revision, with a simple worn/unworn state exposed to firmwar |
-| `chg-18d767ad` | hardware | unified | 1 | 1 | Replace the prototype pendant’s single-button/single-LED UI with a production interaction module: two tactile buttons plus a low-power haptic actuator |
-| `chg-e8b31ed5` | hardware | unified | 1 | 1 | Replace the prototype pendant’s single button/LED interaction with a production input-output module: a low-power haptic actuator, a capacitive or pres |
-| `chg-92c2ba92` | hardware | unified | 1 | 1 | Add a low-power 6-axis IMU and a capacitive touch/proximity electrode to the pendant, with an interrupt line exposed to the nRF9160. Define local gest |
-| `chg-253ab595` | hardware | unified | 1 | 1 | Replace the prototype’s single-button/LED control with two tactile buttons plus a small haptic motor and a fuel-gauge IC: one button remains conversat |
-| `chg-41fd962f` | hardware | unified | 1 | 1 | Replace the prototype pendant enclosure/electronics with a production wearable containing a low-power always-on DSP, dual microphones with beamforming |
-| `chg-a71b9024` | hardware | unified | 1 | 1 | Replace the single-button prototype interaction with a wearable input module containing a low-power 6-axis IMU plus a capacitive wear/contact sensor,  |
 | `chg-829a32a5` | hardware | unified | 1 | 1 | Add a small always-on companion board in the wearable enclosure with a real-time clock, inertial sensor, and secure nonvolatile event counter; have it |
-| `chg-1189745e` | hardware | unified | 1 | 1 | Replace the ESP32 A2DP bridge in the wearable product with a modern Bluetooth LE Audio-capable companion (LC3, bidirectional headset profile), retaini |
 | `chg-eae14546` | integration | browser-extension | 1 | 1 | Add a local-first evidence-bundle pipeline shared by the browser and Mac surfaces. It should accept a set of browser page captures and local files, no |
 | `chg-97d60b4f` | integration | browser-extension | 1 | 1 | Add a Cross-Source Reconciliation job type between browserBridge and the Mac agent. It accepts two source descriptors (authenticated tab extraction re |
 | `chg-e77b6355` | integration | browser-extension | 1 | 1 | Add a privacy-audit pipeline that runs as a durable, scoped manifest job: browser account adapters emit typed data-category/retention/export/delete ev |
@@ -5179,26 +4826,18 @@ in here.
 | `chg-ba81a7fb` | routines | mac-vision | 1 | 1 | Create a natural language enabled routine for the owner to request complex UI workflows on the Mac that the system breaks down into typed mac-run-acti |
 | `chg-2a582d48` | routines | mac-vision | 1 | 1 | Create scheduled health checks and maintenance routines for mac-vision’s computerUse loop including permission sanity checks, log pruning, and perform |
 | `chg-3b7d9718` | routines | mac-vision | 1 | 1 | Implement scheduled health checks and self-tests for mac-vision accessibility automation loop to detect UI changes, accessibility API breakages, or ri |
-| `chg-67952158` | routines | relay-realtime | 1 | 1 | Add a real scheduler: a Durable Object-backed job queue with delayed execution and recurring rules (cron-like). The relay can enqueue jobs, and a work |
-| `chg-9b4366c7` | routines | relay-realtime | 1 | 1 | Add a relay-owned durable work queue with retries and a receipt log, implemented as a Durable Object (or D1 + Durable Object alarms). The relay expose |
-| `chg-ae7e4af5` | routines | relay-realtime | 1 | 1 | Introduce a lightweight scheduler using Durable Object alarms or Cloudflare Cron to trigger queued jobs (summarize notes, send digests, retry failed u |
-| `chg-966eb894` | routines | relay-realtime | 1 | 1 | Introduce a scheduler layer (cron-like) with durable job definitions, per-job cadence, retry policy, quiet hours, and a wake/dispatch mechanism that c |
-| `chg-c9a62f5a` | routines | relay-realtime | 1 | 1 | Add a scheduling layer that supports delayed and recurring jobs for both the relay (via Durable Object alarms/Cron Triggers) and the Mac agent (via a  |
-| `chg-de0c7730` | routines | relay-realtime | 1 | 1 | Add a cross-surface durable job system with scheduling primitives (cron-like cadence and single-run alarms). Jobs can target Mac planner, browser harn |
 | `chg-62a00ae7` | routines | relay-realtime | 1 | 1 | Add a cross-surface durable job ledger with receipts. A submitted job gets a stable id, typed steps, and a receipt trail (status, timestamps, evidence |
-| `chg-d367cebe` | routines | relay-realtime | 1 | 1 | Add a scheduler capability (cron-like) that can trigger jobs and page watches at defined times or intervals, implemented via Cloudflare Cron Triggers  |
-| `chg-af532db8` | routines | relay-realtime | 1 | 1 | Add a scheduler layer (cron-like) with durable job definitions and a queue that can run tasks later, with retry and idempotency. Provide a relay-visib |
-| `chg-0b83ced8` | routines | relay-realtime | 1 | 1 | Build a real scheduler using Worker Cron triggers and/or Durable Object alarms. Support delayed execution and periodic checks, with clear ownership of |
-| `chg-fbae5ce9` | routines | relay-realtime | 1 | 1 | Add a scheduler primitive (cron triggers or durable alarms) to run watches/briefings at set times. The relay should only orchestrate and speak results |
-| `chg-b7b633c0` | routines | relay-realtime | 1 | 1 | Introduce a scheduler layer (cron triggers or durable object alarms) to run page watches and daily briefings, with quiet hours and backoff, then notif |
-| `chg-36336920` | routines | relay-realtime | 1 | 1 | Add a scheduler layer (cron triggers or durable object alarms) to support delayed and recurring jobs, with routing to mac-planner or server-side read- |
-| `chg-7775dd0f` | routines | relay-realtime | 1 | 1 | Add a scheduler capability to the stack (Cloudflare Cron + Durable Object alarms) to support delayed and recurring tasks like morning briefings, page  |
-| `chg-a22a2220` | routines | relay-realtime | 1 | 1 | Add a lightweight scheduler (cron/alarm) for periodic tasks like daily briefing, page-watch checks, and cleanup jobs, with clear receipts of what ran. |
 
 ## Implemented
 
 | id | layer | proposed by | agents | rounds | change |
 | --- | --- | --- | --- | --- | --- |
+| `cap-596ec5d7` | capability | browser-extension, mac-planner | 2 | 2 | “What am I looking at?” |
+| `cap-a3776f29` | capability | mac-planner, mac-terminal | 2 | 2 | “Why didn’t that happen?” |
+| `cap-db73a705` | capability | relay-realtime | 1 | 3 | What happened to the thing I asked you to do earlier? |
+| `cap-1c225ed3` | capability | relay-realtime | 1 | 2 | Route this to my Mac and tell me when it’s done. |
+| `cap-453b2214` | capability | unified | 1 | 2 | “Continue this on my Mac.” |
+| `chg-e14fff33` | browser-harness | browser-extension | 1 | 1 | Add a provenance-aware browser workbench: every extraction and field mutation gets a tabId, URL, timestamp, DOM locator, source snippet hash, action p |
 | `chg-5fd30665` | browser-harness | relay-realtime | 1 | 1 | Give the relay a server-side browsing path using Cloudflare Browser Run for public web tasks, with a policy to prefer server_browser_actions over rout |
 | `cap-d65785c8` | capability | browser-extension | 1 | 1 | “Read the relevant pages in my open browser tabs, compare the options, and give me a short brief with links and any deadlines.” |
 | `cap-9764ec65` | capability | browser-extension | 1 | 1 | “Research this topic across the public web, check the sources, and send me a cited answer later.” |
@@ -5210,6 +4849,14 @@ in here.
 | `cap-ea762950` | capability | browser-extension | 1 | 1 | “Watch this authenticated page and tell me when the status, price, or availability changes.” |
 | `cap-b15b17f9` | capability | browser-extension | 1 | 1 | Open this website, fill out the form with the information we discussed, and show me exactly what is ready before you submit it. |
 | `cap-cb69fbe6` | capability | browser-extension | 1 | 1 | Watch this logged-in page and tell me when the status changes, but don't click anything or send anything. |
+| `cap-bff5f829` | capability | browser-extension | 1 | 1 | Check my logged-in web accounts for anything urgent, summarize it, and draft (but do not send) any replies that need my attention. |
+| `cap-b875c138` | capability | browser-extension | 1 | 1 | Draft a form, email, or support request from information on this private webpage, fill it in, and show me exactly what will be submitted before I appr |
+| `cap-391cae82` | capability | browser-extension | 1 | 1 | When I ask about something on a logged-in site, have several agents inspect it in parallel, reconcile their findings, and give me an evidence-backed a |
+| `cap-e8f33de2` | capability | browser-extension | 1 | 1 | If I ask you to check something in Safari while my laptop is asleep or the browser is disconnected, remember the request, run it automatically when Sa |
+| `cap-6e3756e0` | capability | faculty-action | 1 | 1 | “If you get interrupted, pick up where you left off and finish this without doing anything twice.” |
+| `cap-240b6659` | capability | faculty-action | 1 | 1 | Undo the last thing you did, but only if it is still safe. |
+| `cap-4aab3adb` | capability | faculty-perception | 1 | 1 | “What happened while I was away?” |
+| `cap-4138e673` | capability | faculty-perception | 1 | 1 | Read the page I mean, and prove to me which tab you read before you summarize it. |
 | `cap-fb442a50` | capability | mac-planner | 1 | 1 | “Every morning, check my calendar, unread email, and today’s files, then give me a short spoken brief with the meetings that need preparation and a pr |
 | `cap-2a60c5ba` | capability | mac-planner | 1 | 1 | “Research this topic and leave me a concise source-linked briefing on my Mac, with an audio version I can play later.” |
 | `cap-c071fa0a` | capability | mac-planner | 1 | 1 | “Every morning, give me a concise briefing of today’s calendar, unread priority messages, weather, and the files I need for my first meeting; let me a |
@@ -5225,6 +4872,7 @@ in here.
 | `cap-a5a9a6a9` | capability | mac-planner | 1 | 1 | Turn my unread mail into a priority list and draft replies for the top three, but never send anything without showing me the drafts first. |
 | `cap-72735dd9` | capability | mac-planner | 1 | 1 | “After each meeting, prepare a follow-up workspace: open the meeting notes, create a draft summary file with attendees and action items, and show me t |
 | `cap-8648b1a9` | capability | mac-planner | 1 | 1 | “Once a week, clean up my Downloads: group files by type and project, flag duplicates and stale installers, and show me a review list before anything  |
+| `cap-51c2dc88` | capability | mac-planner | 1 | 1 | “Get me ready for my next meeting.” |
 | `cap-5dbbe6df` | capability | relay-realtime | 1 | 1 | “Summarize what I missed in my email today.” |
 | `cap-0e994cfb` | capability | relay-realtime | 1 | 1 | “Read my upcoming schedule for the day.” |
 | `cap-2d29628a` | capability | relay-realtime | 1 | 1 | “Save this idea for later.” |
@@ -5237,6 +4885,10 @@ in here.
 | `cap-64c3562b` | capability | relay-realtime | 1 | 1 | “When I get back to my desk, summarize what happened while I was away and queue anything urgent.” |
 | `cap-d5ef6ea9` | capability | relay-realtime | 1 | 1 | “Remind me every weekday at 5 to shut down and summarize what I did today.” |
 | `cap-c67d4f1e` | capability | relay-realtime | 1 | 1 | “I asked you to handle that on my Mac—what’s the status?” |
+| `cap-56f6a5f9` | capability | relay-realtime | 1 | 1 | When I say "keep an eye on this and tell me if it changes," watch the page and summarize meaningful changes for me. |
+| `cap-7c9d0bc2` | capability | relay-realtime | 1 | 1 | What can you do for me right now? |
+| `cap-9b374784` | capability | relay-realtime | 1 | 1 | “What exactly did you change across my Mac and browser in the last few minutes, and show me the source for each claim?” |
+| `cap-b908fff4` | capability | relay-realtime | 1 | 1 | Record a quick voice note from the pendant and turn it into a reminder with a title, time, and context. |
 | `chg-43804606` | dashboard-ux | browser-extension | 1 | 1 | Add a Browser Jobs view shared by web, menubar, and iOS: active/queued/completed jobs, per-site permission scope, source evidence, extracted result, p |
 | `chg-0aa257d0` | dashboard-ux | browser-extension | 1 | 1 | Add a unified Jobs inbox across web, menubar, and iOS showing running/blocked/completed browser and Mac jobs, compact evidence, sensitive-field redact |
 | `chg-56aa1998` | dashboard-ux | mac-planner | 1 | 1 | Add a unified Jobs and Approvals view shared by web, menubar, and iOS: each job shows purpose, sources accessed, files/apps touched, risk level, estim |
@@ -5267,12 +4919,14 @@ in here.
 | `chg-f527c3bc` | model-routing | relay-realtime | 1 | 1 | Default web reading and extraction to a server-side browser (Cloudflare Browser Run) via server_browser_actions when the task is purely web and does n |
 | `chg-5b887962` | routines | relay-realtime | 1 | 1 | Add a Worker-side scheduler using Cron Triggers and Durable Object alarms to run routines even when the Mac is asleep, with a simple queue that delega |
 | `chg-f79dcdb8` | routines | relay-realtime | 1 | 1 | Add a first-class scheduler/queue for delayed and recurring work in the relay, backed by Durable Objects (alarms) or Worker Cron. Provide a routine st |
+| `chg-0b83ced8` | routines | relay-realtime | 1 | 1 | Build a real scheduler using Worker Cron triggers and/or Durable Object alarms. Support delayed execution and periodic checks, with clear ownership of |
 | `chg-324de76f` | stack | relay-realtime | 1 | 1 | Align the stack spec and orchestrator tool registry for the realtime agent, and publish a single authoritative capability manifest (tools, endpoints,  |
 
 ## Rejected / duplicate
 
 | id | layer | proposed by | agents | rounds | change |
 | --- | --- | --- | --- | --- | --- |
+| `cap-8fc0ee3d` | capability | mac-terminal | 1 | 2 | “What am I looking at, and what should I do next?” |
 | `chg-bc35ae04` | browser-harness | browser-extension | 1 | 1 | Add a first-class browser session API: list tabs with stable tab IDs, select a tab explicitly, bootstrap navigation only after confirmation, capture a |
 | `chg-2fffc681` | browser-harness | browser-extension | 1 | 1 | Add a durable browser-task runner: bootstrap a tab via navigate, maintain task-scoped tab IDs, execute read/click/type/wait sequences with timeouts, c |
 | `chg-086a6904` | browser-harness | browser-extension | 1 | 1 | Replace generic browser action results with a typed, policy-enforcing runner: classify commands as read-only or mutating; enforce origin/path allowlis |
@@ -5281,9 +4935,38 @@ in here.
 | `cap-fc6643a7` | capability | browser-extension | 1 | 1 | “Every weekday morning, check my authenticated work portal for new high-priority items and tell me only what needs my attention.” |
 | `cap-daaf6d3e` | capability | browser-extension | 1 | 1 | Research this topic across my logged-in websites, compare the results, and send me a concise audio brief later. |
 | `cap-bc260bea` | capability | browser-extension | 1 | 1 | Every weekday morning, check my logged-in work dashboard, calendar, and inbox, then give me a short audio briefing with only what needs my attention. |
+| `cap-8c36c70a` | capability | browser-extension | 1 | 1 | Every weekday morning, check my logged-in calendar, task board, and travel reservations, then tell me the three things I need to know and prepare a su |
 | `cap-9a41624d` | capability | browser-extension | 1 | 1 | Watch this logged-in page for a meaningful change and tell me when it happens, with the before-and-after evidence. |
+| `cap-a624ca3e` | capability | browser-extension | 1 | 1 | Every morning, check my private calendar, travel reservations, and important account notifications in Safari, then give me a concise spoken briefing w |
 | `cap-c262d2f0` | capability | browser-extension | 1 | 1 | When I ask, find the exact information on a logged-in website—such as my latest bill, a delivery status, or an insurance claim—and read me the answer, |
+| `cap-a09b223f` | capability | browser-extension | 1 | 1 | Watch my authenticated order, appointment, and account pages for changes, and tell me only when a meaningful change happens—never pollute my daily bri |
 | `cap-31e2c2fa` | capability | browser-extension | 1 | 1 | Watch my logged-in websites (bank, bills, delivery, work portals) and tell me only when something important changes; read the details to me, but never |
+| `cap-0c8c5dfe` | capability | browser-extension | 1 | 1 | Watch the authenticated pages I choose, detect meaningful changes, and leave me a concise, sourced briefing with suggested next steps—without sending  |
+| `cap-7217b17c` | capability | browser-extension | 1 | 1 | Prepare a browser transaction for me: gather the relevant logged-in data, fill the form or draft the message, show me exactly what will change with be |
+| `cap-0d11cf82` | capability | browser-extension | 1 | 1 | Every weekday morning, check my authenticated work portal for new high-priority items and tell me only what needs my attention. |
+| `cap-df9ec55e` | capability | browser-extension | 1 | 1 | When I say 'handle this' about something I found in Safari, gather the needed details across my logged-in tabs, fill the reversible parts, and show me |
+| `cap-a8e02eeb` | capability | browser-extension | 1 | 1 | “I’m looking at this—read the important parts and tell me what I should do.” |
+| `cap-09a5c165` | capability | browser-extension | 1 | 1 | “What am I looking at?” (or press the pendant button while a Safari page is open) |
+| `cap-7a82364d` | capability | browser-extension | 1 | 1 | If my browser session is unavailable, reconnect it and continue the private-page job when Safari comes back; tell me what was completed, what is waiti |
+| `cap-8a486e65` | capability | browser-extension | 1 | 1 | Every morning, check my logged-in Gmail, GitHub, and calendar web accounts, tell me only what is urgent, and prepare replies or actions without sendin |
+| `cap-726852c3` | capability | browser-extension | 1 | 1 | “If Safari goes offline while you’re checking my logged-in pages, keep the task alive and tell me when it resumes—without doing any step twice.” |
+| `cap-20cb39a7` | capability | browser-extension | 1 | 1 | “If Safari is unavailable, remember the private-page task and resume it when my browser reconnects—tell me if anything changed, and never run the same |
+| `cap-95fd7942` | capability | browser-extension | 1 | 1 | When I say “what am I looking at?”, read the currently active Safari page, answer my question from that page aloud, and give me the exact section or l |
+| `cap-230d9f4f` | capability | browser-extension | 1 | 1 | “What am I looking at?” (while a private webpage is open) |
+| `cap-33593834` | capability | browser-extension | 1 | 1 | “Read the page I’m looking at and answer my question about it.” |
+| `cap-de36df90` | capability | browser-extension | 1 | 1 | “Compare the details across my open logged-in tabs and tell me if anything conflicts—dates, amounts, names, or deadlines—and show me the exact evidenc |
+| `cap-e5cb03b9` | capability | browser-extension | 1 | 1 | “What am I looking at? Give me the important parts, and let me ask follow-up questions by voice.” |
+| `cap-6cba0899` | capability | faculty-action | 1 | 1 | When I ask you to create something—like a reminder, note, or draft—from my pendant, make sure it appears exactly once even if the pendant, relay, and  |
+| `cap-7b652137` | capability | faculty-action | 1 | 1 | “If that failed, show me why and give me a safe way to retry it—without making me explain everything again.” |
+| `cap-e1adf6dd` | capability | faculty-judgement | 1 | 1 | “I’m back—catch me up on anything you did or anything that changed while I was away, and tell me the one thing I should do next.” |
+| `cap-a62bcec0` | capability | faculty-judgement | 1 | 1 | “I’m back—what happened while I was away?” |
+| `cap-d36e3eeb` | capability | faculty-judgement | 1 | 1 | “Give me one useful update, not five separate briefings—and if I miss it, catch me up without repeating what I already heard.” |
+| `cap-1a442bc7` | capability | faculty-judgement | 1 | 1 | When I ask “what did I miss?”, give me a short, chronological account of important things that happened since I last checked—my pendant conversations, |
+| `cap-7948aed4` | capability | faculty-judgement | 1 | 1 | “I was away—tell me only what changed while I was gone, and put the important things in order.” |
+| `cap-c731b38e` | capability | faculty-perception | 1 | 1 | “I was away or offline—what happened while I was gone, and what still needs my attention?” |
+| `cap-4652ef44` | capability | faculty-perception | 1 | 1 | “I was offline—tell me what happened while I was away, in order, and what still needs me.” |
+| `cap-81bc8f2d` | capability | faculty-perception | 1 | 1 | “When I come back online, tell me what I missed while I was away—and separate what definitely happened from what you only inferred.” |
+| `cap-b1a8f555` | capability | faculty-perception | 1 | 1 | “What changed while I was away, and what did we miss?” |
 | `cap-b4dfb9ea` | capability | mac-planner | 1 | 1 | “Clean up my Downloads every Friday: group files by project, rename obvious duplicates, and show me a review list before anything is deleted.” |
 | `cap-026858ec` | capability | mac-planner | 1 | 1 | “Find the best flight options for next Thursday, compare total price and duration, and leave me a shortlist; do not book.” |
 | `cap-2fc364ed` | capability | mac-planner | 1 | 1 | “Give me a workday brief at 8:30, and let me play it from the pendant when I’m ready.” |
@@ -5300,6 +4983,9 @@ in here.
 | `cap-e1ee3b1d` | capability | mac-planner | 1 | 1 | Before each meeting, prepare a two-minute brief from the invite, recent mail, and relevant files; afterward, draft the follow-up and put it in my draf |
 | `cap-1e4c774f` | capability | mac-planner | 1 | 1 | While I sleep, monitor my authenticated browser sources and Mac work queue, then give me a concise morning brief on the pendant with links, changes, a |
 | `cap-e9d24899` | capability | mac-planner | 1 | 1 | Handle this while I'm away, and have the result waiting for me when I get back. |
+| `cap-dd772885` | capability | mac-planner | 1 | 1 | "Continue that web task when my browser comes back, without repeating anything or losing where you got to." |
+| `cap-75f89b3d` | capability | mac-terminal | 1 | 1 | “What am I looking at right now—and what’s the one thing I should notice?” |
+| `cap-51be54bf` | capability | mac-terminal | 1 | 1 | “Press the pendant button and read me what I’m looking at.” |
 | `cap-7e779dac` | capability | relay-realtime | 1 | 1 | "Summarize this webpage" or "Check the price on this product" |
 | `cap-2a78a3d7` | capability | relay-realtime | 1 | 1 | “Check the weather and read the highlights to me.” |
 | `cap-6bbef5ec` | capability | relay-realtime | 1 | 1 | “Read me the top three things I should care about right now.” |
@@ -5309,13 +4995,314 @@ in here.
 | `cap-e2d21e8e` | capability | relay-realtime | 1 | 1 | “Check my inbox and tell me what needs attention, but don’t send anything.” |
 | `cap-e157b2ab` | capability | relay-realtime | 1 | 1 | “Keep an eye on this website and let me know when anything important changes.” |
 | `cap-bf4fc79f` | capability | relay-realtime | 1 | 1 | “Give me a quick overnight briefing.” |
+| `cap-daf3803b` | capability | relay-realtime | 1 | 1 | “Prep me for my next meeting.” Then, wherever I am, tell me who it is with, the relevant history and open decisions from my Mac, and any authenticated |
+| `cap-b9911b33` | capability | relay-realtime | 1 | 1 | “What is on my Mac right now?” or “Read the page I left open and tell me the important parts.” |
+| `cap-3a72e414` | capability | relay-realtime | 1 | 1 | “What am I looking at on my computer right now, and what are the two most important things on it?” |
+| `cap-5b47ba80` | capability | relay-realtime | 1 | 1 | Get me ready for my next meeting. |
 | `chg-99e3117a` | context | relay-realtime | 1 | 1 | Introduce a typed, minimal context service for the relay: given an utterance and a desired outcome (status query, dictation, mac task), return only re |
 | `chg-30c6ee4e` | dashboard-ux | browser-extension | 1 | 1 | Add a Jobs inbox shared by web, menubar, and iOS: each job shows status, source links, last update, evidence snippets, sensitivity, proposed actions,  |
 | `chg-6c8e6a4f` | dashboard-ux | browser-extension | 1 | 1 | Create a unified task timeline showing source site/origin, extracted facts, pending approval cards, exact submit payload, model used, and retention/de |
 | `chg-b453effa` | dashboard-ux | mac-planner | 1 | 1 | Add a unified Jobs inbox shared by web, menubar, and iOS: queued/running/completed/failed jobs, source timestamps, concise result, audio-play button,  |
 | `chg-a649e91c` | dashboard-ux | mac-planner | 1 | 1 | Ship a unified Jobs inbox across web, menubar, and iOS showing queued/running/completed/failed work, source account, evidence links, data sensitivity, |
 | `chg-106220f4` | dashboard-ux | mac-planner | 1 | 1 | Add a unified job inbox showing queued/running/paused/completed work across relay, Mac, and browser. Each job displays source, progress, exact effects |
+| `chg-cafea71e` | firmware | mac-vision | 1 | 1 | Add a dedicated onboard UI verification coprocessor on the pendant that can independently verify computer-generated UI actions before they occur by an |
+| `chg-9d72d763` | firmware | mac-vision | 1 | 1 | Add local encrypted image buffer and real-time vision accelerator coprocessor on the pendant to allow offloading screen pixel analysis with zero cloud |
+| `chg-720c8c8e` | firmware | mac-vision | 1 | 1 | Add hardware-accelerated local AI vision processing coprocessor to the MacBook device to enable always-on safe UI snapshot analysis without performanc |
 | `skill-ba1d5d1a` | firmware | mac-vision | 1 | 1 | computer_vision.screenshot |
+| `chg-075021ae` | hardware | browser-extension | 1 | 1 | Design the production pendant with a low-power ERM/LRA haptic actuator and a dedicated wake-capable haptic driver, while retaining the single button a |
+| `chg-0169aee1` | hardware | browser-extension | 1 | 1 | Ship a real 24-kHz superwideband audio path as one negotiated end-to-end mode rather than only changing the relay sample-rate label: replace the fixed |
+| `chg-4c19992b` | hardware | browser-extension | 1 | 1 | Add a tiny coin vibration motor and a low-power notification controller to the pendant, with a single reserved haptic pattern for 'private browser tas |
+| `chg-3617a73f` | hardware | browser-extension | 1 | 1 | Add a low-power haptic actuator and driver to the production pendant, with firmware primitives for distinct short patterns (new private-browser item,  |
+| `chg-92974e85` | hardware | faculty-action | 1 | 1 | Design the production pendant with a small haptic actuator and a secure element alongside the button/LED. The relay issues a one-time transaction chal |
+| `chg-62715247` | hardware | faculty-action | 1 | 1 | Add a low-power coin vibration motor (or piezo haptic actuator) with a dedicated GPIO driver and a simple three-pattern status vocabulary: short pulse |
+| `chg-01338908` | hardware | faculty-action | 1 | 1 | For the product pendant, add a low-power haptic actuator and a fuel-gauge IC with an interrupt line, while retaining the single button and LED. Expose |
+| `chg-233b6838` | hardware | faculty-action | 1 | 1 | Replace the prototype's single-button/single-LED interaction with a production pendant interaction module: retain the talk button, add a distinct guar |
+| `chg-b9a1d8a3` | hardware | faculty-action | 1 | 1 | Replace the provisional ESP32 classic-A2DP bridge with a BLE Audio-capable bridge (or a production codec module) whose transport and sink can preserve |
+| `chg-ddecfd72` | hardware | faculty-action | 1 | 1 | Add a secure authorization path to the pendant: a device-unique private key in protected storage (or a small secure element), monotonic anti-replay co |
+| `chg-3a03c3d6` | hardware | faculty-action | 1 | 1 | Evolve the pendant from a single-button/LED prototype into an action-confirmation interface: retain the conversation button, add a low-profile tactile |
+| `chg-a588a7c7` | hardware | faculty-action | 1 | 1 | Replace the prototype audio front end with a native 24 kHz-capable capture and playback clock domain: use a microphone/codec path whose actual sample  |
+| `chg-93872eb3` | hardware | faculty-action | 1 | 1 | Add a tiny bistable 3-color status indicator and a vibration motor to the wearable, driven by a safety-isolated local action-state controller. The rel |
+| `chg-82c44d37` | hardware | faculty-action | 1 | 1 | Add a low-power BLE central/peripheral presence channel to the pendant product, with a locally authenticated rolling token and a small nonvolatile pen |
+| `chg-359b70fa` | hardware | faculty-action | 1 | 1 | Add a low-power haptic actuator and a three-color status LED (or an RGB LED) to the next pendant revision, with a tiny event protocol from relay: acce |
+| `chg-431e96de` | hardware | faculty-action | 1 | 1 | Add a low-cost reference MEMS microphone and hardware timestamp line to the ESP32 headphone bridge, positioned near the headphone output (or provide a |
+| `chg-254a2441` | hardware | faculty-action | 1 | 1 | Add a tiny coin/LRA haptic actuator with a dedicated low-side driver and a protected, debounced action button to the pendant; expose three firmware pa |
+| `chg-a6b1dc15` | hardware | faculty-action | 1 | 1 | Replace the prototype nRF9160-only pendant interaction path with a production companion module that provides authenticated BLE plus UWB ranging to the |
+| `chg-950650a4` | hardware | faculty-action | 1 | 1 | Add a low-power tactile/haptic actuator and a secure element to the pendant, with firmware-managed patterns for countdown, success, failure, waiting-f |
+| `chg-5bb0969c` | hardware | faculty-judgement | 1 | 1 | Make the wearable product (not the current nRF9160 DK prototype) include a low-power haptic actuator, a two-color status LED, and a second physical bu |
+| `chg-ad240ba8` | hardware | faculty-judgement | 1 | 1 | Design the product pendant (not the provisional nRF9160 DK) with a low-power haptic actuator and a two-stage tactile control: short press acknowledges |
+| `chg-2c3fc9d6` | hardware | faculty-judgement | 1 | 1 | Design the wearable revision with (1) a low-power fuel-gauge IC on the currently unused I2C bus, (2) a small vibration motor with a dedicated driver,  |
+| `chg-4c5cba4f` | hardware | faculty-judgement | 1 | 1 | Add a real two-position microphone privacy switch that electrically gates the mic bias/input, plus a small vibration motor and driver on the currently |
+| `chg-023be44f` | hardware | faculty-judgement | 1 | 1 | Add a deliberate three-position hardware control (OBSERVE / PREPARE / ACT) with a tactile detent and unmistakable haptic/LED indication, plus a signed |
+| `chg-b8ad34f1` | hardware | faculty-judgement | 1 | 1 | Replace the prototype single-button development-kit interaction with a production pendant that has a physically latched microphone mute/privacy switch |
+| `chg-37bd005a` | hardware | faculty-judgement | 1 | 1 | Replace the provisional ESP32-class HUZZAH32 audio bridge for the product with a BLE Audio-capable bridge (nRF5340 Audio or equivalent) that accepts n |
+| `chg-400dd97c` | hardware | faculty-judgement | 1 | 1 | Replace the development pendant's single-button/LED interaction with a production interaction module: a low-power haptic actuator plus a capacitive th |
+| `chg-48fdb151` | hardware | faculty-judgement | 1 | 1 | Replace the prototype’s single-button interaction with a sealed, low-profile two-way tactile control: a three-position momentary rocker (left/neutral/ |
+| `chg-ef53e2d8` | hardware | faculty-judgement | 1 | 1 | Make 24 kHz superwideband a negotiated full-duplex product mode rather than a playback-only prototype: use a microphone/clock path that natively captu |
+| `chg-f15391f5` | hardware | faculty-judgement | 1 | 1 | Add a physically latched privacy control to the pendant: a two-position slider that electrically gates the microphone and drives a visible/tactile loc |
+| `chg-b8ac93b4` | hardware | faculty-judgement | 1 | 1 | Replace the prototype’s 15,625 Hz capture path plus 31,250 Hz bridge-clock resampling with a negotiated 24 kHz audio contract: a microphone/ADC clocke |
+| `chg-a0ce40e7` | hardware | faculty-judgement | 1 | 1 | Finish the 24 kHz superwideband path on the capture side instead of only decoding 24 kHz playback: choose a production microphone/codec and clock tree |
+| `chg-6b3b41eb` | hardware | faculty-judgement | 1 | 1 | Replace the prototype's 15,625-Hz I2S microphone/31,250-Hz playback clock arrangement with a clocked 24-kHz capture and 48-kHz playback path (or an au |
+| `chg-0a2be213` | hardware | faculty-judgement | 1 | 1 | For the product revision, replace the prototype nRF9160-plus-ESP32 audio chain with a wearable SoC/audio front end that can capture native 24 kHz mono |
+| `chg-36fbe301` | hardware | faculty-judgement | 1 | 1 | Add a fuel-gauge IC with a thermistor input (for example, a low-power I²C gauge appropriate to the final cell), expose percentage, voltage, charging s |
+| `chg-2a4c57a4` | hardware | faculty-judgement | 1 | 1 | Replace the DK-era single-core audio path with a product audio design: a 24/32 kHz-capable digital microphone and an audio-capable dual-core MCU (or d |
+| `chg-08bbf339` | hardware | faculty-judgement | 1 | 1 | Add a low-power LRA haptic actuator with a dedicated haptic driver on the currently unused I2C bus, plus a second physical acknowledge/cancel button ( |
+| `chg-6a90f0a1` | hardware | faculty-judgement | 1 | 1 | For the product revision, add a tiny coin/LRA haptic actuator with a dedicated low-side driver and expose a wake-capable second tactile input (or capa |
+| `chg-c1864358` | hardware | faculty-judgement | 1 | 1 | Add a physical privacy control to the product pendant: a latching microphone-power cutoff or hardware mute gate, a distinct haptic motor, and a two-co |
+| `chg-0fbafd1a` | hardware | faculty-judgement | 1 | 1 | Add a low-power IMU and privacy-preserving local presence/departure detector to the wearable, with optional BLE proximity to the owner's phone or a ho |
+| `chg-1f11ba2d` | hardware | faculty-judgement | 1 | 1 | Replace the development pendant's unmeasured USB/battery supply with a production power path exposing battery voltage/current over the already-free I2 |
+| `chg-4b65ec11` | hardware | faculty-judgement | 1 | 1 | Revise the pendant enclosure/PCB to add a coin-style low-power haptic actuator with a dedicated driver and a second input modality (a capacitive touch |
+| `chg-246a90b2` | hardware | faculty-judgement | 1 | 1 | Add a secure-attention path to the pendant: a dedicated double-press gesture sampled locally with debounce and long-press cancellation, a per-device s |
+| `chg-a8187b83` | hardware | faculty-judgement | 1 | 1 | Replace the prototype HUZZAH32 SBC-only A2DP bridge with a small BLE-Audio-capable bridge (nRF5340-class, with LC3/LE Audio and SBC fallback), and add |
+| `chg-85b5744f` | hardware | faculty-judgement | 1 | 1 | Build a production wearable audio bridge around an LE-Audio-capable nRF5340-class radio, with LC3/24 kHz mono support, mandatory SBC fallback for exis |
+| `chg-6aab63de` | hardware | faculty-judgement | 1 | 1 | Replace the prototype's single-button/single-LED interaction with a production pendant interaction module: a low-power coin haptic actuator with a ded |
+| `chg-f52778d3` | hardware | faculty-judgement | 1 | 1 | Replace the provisional single-button pendant input with a two-control interaction: retain the action button and add a physically latching microphone  |
+| `chg-fc4e2a50` | hardware | faculty-judgement | 1 | 1 | Add a discreet coaching I/O path: a dedicated capacitive side strip or two-stage button with a short-range haptic motor, plus firmware support for thr |
+| `chg-1543e22b` | hardware | faculty-judgement | 1 | 1 | Add a low-power coin haptic actuator with a dedicated GPIO/PWM driver and a physical long-press stop path that remains local to the pendant. Keep the  |
+| `chg-9efa2916` | hardware | faculty-judgement | 1 | 1 | Replace the prototype nRF9160-plus-ESP32 audio split with a production audio front end: an nRF5340-class dual-core application MCU (or equivalent DSP- |
+| `chg-91558bda` | hardware | faculty-judgement | 1 | 1 | Add a secure-element-backed authorization button to the production pendant: generate and hold a non-exportable device key, maintain a monotonic counte |
+| `chg-2e8ed42d` | hardware | faculty-judgement | 1 | 1 | Add a sealed low-power haptic actuator (prefer an LRA for crisp short patterns) with a dedicated driver and one interrupt-capable acknowledgement butt |
+| `chg-c5608baf` | hardware | faculty-judgement | 1 | 1 | Replace the provisional single-button pendant input with two tactile controls: a primary press/hold for talk and a small acknowledge/re-entry button ( |
+| `chg-7c331a17` | hardware | faculty-judgement | 1 | 1 | Add a real low-power audio front end to the product pendant: a 24 kHz-capable digital microphone/codec with shared clock, hardware acoustic-echo cance |
+| `chg-0d74be37` | hardware | faculty-judgement | 1 | 1 | Replace the prototype audio front end with a production capture chain whose microphone/codec natively samples at 24 kHz or 32 kHz (with a documented a |
+| `chg-176d108a` | hardware | faculty-judgement | 1 | 1 | Add a sealed low-power haptic actuator and driver to the production pendant, with three firmware-owned patterns (notice, urgent, critical), a physical |
+| `chg-377e6af1` | hardware | faculty-judgement | 1 | 1 | Replace the prototype's single-button/LED interaction with a small haptic actuator and low-power IMU on the free I2C bus, plus a fuel-gauge IC. Define |
+| `chg-beac5795` | hardware | faculty-judgement | 1 | 1 | Revise the pendant from the prototype nRF9160 DK into a wearable revision with a low-power ERM/LRA haptic actuator, a proper coulomb-counting fuel gau |
+| `chg-0c30f5fb` | hardware | faculty-judgement | 1 | 1 | Replace the provisional nRF9160-DK audio path with a product audio front end: a low-power stereo/mono 24 kHz-capable ADC/DAC (or dedicated audio DSP)  |
+| `chg-2453d45d` | hardware | faculty-judgement | 1 | 1 | Design the wearable around a privacy-capable output path instead of the current open playback assumption: add a near-ear bone-conduction or sealed dir |
+| `chg-e2d7ab05` | hardware | faculty-judgement | 1 | 1 | Replace the prototype’s single multifunction button/LED with a dedicated, physically latched microphone mute switch plus a high-visibility two-color p |
+| `chg-a6822265` | hardware | faculty-judgement | 1 | 1 | Replace the prototype’s 15,625 Hz I2S microphone/clock path with a production audio front end that captures 24 kHz (preferably a 48 kHz digital MEMS m |
+| `chg-1456b8a1` | hardware | faculty-judgement | 1 | 1 | Add a local departure-signal subsystem to the wearable: GNSS-capable location sampling with geofence evaluation and a low-power motion trigger, keepin |
+| `chg-2be6f2f4` | hardware | faculty-judgement | 1 | 1 | Replace the prototype's single LED-only notification path with a production pendant notification module: a low-power LRA haptic actuator behind the en |
+| `chg-686ca9eb` | hardware | faculty-judgement | 1 | 1 | Replace the prototype pendant’s single-button/single-LED interaction with a physical two-position microphone privacy switch that electrically disconne |
+| `chg-dad33d86` | hardware | faculty-judgement | 1 | 1 | Replace the prototype's fixed 15,625 Hz I2S microphone clock path with a clocked 24 kHz-capable digital MEMS microphone (or add an ASRC front end) and |
+| `chg-cee88693` | hardware | faculty-judgement | 1 | 1 | Add a coin vibration motor (or low-power LRA with driver), a second tactile button, and a physical microphone-mute/privacy slider to the pendant revis |
+| `chg-d463d520` | hardware | faculty-judgement | 1 | 1 | For the product revision (not the current nRF9160 DK prototype), add a matched dual-microphone pair with physical windscreen/acoustic isolation and a  |
+| `chg-1bc21c4b` | hardware | faculty-judgement | 1 | 1 | Add a low-power haptic actuator with a dedicated interrupt-capable driver and a small nonvolatile attention latch (plus a physical acknowledge/stop in |
+| `chg-3b6cb4e2` | hardware | faculty-judgement | 1 | 1 | Add a low-power LRA haptic actuator with a DRV2605-class I2C driver, plus a battery fuel gauge and (optionally) an ambient-light/proximity sensor. Res |
+| `chg-e13db47f` | hardware | faculty-judgement | 1 | 1 | Add a low-power haptic actuator and a 6-axis IMU to the pendant, with a tiny local acknowledgement state machine: distinct vibration patterns for ordi |
+| `chg-6e747d3e` | hardware | faculty-judgement | 1 | 1 | Revise the pendant enclosure to include an owner-triggered camera module with a physical shutter, a bright capture indicator, a dedicated capture/hold |
+| `chg-6d5c63ba` | hardware | faculty-judgement | 1 | 1 | Add a physically latching microphone-disconnect switch to the pendant audio path, with a high-visibility mechanical indicator and a separate low-power |
+| `chg-59a964bd` | hardware | faculty-judgement | 1 | 1 | Replace the prototype's single-button/single-LED control with a wearable control cluster: a distinct mark button plus a recessed stop/privacy button,  |
+| `chg-5bd8b607` | hardware | faculty-judgement | 1 | 1 | Add a small coin vibration motor and a second capacitive or tactile input to the wearable, with a dedicated low-power haptic driver and an explicit si |
+| `chg-979d16f0` | hardware | faculty-judgement | 1 | 1 | Replace the prototype's single LED-only feedback with a small coin haptic motor driven by a spare GPIO/PWM channel, plus a real battery fuel-gauge IC  |
+| `chg-dbd1d07a` | hardware | faculty-judgement | 1 | 1 | Revise the pendant around a secure-element-backed proximity identity and a distinct emergency control: add a low-power BLE/NFC presence channel, a tam |
+| `chg-2c6ee71e` | hardware | faculty-judgement | 1 | 1 | Add a low-current vibration motor (with a transistor driver and flyback protection) to the pendant, expose a three-pattern haptic API, and reserve one |
+| `chg-790d21fc` | hardware | faculty-judgement | 1 | 1 | Add a low-power coin vibration motor with a dedicated driver and a second tactile input (or capacitive touch strip) to the pendant, and define a small |
+| `chg-a529ba0f` | hardware | faculty-judgement | 1 | 1 | Add a low-power wear/presence sensor to the pendant—capacitive skin contact or a dedicated clasp contact, backed by an accelerometer—and expose a sign |
+| `chg-2ac5d262` | hardware | faculty-judgement | 1 | 1 | Add a low-current coin vibration motor (or equivalent haptic actuator with a protected driver) to the pendant revision, exposed as a three-level inten |
+| `chg-a02f83f6` | hardware | faculty-judgement | 1 | 1 | Revise the wearable from the current single-button/single-LED Nordic development kit to include a low-power haptic actuator and an ambient-light/proxi |
+| `chg-e7c34138` | hardware | faculty-perception | 1 | 1 | For the wearable revision, separate modem and audio workloads: retain an LTE-M modem but add a low-power audio MCU/DSP with native 24 kHz capture/play |
+| `chg-46cf2817` | hardware | faculty-perception | 1 | 1 | Replace the prototype's 15.625 kHz I2S microphone path plus nRF9160-side 16 kHz Opus uplink with a low-power audio front end that can deliver native 2 |
+| `chg-f3856943` | hardware | faculty-perception | 1 | 1 | Replace the prototype nRF9160-DK audio path with a production two-processor audio design: retain the LTE-M modem, add a low-power audio MCU/DSP with n |
+| `chg-880494dd` | hardware | faculty-perception | 1 | 1 | Add a low-power haptic actuator and a small nonvolatile event queue (for example,  ferroelectric RAM or wear-leveled external flash) to the wearable p |
+| `chg-625a48ef` | hardware | faculty-perception | 1 | 1 | Add a small, low-power audio codec/ADC on the bridge's I2S path with a hardware 24 kHz-capable clock and DMA buffer, while retaining the nRF9160 modem |
+| `chg-3c388c99` | hardware | faculty-perception | 1 | 1 | Add a low-power authenticated proximity channel to the pendant: use the existing ESP32 bridge’s BLE capability, or add a small BLE beacon if the bridg |
+| `chg-2a08e6f2` | hardware | faculty-perception | 1 | 1 | Add a low-power RTC crystal and a tiny monotonic-event journal (FRAM or a reserved wear-leveled microSD journal) to the pendant, with a tamper-evident |
+| `chg-2e9f2fda` | hardware | faculty-perception | 1 | 1 | Replace the prototype nRF9160-DK + ESP32 audio chain for the product with a low-power audio front end that natively samples and plays 24 kHz (or 48 kH |
+| `chg-d3b95c8e` | hardware | faculty-perception | 1 | 1 | Replace the prototype's 15,625 Hz I2S capture plus 16 kHz Opus uplink with a clocked 24 kHz (or 48 kHz/2) microphone path and negotiated 24 kHz Opus f |
+| `chg-d4ebed25` | hardware | faculty-perception | 1 | 1 | Replace the prototype 15,625-Hz I2S microphone/clock path with a microphone and clocking design that natively captures 24 kHz (or higher with controll |
+| `chg-71daa39a` | hardware | faculty-perception | 1 | 1 | Replace the prototype’s single raw I2S microphone path with a production audio front end that includes a low-power always-on voice/activity detector ( |
+| `chg-06d5308d` | hardware | faculty-perception | 1 | 1 | Replace the prototype’s single-button/single-LED pendant audio module with a production enclosure that adds a low-power 6-axis IMU and capacitive skin |
+| `chg-efcb194d` | hardware | faculty-perception | 1 | 1 | Replace the prototype's single shared I2S path plus opaque ESP32 bridge buffering with a production audio front end containing timestamped DMA on both |
+| `chg-e706385c` | hardware | faculty-perception | 1 | 1 | Add a low-power ERM/LRA haptic actuator driven by a protected GPIO, plus a tiny 3-axis accelerometer with wake-on-motion and interrupt, to the pendant |
+| `chg-5a22c1c3` | hardware | faculty-perception | 1 | 1 | Add a low-power BLE companion (for example an nRF52840-class module) to the pendant, with a signed proximity/presence beacon and a small local event q |
+| `chg-f5d3b820` | hardware | mac-planner | 1 | 1 | Replace the desk-bound nRF9160 DK prototype with a jewelry-sized cellular/BLE pendant built around an nRF9161-class modem/application module plus a lo |
+| `chg-258cbe5e` | hardware | mac-planner | 1 | 1 | Build the wearable revision around the nRF9160 with an ultra-low-power 6-axis IMU on the unused I2C bus, a vibration/LRA haptic driver, and a real mic |
+| `chg-9914b3fc` | hardware | mac-planner | 1 | 1 | For the wearable revision, add a small always-on audio/transport companion (for example an nRF5340-class low-power MCU with PDM/I2S and a ring-buffere |
+| `chg-27011ab4` | hardware | mac-planner | 1 | 1 | Replace the prototype audio chain with a native 24-kHz capture/playback design: a wearable-grade MCU with DSP headroom (nRF5340-class or equivalent),  |
+| `chg-8b813226` | hardware | mac-planner | 1 | 1 | For the wearable revision, split modem and audio duties instead of pushing both Opus directions through the nRF9160: use an nRF5340 audio MCU (or equi |
+| `chg-c2a4541c` | hardware | mac-planner | 1 | 1 | Add a dedicated, physically recessed privacy-shutter button to the pendant, backed by a hardware-latched privacy state rather than a model-interpreted |
+| `chg-a2fd207f` | hardware | mac-planner | 1 | 1 | Replace the prototype's single-button interaction with a dedicated, textured “mark” button (or a distinct double-click gesture) and add a tiny confirm |
+| `chg-9ddd89ae` | hardware | mac-planner | 1 | 1 | Replace the prototype nRF9160 DK audio path with a production pendant audio front end that can capture 24 kHz (or 32 kHz) wideband I2S and provide a h |
+| `chg-41c62a77` | hardware | mac-planner | 1 | 1 | Replace the prototype audio front end with a production 24 kHz-capable path: a low-power digital microphone/audio codec clocked for 24 kHz capture and |
+| `chg-2082b300` | hardware | mac-planner | 1 | 1 | Replace the prototype 15,625 Hz microphone path with a production digital microphone/codec and clocking that supports 24 kHz (or 32 kHz) capture, then |
+| `chg-858c3aa2` | hardware | mac-planner | 1 | 1 | Replace the single nRF9160 development-kit audio/transport bottleneck in the wearable design with a two-processor audio architecture: a low-power audi |
+| `chg-e9eef2e0` | hardware | mac-planner | 1 | 1 | Replace the prototype nRF9160 DK's single LED/button feedback with a product pendant that includes a small tri-color status LED or sunlight-readable e |
+| `chg-bbf12fc5` | hardware | mac-planner | 1 | 1 | Make the wearable’s audio path genuinely 24 kHz end to end: use a microphone/ADC and I2S clocking mode that captures 24 kHz (48 kHz wire clock with 24 |
+| `chg-c0585125` | hardware | mac-planner | 1 | 1 | For the wearable revision, separate radio/control from audio timing: retain the LTE-M modem but add a small audio companion (or an SoC with a hardware |
+| `chg-e86b93e3` | hardware | mac-planner | 1 | 1 | Revise the wearable prototype with a low-power haptic actuator and a fuel-gauge/charger monitor on I2C, while retaining the single button and LED as f |
+| `chg-5005c6de` | hardware | mac-planner | 1 | 1 | Replace the prototype's single LED-only notification path with a low-power coin/LRA haptic actuator plus a tri-color LED and a GPIO-capable button con |
+| `chg-a06ac3f9` | hardware | mac-planner | 1 | 1 | Replace the prototype nRF9160-plus-ESP32 audio split with a production pendant audio front end: a low-power 24/48 kHz codec or DSP with hardware sampl |
+| `chg-f837cabe` | hardware | mac-planner | 1 | 1 | Replace the prototype 15,625-Hz I2S microphone path with a production audio front end that captures 24 kHz (preferably 32 kHz I2S/PDM with hardware de |
+| `chg-b0dfe54e` | hardware | mac-planner | 1 | 1 | Add a small tri-color status LED (or low-power RGB indicator) and vibration motor to the pendant, driven by a signed privacy-state envelope from firmw |
+| `chg-6fc03b06` | hardware | mac-planner | 1 | 1 | Revise the wearable from the dev kit into a small carrier with a low-power fuel gauge (I2C), a vibration motor with a protected driver, and a second c |
+| `chg-efd3d2aa` | hardware | mac-planner | 1 | 1 | Replace the one-button nRF9160 pendant enclosure with a two-control design: retain the conversation button and add a physically latching microphone-mu |
+| `chg-9514d6f4` | hardware | mac-planner | 1 | 1 | Add a small I2C secure element and a physical recovery contact/short-range pairing interface to the production pendant, using the currently free I2C b |
+| `chg-b9cf6e5d` | hardware | mac-terminal | 1 | 1 | Replace the prototype HUZZAH32 bridge's 31.25→44.1 kHz path with a production Bluetooth-audio bridge that runs one explicit 24→48 kHz conversion (or 2 |
+| `chg-ff0bb424` | hardware | mac-terminal | 1 | 1 | Give the production pendant a deliberate privacy-presence control: a capacitive skin/contact or proximity sensor plus a long-press gesture, backed by  |
+| `chg-75f70d1c` | hardware | mac-terminal | 1 | 1 | Add a low-power I2C fuel-gauge IC (for example MAX17048-class, with an interrupt line) to the pendant revision, then expose battery percentage/voltage |
+| `chg-8e1b542e` | hardware | mac-terminal | 1 | 1 | Add a tiny coin vibration motor or linear resonant actuator with a dedicated driver in the next pendant revision, plus a low-power haptic event protoc |
+| `chg-b917ddf7` | hardware | mac-terminal | 1 | 1 | Add a small encrypted nonvolatile event spool dedicated to handoff intents—an I2C/QSPI FRAM or protected flash ring buffer with monotonic sequence num |
+| `chg-0cce790c` | hardware | mac-terminal | 1 | 1 | Add a low-power capacitive skin-contact/proximity sensor and a hardware-backed identity element to the pendant, while retaining the existing single bu |
+| `chg-d6fb1d10` | hardware | mac-terminal | 1 | 1 | Add a low-power I²C fuel-gauge IC and a guarded battery-voltage divider to the pendant, with firmware exposing coarse battery percentage, charging/USB |
+| `chg-3bcd1173` | hardware | mac-terminal | 1 | 1 | Add a low-power wear/presence sensor and a hardware privacy state to the pendant: detect skin contact or lanyard removal, latch a local microphone/aud |
+| `chg-e8536bb6` | hardware | mac-terminal | 1 | 1 | Add a low-power coin vibration motor and a dedicated charge/alert controller to the pendant, with firmware patterns for relay-connected, request accep |
+| `chg-e79fa659` | hardware | mac-terminal | 1 | 1 | Replace the prototype's single-button/LED interaction with a production pendant interaction module: add BLE presence beacons (or UWB if reliable room- |
+| `chg-d2467f21` | hardware | mac-terminal | 1 | 1 | Replace the prototype nRF9160 pendant's single-button/single-LED interaction with a two-control safety interface: retain the primary action button, ad |
+| `chg-ba857eff` | hardware | mac-terminal | 1 | 1 | Replace the prototype nRF9160 DK’s tiny/contended application flash arrangement with a production pendant carrier that adds 8–16 MB external QSPI NOR  |
+| `chg-d9ce5471` | hardware | mac-vision | 1 | 1 | Add a dedicated low-power vision coprocessor or embedded GPU to the pendant hardware for on-device image analysis to recognize Mac screen contents and |
+| `chg-004c4df2` | hardware | mac-vision | 1 | 1 | Add a hardware privacy indicator LED on the MacBook that lights up whenever screen recording or AI vision upload is active, ensuring physical awarenes |
+| `chg-68ed35b1` | hardware | mac-vision | 1 | 1 | Add a local vision processing hardware accelerator to the AI Pendant device to enable real-time image processing and vision model inference on the dev |
+| `chg-0f329b29` | hardware | mac-vision | 1 | 1 | Equip the MacBook and pendant with a local trusted execution environment (TEE) dedicated to secure pixel capture and UI event logging that allows mac- |
+| `chg-a7d0a30f` | hardware | mac-vision | 1 | 1 | Add a dedicated high-efficiency camera sensor integrated with the Mac, optimized for capturing screen pixel data and ambient context without interferi |
+| `chg-7068a82d` | hardware | mac-vision | 1 | 1 | Add a dedicated local vision processing accelerator chip on the pendant or Mac hardware to preprocess screenshots and UI images locally, extracting ac |
+| `chg-3309acb3` | hardware | mac-vision | 1 | 1 | Add a dedicated onboard neural vision processor in the MacBook hardware specifically optimized for real-time UI context analysis and gesture recogniti |
+| `chg-25084a27` | hardware | mac-vision | 1 | 1 | Equip the pendant with enhanced local AI capabilities, including a dedicated vision processing chip and lower-latency RAM, to enable offline real-time |
+| `chg-46392d4d` | hardware | mac-vision | 1 | 1 | Upgrade the MacBook wearable pendant hardware to include a dedicated low-power edge TPU or neural engine optimized for real-time vision processing of  |
+| `chg-ea8f6c08` | hardware | mac-vision | 1 | 1 | Equip the pendant device with a secure UI interaction companion chip that can perform local accessibility queries and provide token-gated UI context s |
+| `chg-336b23b8` | hardware | mac-vision | 1 | 1 | Add a low-power dedicated visual sensing chip in the pendant to capture simplified UI accessibility snapshot data locally, reducing need for full scre |
+| `chg-88f73c82` | hardware | mac-vision | 1 | 1 | Enhance the pendant hardware with a secondary confirmation button and haptic feedback to safely confirm mac-vision's high-impact UI actions locally wi |
+| `chg-b7bbd6c8` | hardware | mac-vision | 1 | 1 | Add a dedicated low-power vision co-processor on the pendant to locally preprocess Mac screen captures, run simple UI element recognition, and send st |
+| `chg-6604f04b` | hardware | mac-vision | 1 | 1 | Add a dedicated local AI vision co-processor or neural engine on the MacBook or pendant to offload computer vision tasks, reducing latency and privacy |
+| `chg-e004b6d1` | hardware | mac-vision | 1 | 1 | Design a next-generation wearable AI pendant with enhanced CPU, memory, and native camera sensors with privacy-controlled local processing for rich co |
+| `chg-5856805d` | hardware | mac-vision | 1 | 1 | Add a lightweight local camera on the Mac device focused on the screen to capture fullscreen video or images at adjustable frequencies, combined with  |
+| `chg-27c6b283` | hardware | mac-vision | 1 | 1 | Add a dedicated local vision co-processor and secure enclave on the MacBook for real-time UI snapshot processing and vision inference without sending  |
+| `chg-7e72285d` | hardware | mac-vision | 1 | 1 | Add a dedicated low-power secure coprocessor on the MacBook to handle vision input locally with privacy and security safeguards, enabling pixel-level  |
+| `chg-0176c23b` | hardware | mac-vision | 1 | 1 | Add a secondary low-power camera on the MacBook that can provide real-time, high-resolution screen capture or partial region capture for the mac-visio |
+| `chg-61ba81f2` | hardware | mac-vision | 1 | 1 | Add a dedicated, low-power image capture and preliminary vision processing unit inside the Mac pendant hardware for continuous UI screenshotting and p |
+| `chg-eb715e2a` | hardware | mac-vision | 1 | 1 | Add a dedicated MacBook accessory camera and sensor suite optimized for rapid, private, high fidelity UI state capture at the screen level without int |
+| `chg-6943edf3` | hardware | mac-vision | 1 | 1 | Add a high-resolution, low-latency camera and IR depth sensor module to the pendant to enable robust visual context capture for Mac-vision without rel |
+| `chg-c33161e3` | hardware | mac-vision | 1 | 1 | Add a dedicated hardware security LED on the AI Pendant Mac Local Agent device that lights up visibly whenever the screen recording or vision capture  |
+| `chg-49f555a3` | hardware | mac-vision | 1 | 1 | Add a dedicated hardware privacy LED on the AI Pendant Mac Local Agent device to visibly indicate when pixel-level screen capture is active. |
+| `chg-35946ad0` | hardware | mac-vision | 1 | 1 | Add a hardware button or touch gesture on the pendant specifically dedicated to emergency stop/pause of ongoing mac-vision UI automation, with visual/ |
+| `chg-328501cb` | hardware | mac-vision | 1 | 1 | Add a dedicated secure co-processor in the MacBook hardware that captures, encrypts, and streams low-latency, high-resolution UI pixel data and access |
+| `chg-de3d4b0e` | hardware | mac-vision | 1 | 1 | Add a secure, user-approved screen capture and UI accessibility sharing feature embedded in the MacBook hardware and macOS kernel, with low-latency lo |
+| `chg-87305940` | hardware | mac-vision | 1 | 1 | Add a dedicated camera or sensor on the MacBook chassis or nearby to capture screen images for the mac-vision agent without relying on software screen |
+| `chg-5546fcd2` | hardware | mac-vision | 1 | 1 | Add a secure, dedicated vision co-processor and camera integration on the MacBook designed specifically for trusted local screenshot capture and real- |
+| `chg-79de44e5` | hardware | mac-vision | 1 | 1 | Add a dedicated secure enclave chip on the MacBook to store and manage vision upload consents, accessibility and screen recording authorization tokens |
+| `chg-477d3786` | hardware | mac-vision | 1 | 1 | Add a dedicated low-latency coprocessor to the MacBook hardware specifically for secure on-device AI vision processing and UI interaction synthesis. |
+| `chg-ec89528a` | hardware | mac-vision | 1 | 1 | Add a local secure on-device vision processing chip and dedicated RAM in the MacBook pendant to enable fully offline and privacy-preserving pixel-base |
+| `chg-63086208` | hardware | mac-vision | 1 | 1 | Add a dedicated low-power AI co-processor inside the wearable pendant optimized for continuously running lightweight vision and voice models locally,  |
+| `chg-96ebc4dc` | hardware | mac-vision | 1 | 1 | Design and build a new wearable pendant with enhanced capabilities: a dedicated camera for visual context capture, increased RAM and flash, multiple b |
+| `chg-ace65aba` | hardware | mac-vision | 1 | 1 | Add a dedicated low-power AI coprocessor to the MacBook Air for continuous vision processing and UI awareness without waking the main CPU. This coproc |
+| `chg-dbea5ecb` | hardware | mac-vision | 1 | 1 | Add a dedicated secure, privacy-preserving vision co-processor on the Mac or pendant to handle local screen capture and UI semantic analysis without n |
+| `chg-1dc97f75` | hardware | mac-vision | 1 | 1 | Add a custom secure co-processor on the pendant or bridge that can locally process UI screenshots and do lightweight image recognition and anonymizati |
+| `chg-bea54a6e` | hardware | mac-vision | 1 | 1 | Design and build a next-generation wearable pendant device with more RAM and CPU power, including a dedicated secure enclave for privacy-preserving lo |
+| `chg-1742246e` | hardware | mac-vision | 1 | 1 | Add a dedicated low-latency vision co-processor on the MacBook hardware to accelerate local UI screenshot analysis, element detection, and pixel manip |
+| `chg-af24c403` | hardware | mac-vision | 1 | 1 | Add a dedicated lightweight local vision processing co-processor on the MacBook or pendant to enable high-speed image recognition and screen understan |
+| `chg-0e755112` | hardware | mac-vision | 1 | 1 | Implement a low-power local vision processing chip on the pendant hardware to preprocess and classify UI elements visually in real time, enabling cont |
+| `chg-329ea34e` | hardware | mac-vision | 1 | 1 | Add a secure enclave coprocessor on the Mac to handle vision privacy and real-time UI capture locally, enabling pixel-level screen understanding witho |
+| `chg-0caebe46` | hardware | mac-vision | 1 | 1 | Add a dedicated secure coprocessor on the pendant to locally validate and veto autonomous UI actions proposed by the Mac vision loop before execution, |
+| `chg-b9575878` | hardware | mac-vision | 1 | 1 | Upgrade MacBook auxiliary camera and secure local storage to enable encrypted local screenshot capture, temporary caching, and on-device processing re |
+| `chg-08ed0c15` | hardware | mac-vision | 1 | 1 | Upgrade the MacBook's system to include a dedicated, isolated coprocessor for real-time visual processing and AI inference to offload pixel-level visi |
+| `chg-042ffb68` | hardware | mac-vision | 1 | 1 | Add a low-power, high-resolution front-facing camera and proximity sensor to the MacBook for continuous contextual environmental capture to assist AI  |
+| `chg-2d7ff415` | hardware | mac-vision | 1 | 1 | Equip the pendant with a low-power vision co-processor or dedicated accelerator capable of pre-processing screen capture data, running lightweight per |
+| `chg-ec1337d3` | hardware | mac-vision | 1 | 1 | Add a dedicated secure co-processor module on the MacBook that handles all vision pixel processing and encryption locally before any data leaves the d |
+| `chg-46874fcc` | hardware | mac-vision | 1 | 1 | Add a dedicated secure coprocessor on the MacBook to handle screen capture, accessibility event logging, and replay for the AI pendant system out-of-b |
+| `chg-cb246cec` | hardware | mac-vision | 1 | 1 | Equip the MacBook Air or equivalent device with a low-latency, high-resolution dedicated camera designed and integrated for continuous screen capture  |
+| `chg-121fe874` | hardware | mac-vision | 1 | 1 | Add a dedicated secure enclave or TPM-like hardware module to the MacBook and wearable pendant for encrypted storage and processing of sensitive UI sn |
+| `chg-f516f036` | hardware | mac-vision | 1 | 1 | Add a dedicated low-latency vision coprocessor and secure screen capture hardware in the Mac or pendant to accelerate UI image processing and enable f |
+| `chg-9c89b362` | hardware | mac-vision | 1 | 1 | Add a local dedicated AI coprocessor in the MacBook hardware to run mac-vision's pixel-level computer use loop offline securely, avoiding any necessit |
+| `chg-fc0ea62a` | hardware | mac-vision | 1 | 1 | Add a dedicated hardware button or gesture sensor on the wearable pendant to allow the owner to instantly interrupt or pause all mac-vision computer a |
+| `chg-02a05563` | hardware | mac-vision | 1 | 1 | Integrate a dedicated onboard AI vision co-processor into the pendant or MacBook to accelerate real-time UI scene analysis and pixel-level decision ma |
+| `chg-2ce0f0b4` | hardware | mac-vision | 1 | 1 | Enhance the wearable pendant hardware with low-power dedicated vision processing chip and secure enclave for privacy-preserving real-time UI interacti |
+| `chg-18c0a186` | hardware | mac-vision | 1 | 1 | Add a local secure enclave chip to the MacBook to handle sensitive screen recording and input automation securely with owner-overwatch and encrypted t |
+| `chg-2f102f61` | hardware | mac-vision | 1 | 1 | Equip the pendant with a dedicated local AI accelerator chip and secure UI snapshot redactor that preprocesses screen captures to anonymize sensitive  |
+| `chg-228db794` | hardware | mac-vision | 1 | 1 | Add a dedicated secure vision processing chip on the MacBook that can analyze screen pixels locally without sending raw screen data off the device, en |
+| `chg-1d3241a4` | hardware | mac-vision | 1 | 1 | Add a specialized low-power coprocessor on the pendant or nearby device dedicated to fast local pixel vision inference and UI snapshot processing to o |
+| `chg-87eb53f8` | hardware | mac-vision | 1 | 1 | Add an integrated low-power AI vision co-processor on the wearable pendant capable of pre-processing and extracting semantic UI elements and user inte |
+| `chg-b3aae8b7` | hardware | mac-vision | 1 | 1 | Integrate an on-pendant neural inference accelerator specialized for real-time vision processing to offload the Mac and reduce latency in UI understan |
+| `chg-c2948759` | hardware | mac-vision | 1 | 1 | Design and build a next-generation wearable pendant with expanded sensors including a small high-resolution camera, inertial measurement unit (IMU), a |
+| `chg-0a88a6af` | hardware | mac-vision | 1 | 1 | Add visual processing hardware accelerator on the pendant or Mac to speed up real-time computer vision tasks for the mac-vision agent, reducing latenc |
+| `chg-c60527d6` | hardware | mac-vision | 1 | 1 | Add a dedicated low-power vision coprocessor on the pendant to assist mac-vision by preprocessing UI screenshots for semantic element recognition and  |
+| `chg-bfed5d03` | hardware | mac-vision | 1 | 1 | Add a dedicated AI vision coprocessor to the pendant or Mac device to enable low-latency, private computer vision processing for mac-vision automation |
+| `chg-449b5b79` | hardware | relay-realtime | 1 | 1 | Add a low-power audio front end between the pendant microphone/speaker path and the nRF9160: an external I2S/PCM codec with DMA-backed ring buffers an |
+| `chg-d4c30cc4` | hardware | relay-realtime | 1 | 1 | Add a coin vibration motor with a low-side driver and expose three firmware patterns (acknowledged, needs-answer, completed/failed) to the relay task  |
+| `chg-8a2e6083` | hardware | relay-realtime | 1 | 1 | Add a tiny coin haptic motor (or linear resonant actuator), dedicated low-side driver, and a firmware notification queue to the pendant. Expose three  |
+| `chg-51f14c42` | hardware | relay-realtime | 1 | 1 | Add a low-power haptic actuator and a second input gesture (for example, a squeeze/side button) to the pendant, with firmware support for distinct pat |
+| `chg-354280dd` | hardware | relay-realtime | 1 | 1 | Add a tiny coin vibration motor with a low-side driver and a dedicated wake-capable GPIO to the nRF9160 pendant, plus firmware patterns for question-a |
+| `chg-13b6c566` | hardware | relay-realtime | 1 | 1 | Add a low-power coin vibration motor and a dedicated haptic driver to the nRF9160 pendant, with firmware patterns for capture accepted, task completed |
+| `chg-9d4d76dd` | hardware | relay-realtime | 1 | 1 | Add a simple capacitive/proximity wear sensor and a hardware microphone-mute indicator path to the pendant, with firmware publishing worn/removed tran |
+| `chg-0b7f2964` | hardware | relay-realtime | 1 | 1 | Add a low-power 3-axis accelerometer/proximity-orientation sensor and a small haptic actuator to the nRF9160 pendant, with firmware exposing signed wo |
+| `chg-17efa0dc` | hardware | relay-realtime | 1 | 1 | Add a tiny coin-cell haptic motor (with a dedicated low-side driver and firmware notification patterns) to the pendant, and expose a relay notificatio |
+| `chg-b075f233` | hardware | relay-realtime | 1 | 1 | Add a low-power haptic actuator and an audio-path interrupt line to the pendant, alongside the existing single button/LED. Firmware should expose shor |
+| `chg-815a9c88` | hardware | relay-realtime | 1 | 1 | Add a low-power vibration actuator and a capacitive touch strip to the pendant, with firmware events exposed to relay task leases: distinct short patt |
+| `chg-8350113d` | hardware | relay-realtime | 1 | 1 | Add a tiny coin vibration motor driven by a low-side transistor and a low-power 3-axis accelerometer with interrupt wake, while keeping the existing b |
+| `chg-64965f75` | hardware | relay-realtime | 1 | 1 | Add a low-power coin vibration motor and a second capacitive/tactile input zone (or a distinct double-click-capable button) to the pendant, with firmw |
+| `chg-876edf43` | hardware | relay-realtime | 1 | 1 | Add a tiny coin vibration motor with a low-side driver and a dedicated firmware GPIO to the pendant, plus a sealed tactile isolation mount. Define thr |
+| `chg-53ff66ba` | hardware | relay-realtime | 1 | 1 | Add a coin-ERM or LRA vibration motor with a dedicated low-side driver and local duty-cycle limiter to the nRF9160 pendant, exposing three short tacti |
+| `chg-f7a5fd17` | hardware | relay-realtime | 1 | 1 | Add a low-power coin ERM/LRA haptic actuator and a tiny driver to the pendant, with firmware patterns for listening, task accepted, task completed, ne |
+| `chg-a0b45d04` | hardware | relay-realtime | 1 | 1 | Add a low-power vibration motor and a simple haptic driver to the pendant, paired with a firmware notification queue. Define three short patterns (job |
+| `chg-6f9293e4` | hardware | relay-realtime | 1 | 1 | Add a low-power haptic actuator (coin ERM or LRA) and a dedicated local alert driver to the pendant, with firmware patterns for queued, completed, fai |
+| `chg-c448f600` | hardware | relay-realtime | 1 | 1 | Add a low-power vibration motor with a simple driver and expose three firmware patterns (urgent, acknowledged, queued-digest). Keep the existing one-b |
+| `chg-88f890ae` | hardware | relay-realtime | 1 | 1 | Add a low-power bone-conduction or open-ear earpiece path to the ESP32 audio bridge, with a hardware mute/arming switch and independent volume control |
+| `chg-94b73f84` | hardware | relay-realtime | 1 | 1 | Add a tiny low-power vibration motor and driver to the pendant, with firmware patterns for acknowledgement, urgent result, failure, and incoming compl |
+| `chg-f89937d7` | hardware | relay-realtime | 1 | 1 | Add a low-power coin vibration motor and a protected driver to the nRF9160 pendant, with firmware patterns for acknowledgement, private notification,  |
+| `chg-7f3b06cf` | hardware | relay-realtime | 1 | 1 | Add a low-power coin vibration motor and a single capacitive touch strip to the nRF9160 pendant enclosure, driven by a tiny local event queue. Use dis |
+| `chg-fa944afa` | hardware | relay-realtime | 1 | 1 | Add a low-power haptic actuator and a physical three-position privacy switch to the pendant, with firmware events for silent-alert, active-listening,  |
+| `chg-d6471ebd` | hardware | unified | 1 | 1 | Revise the wearable from the development kit to a low-power product board with a small haptic motor and a secure element connected on the currently un |
+| `chg-e12b884c` | hardware | unified | 1 | 1 | Replace the prototype's 15,625 Hz I2S microphone path with a production audio front end that can capture 48 kHz (or 32 kHz minimum if the acceptance t |
+| `chg-2b68f2b2` | hardware | unified | 1 | 1 | Add a low-power I2C fuel-gauge IC and a small vibration/alert actuator to the production pendant, with the firmware exposing battery percentage, estim |
+| `chg-9859ba5c` | hardware | unified | 1 | 1 | Revise the production pendant with a normally-open physical microphone privacy switch that removes microphone power or gates the I2S data line before  |
+| `chg-7b88f6e1` | hardware | unified | 1 | 1 | Replace the prototype nRF9160 + ESP32 classic SBC bridge audio chain with a product audio front end: a low-power 24 kHz-capable stereo codec/mic inter |
+| `chg-a298c142` | hardware | unified | 1 | 1 | For the wearable revision, replace the nRF9160-DK-style single-chip audio path with a modem-plus-audio architecture: a modem MCU for LTE-M and a dedic |
+| `chg-30e56c15` | hardware | unified | 1 | 1 | Move the wearable audio design from the nRF9160 DK prototype to a production board with a native 24 kHz (or 48 kHz decimated) digital microphone path, |
+| `chg-05970cfa` | hardware | unified | 1 | 1 | Replace the prototype pendant enclosure with a production board that adds a low-power haptic actuator on an I2C GPIO expander or dedicated driver, plu |
+| `chg-26a74c35` | hardware | unified | 1 | 1 | Replace the prototype’s single-button/LED-only interaction with a production pendant interaction module: a recessed, physically latched microphone/spe |
+| `chg-4eacc8aa` | hardware | unified | 1 | 1 | For the wearable revision, replace the DK's single 64 MHz nRF9160 audio workload with a small audio-capable companion (DSP/codec or higher-performance |
+| `chg-9f6fc3db` | hardware | unified | 1 | 1 | Replace the prototype HUZZAH32 SBC-only A2DP bridge with a production audio bridge that supports Bluetooth LE Audio/LC3 (or a wired USB-C digital-audi |
+| `chg-69136842` | hardware | unified | 1 | 1 | Add a normally-open, hardware-controlled microphone power/data disconnect and a bi-color privacy LED to the pendant audio front end. The disconnect is |
+| `chg-de6e02d5` | hardware | unified | 1 | 1 | Replace the prototype’s single LED-only feedback with a production pendant input/output package: a low-power coin haptic motor plus a distinct confirm |
+| `chg-0f348920` | hardware | unified | 1 | 1 | Add a low-power secure element to the production pendant, with a dedicated approval input path: generate and retain a non-exportable device key, sign  |
+| `chg-c04771f3` | hardware | unified | 1 | 1 | Add a low-power fuel-gauge IC (I²C, e.g. MAX17048-class) and a second RGB status indicator or haptic driver to the pendant, with firmware telemetry fi |
+| `chg-c0695796` | hardware | unified | 1 | 1 | Replace the HUZZAH32 SBC-only A2DP source in the production audio path with a BLE Audio-capable bridge (for example an nRF5340 Audio DK-class design o |
+| `chg-2e6c1ba7` | hardware | unified | 1 | 1 | Replace the prototype nRF9160 DK wearable I/O with a product pendant that adds a fuel-gauge IC over the currently unused I2C bus, a low-power haptic m |
+| `chg-db942c37` | hardware | unified | 1 | 1 | Revise the product pendant (not the current DK) to add a small ERM/LRA haptic actuator with a dedicated low-side driver and a fuel-gauge/charger telem |
+| `chg-2465f243` | hardware | unified | 1 | 1 | Add a low-power secure element with device-unique key and monotonic counter, plus a clearly tactile two-stage approval control (or force-sensitive lon |
+| `chg-6d024e56` | hardware | unified | 1 | 1 | Replace the prototype's split nRF9160-plus-ESP32 audio chain with a product audio front end: a low-power audio codec/DSP with native 24 kHz voice supp |
+| `chg-9121b4a4` | hardware | unified | 1 | 1 | For the wearable revision, replace the development-kit audio chain with a dedicated low-power full-duplex audio codec and a cellular MCU/module with h |
+| `chg-75f35bf1` | hardware | unified | 1 | 1 | For the product revision, replace the prototype's 15,625 Hz I2S microphone/clock path with a microphone and audio front end that natively captures 24  |
+| `chg-10e51acf` | hardware | unified | 1 | 1 | Add a tiny low-power haptic actuator with a dedicated driver (or a piezo/buzzer fallback) to the production pendant, and define a local tactile status |
+| `chg-c4b19a28` | hardware | unified | 1 | 1 | On the product pendant, add a low-power haptic motor with a driver on the currently-unused I2C bus, plus a fuel-gauge IC on the same bus; retain the e |
+| `chg-e0bdacac` | hardware | unified | 1 | 1 | Replace the HUZZAH32 classic-Bluetooth audio bridge with a product bridge built around an nRF5340 Audio-class module (LC3/LE Audio, 24 kHz mono path)  |
+| `chg-eea4e179` | hardware | unified | 1 | 1 | Replace the prototype single-I2S-mic nRF9160/ESP32 audio arrangement with a production pendant audio front end: a low-power audio DSP or application S |
+| `chg-17e77c6b` | hardware | unified | 1 | 1 | Replace the prototype nRF9160 DK audio runtime with a production pendant architecture that gives audio its own compute headroom: an nRF5340-class appl |
+| `chg-4727f4c9` | hardware | unified | 1 | 1 | Add a small fixed-point audio codec/DSP (or use the existing ESP32 HUZZAH32 as a dedicated audio worker) between the nRF9160 and the speaker path. Kee |
+| `chg-1496c224` | hardware | unified | 1 | 1 | Add a low-power I2C fuel-gauge and a temperature-compensated RTC (with coin-cell or supercap backup) to the production pendant, exposing battery state |
+| `chg-73bc6419` | hardware | unified | 1 | 1 | Replace the current ESP32 A2DP-source-only bridge with a bidirectional local audio bridge: BLE LE Audio/ISO or USB Audio Class to the Mac/phone, with  |
+| `chg-ad1a9888` | hardware | unified | 1 | 1 | Replace the prototype's single nRF9160 audio workload with a production audio front end: add a low-power full-duplex 24 kHz audio codec/DSP on the exi |
+| `chg-a4d76cf6` | hardware | unified | 1 | 1 | Add a tiny ERM/LRA haptic actuator with a dedicated low-side driver and reserve one GPIO (or an I2C haptic driver) for four short patterns: recording, |
+| `chg-6d0c8e4e` | hardware | unified | 1 | 1 | Replace the nRF9160-DK prototype audio core in the product pendant with a two-domain design: retain a certified LTE-M/NB-IoT modem, but add a low-powe |
+| `chg-716270af` | hardware | unified | 1 | 1 | Add a tiny ERM/LRA haptic actuator with a dedicated low-side driver and one capacitive or side button to the pendant revision; expose a three-level ta |
+| `chg-8ce3df6b` | hardware | unified | 1 | 1 | Replace the single-microphone prototype with a production acoustic front end: a two- or three-microphone near-field array on the pendant, a dedicated  |
+| `chg-e9d5bfc0` | hardware | unified | 1 | 1 | Add a low-power vibration motor (or linear resonant actuator) with a dedicated driver and a second capacitive/gesture input in the production pendant, |
+| `chg-67b4798e` | hardware | unified | 1 | 1 | Add a dedicated wear-presence sensor to the production pendant (skin-contact capacitive electrode or optical/IR proximity sensor), with a tamper/stale |
+| `chg-f3263970` | hardware | unified | 1 | 1 | Replace the prototype ESP32 HUZZAH32 Bluetooth bridge's fixed, RAM-starved audio path with a production bridge module that has a hardware audio clock  |
+| `chg-917dbed3` | hardware | unified | 1 | 1 | Replace the prototype HUZZAH32 ESP32-classic bridge with an ESP32-WROVER-class Bluetooth Classic module (external PSRAM, at least 4 MB) and add a smal |
+| `chg-41a7ec62` | hardware | unified | 1 | 1 | Replace the prototype's ESP32 classic-A2DP bridge with a low-power LE Audio companion (nRF5340 Audio DK-class design or production equivalent) connect |
+| `chg-288bb014` | hardware | unified | 1 | 1 | Design the production pendant with a small haptic actuator and a two-zone capacitive touch surface (or a second sealed tactile control), alongside the |
+| `chg-3f28d416` | hardware | unified | 1 | 1 | For the production pendant, add a low-power 24 kHz-capable mono audio codec/ADC-DAC on the existing audio bus (or replace the current microphone/playb |
+| `chg-4479e894` | hardware | unified | 1 | 1 | Add a low-power bone-conduction or near-ear private-output transducer to the production pendant, with an independent amplifier, hard local mute, and a |
+| `chg-670f9387` | hardware | unified | 1 | 1 | Replace the prototype nRF9160-DK audio front end for the product with a low-power application MCU/DSP plus an external 24 kHz-capable audio codec (or  |
+| `chg-1c5fb59c` | hardware | unified | 1 | 1 | Replace the prototype's 15,625 Hz I2S microphone plus ESP32 bridge arrangement with a product audio front end that natively captures 24 kHz (or 32 kHz |
+| `chg-f3d9d6a8` | hardware | unified | 1 | 1 | Use the existing ESP32 HUZZAH32 bridge as a dedicated audio coprocessor: move Opus decode and 24 kHz→31.25 kHz resampling off the nRF9160 application  |
+| `chg-46e763fb` | hardware | unified | 1 | 1 | Replace the prototype nRF9160-DK-plus-ESP32 audio arrangement in the product design with an LTE-M/NB-IoT module paired to an audio-capable MCU/codec t |
+| `chg-4892d4e3` | hardware | unified | 1 | 1 | For the production pendant, replace the prototype nRF9160-DK audio arrangement with a cellular/audio architecture that has independent DSP headroom an |
+| `chg-8213a18f` | hardware | unified | 1 | 1 | Replace the prototype HUZZAH32 A2DP/SBC bridge with a production Bluetooth LE Audio companion (LC3, mono 24 kHz) and give the pendant a purpose-built  |
+| `chg-dc441e67` | hardware | unified | 1 | 1 | For the production pendant, replace the nRF9160-DK prototype's single-SoC audio arrangement with a modem plus dedicated low-power audio front-end (I2S |
+| `chg-9f246f87` | hardware | unified | 1 | 1 | For the production pendant, replace the prototype nRF9160-DK audio arrangement with a codec/DSP path that natively captures and plays 24 kHz mono (or  |
+| `chg-b4f75df5` | hardware | unified | 1 | 1 | Replace the current ESP32 HUZZAH32 SBC-only A2DP source with a production companion that supports Bluetooth LE Audio (LC3) and a hardware-clocked 24 k |
+| `chg-400ecb1a` | hardware | unified | 1 | 1 | For the product revision, replace the HUZZAH32 Classic-Bluetooth A2DP bridge plus nRF9160 audio burden with a dedicated low-power audio companion (nRF |
+| `chg-5736bf86` | hardware | unified | 1 | 1 | Add a two-microphone near-field array and a dedicated vibration/bone-conduction output transducer to the product pendant, with a small always-on audio |
+| `chg-8cc507c9` | hardware | unified | 1 | 1 | Add a low-power wearer/output-presence subsystem to the product design: a capacitive skin-contact or strap sensor plus a small IMU on the pendant, and |
+| `chg-98ab4382` | hardware | unified | 1 | 1 | Replace the nRF9160 DK + ESP32 audio prototype for the product audio path with a cellular SoC/audio design that has a dedicated 24 kHz-capable I2S cod |
+| `chg-2cafe326` | hardware | unified | 1 | 1 | Add a sealed low-power haptic actuator and a small ambient-light/proximity sensor to the production pendant, with a dedicated hardware mute/status sta |
+| `chg-0b2506ef` | hardware | unified | 1 | 1 | Replace the prototype nRF9160 audio path for the product with a modem/SoC architecture that has a dedicated audio DSP (or second application core), a  |
+| `chg-e2e28bf5` | hardware | unified | 1 | 1 | Replace the prototype audio front end with a production split: a 24/48 kHz digital I2S microphone and low-power audio codec/DSP on the pendant/bridge, |
+| `chg-85dbab30` | hardware | unified | 1 | 1 | For the production pendant, split audio processing from LTE/control: retain the cellular MCU for modem and orchestration, add a low-power audio compan |
+| `chg-c88eb46c` | hardware | unified | 1 | 1 | Replace the ESP32 A2DP-only bridge with a dual-role USB-C audio bridge: USB Audio Class 2.0 full-duplex to the Mac, Bluetooth output retained as an op |
+| `chg-5a0ddd34` | hardware | unified | 1 | 1 | Add a low-power 6-axis IMU and a dedicated capacitive emergency strip to the wearable product, with a hardware debounced trigger path that can wake th |
+| `chg-9542da81` | hardware | unified | 1 | 1 | Add a low-power 6-axis IMU and a small haptic actuator to the product pendant, with a local privacy/removal state machine: detect wrist-off/body-off,  |
+| `chg-3111e104` | hardware | unified | 1 | 1 | Add a low-power haptic actuator and a second tactile control to the production pendant, with a local event vocabulary: short pulse for listening, doub |
+| `chg-e7f0bb3c` | hardware | unified | 1 | 1 | Add a low-power haptic actuator and a capacitive wear/contact sensor to the pendant, with firmware-owned patterns for transport truth, urgent alert, c |
+| `chg-f297e110` | hardware | unified | 1 | 1 | Add a low-power skin/proximity sensor and a hardware-gated audio path to the next pendant revision, with a simple worn/unworn state exposed to firmwar |
+| `chg-18d767ad` | hardware | unified | 1 | 1 | Replace the prototype pendant’s single-button/single-LED UI with a production interaction module: two tactile buttons plus a low-power haptic actuator |
+| `chg-e8b31ed5` | hardware | unified | 1 | 1 | Replace the prototype pendant’s single button/LED interaction with a production input-output module: a low-power haptic actuator, a capacitive or pres |
+| `chg-92c2ba92` | hardware | unified | 1 | 1 | Add a low-power 6-axis IMU and a capacitive touch/proximity electrode to the pendant, with an interrupt line exposed to the nRF9160. Define local gest |
+| `chg-253ab595` | hardware | unified | 1 | 1 | Replace the prototype’s single-button/LED control with two tactile buttons plus a small haptic motor and a fuel-gauge IC: one button remains conversat |
+| `chg-41fd962f` | hardware | unified | 1 | 1 | Replace the prototype pendant enclosure/electronics with a production wearable containing a low-power always-on DSP, dual microphones with beamforming |
+| `chg-a71b9024` | hardware | unified | 1 | 1 | Replace the single-button prototype interaction with a wearable input module containing a low-power 6-axis IMU plus a capacitive wear/contact sensor,  |
+| `chg-1189745e` | hardware | unified | 1 | 1 | Replace the ESP32 A2DP bridge in the wearable product with a modern Bluetooth LE Audio-capable companion (LC3, bidirectional headset profile), retaini |
 | `chg-50677507` | integration | relay-realtime | 1 | 1 | Add a relay-owned job scheduler using Cloudflare Cron Triggers plus Durable Object alarms to run periodic tasks (web diffs, inbox checks, maintenance) |
 | `chg-d04e26d1` | interaction | relay-realtime | 1 | 1 | Introduce a confirmation gate for high-risk actions: relay summarizes intent, shows/reads a payload (e.g., draft email, purchase order, form submissio |
 | `chg-71ae0f60` | mac-harness | mac-planner | 1 | 1 | Replace FULL_CONTROL_MODE's undifferentiated execution path with a typed action broker: structured read/open/search actions by default, and separate m |
@@ -5344,4 +5331,17 @@ in here.
 | `chg-b9b626f3` | routines | relay-realtime | 1 | 1 | Add a real scheduling layer for delayed and recurring work in the relay: use Cloudflare Cron Triggers for recurring jobs and Durable Object alarms for |
 | `chg-6f1a605b` | routines | relay-realtime | 1 | 1 | Add a scheduler layer using Worker Cron Triggers and Durable Object alarms for delayed and recurring jobs, with a job table in D1 and a relay job-stat |
 | `chg-2429a245` | routines | relay-realtime | 1 | 1 | Add a scheduling layer using Cloudflare Cron Triggers (for daily/weekly routines) and Durable Object alarms (for per-user delayed tasks and retries).  |
+| `chg-67952158` | routines | relay-realtime | 1 | 1 | Add a real scheduler: a Durable Object-backed job queue with delayed execution and recurring rules (cron-like). The relay can enqueue jobs, and a work |
+| `chg-9b4366c7` | routines | relay-realtime | 1 | 1 | Add a relay-owned durable work queue with retries and a receipt log, implemented as a Durable Object (or D1 + Durable Object alarms). The relay expose |
+| `chg-ae7e4af5` | routines | relay-realtime | 1 | 1 | Introduce a lightweight scheduler using Durable Object alarms or Cloudflare Cron to trigger queued jobs (summarize notes, send digests, retry failed u |
+| `chg-966eb894` | routines | relay-realtime | 1 | 1 | Introduce a scheduler layer (cron-like) with durable job definitions, per-job cadence, retry policy, quiet hours, and a wake/dispatch mechanism that c |
+| `chg-c9a62f5a` | routines | relay-realtime | 1 | 1 | Add a scheduling layer that supports delayed and recurring jobs for both the relay (via Durable Object alarms/Cron Triggers) and the Mac agent (via a  |
+| `chg-de0c7730` | routines | relay-realtime | 1 | 1 | Add a cross-surface durable job system with scheduling primitives (cron-like cadence and single-run alarms). Jobs can target Mac planner, browser harn |
+| `chg-d367cebe` | routines | relay-realtime | 1 | 1 | Add a scheduler capability (cron-like) that can trigger jobs and page watches at defined times or intervals, implemented via Cloudflare Cron Triggers  |
+| `chg-af532db8` | routines | relay-realtime | 1 | 1 | Add a scheduler layer (cron-like) with durable job definitions and a queue that can run tasks later, with retry and idempotency. Provide a relay-visib |
+| `chg-fbae5ce9` | routines | relay-realtime | 1 | 1 | Add a scheduler primitive (cron triggers or durable alarms) to run watches/briefings at set times. The relay should only orchestrate and speak results |
+| `chg-b7b633c0` | routines | relay-realtime | 1 | 1 | Introduce a scheduler layer (cron triggers or durable object alarms) to run page watches and daily briefings, with quiet hours and backoff, then notif |
+| `chg-36336920` | routines | relay-realtime | 1 | 1 | Add a scheduler layer (cron triggers or durable object alarms) to support delayed and recurring jobs, with routing to mac-planner or server-side read- |
+| `chg-7775dd0f` | routines | relay-realtime | 1 | 1 | Add a scheduler capability to the stack (Cloudflare Cron + Durable Object alarms) to support delayed and recurring tasks like morning briefings, page  |
+| `chg-a22a2220` | routines | relay-realtime | 1 | 1 | Add a lightweight scheduler (cron/alarm) for periodic tasks like daily briefing, page-watch checks, and cleanup jobs, with clear receipts of what ran. |
 
