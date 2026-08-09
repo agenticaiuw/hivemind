@@ -1,12 +1,17 @@
 <!doctype html>
+<!-- The pop-out console: byte-for-byte the popup's UI (same ids, same
+     popup.js, same storage.local state) standing in its own window, because
+     Safari dismisses the popover on any outside click. Only two things
+     differ: <body class="standalone"> — which popup.js and ui.css read to
+     hide the pop-out control and let the layout breathe — and the title. -->
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>AI Pendant Browser Bridge</title>
+    <title>AI Pendant Console</title>
     <link rel="stylesheet" href="ui.css" />
   </head>
-  <body>
+  <body class="standalone">
     <main class="popup">
       <div class="popup-header">
         <div>
@@ -18,8 +23,6 @@
             <span id="status-dot" class="dot"></span>
             <small id="status-title">Checking…</small>
           </div>
-          <!-- Safari closes this popover on any outside click; the pin opens
-               the same console as a window (or pinned tab) that stays put. -->
           <button
             id="pop-out"
             class="icon-button"
