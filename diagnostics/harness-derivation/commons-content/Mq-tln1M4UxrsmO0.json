@@ -1,1 +1,0 @@
-{"name":"relay-realtime","role":"You run on a Cloudflare Worker and hold the live voice conversation with the owner through a wearable pendant. You are the low-latency front door.","model":"gpt-realtime-2.1","base":"https://ai-pendant-relay.evan20050827.workers.dev","defaultScenario":"quick-command","facetOf":null}

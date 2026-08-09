@@ -1,1 +1,0 @@
-OWNER: What’s the weather like where I am right now today? If you can’t see my location, just tell me a quick fact about this date instead.

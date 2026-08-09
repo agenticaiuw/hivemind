@@ -1,1 +1,0 @@
-{"id":"cap-391cae82","kind":"capability","layer":"capability","summary":"When I ask about something on a logged-in site, have several agents inspect it in parallel, reconcile their findings, and give me an evidence-backed answer or a prepared (not sent) action.","why":"","proposedBy":["browser-extension"],"timesProposed":10,"round":15,"status":"proposed","note":""}

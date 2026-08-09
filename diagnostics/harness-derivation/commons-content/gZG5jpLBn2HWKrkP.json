@@ -1,1 +1,0 @@
-{"id":"cap-a4c0ec8d","kind":"capability","layer":"capability","summary":"Turn on mac-vision's accessibility-mode UI interaction loop to automate GUI tasks without taking over the screen or keyboard focus.","why":"","proposedBy":["mac-vision"],"timesProposed":10,"round":13,"status":"proposed","note":""}

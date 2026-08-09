@@ -1,9 +1,0 @@
-=== dual capture 20260803T061758Z ===
-nrf_port=/dev/cu.usbmodem0009600365811
-esp_port=/dev/cu.usbserial-0287A9CA
-run=/Users/evanliu/agentic-gadget/diagnostics/dual-capture-20260803T061758Z
-started=2026-08-03T06:17:58Z
-nrf pid=88706 port=/dev/cu.usbmodem0009600365811
-esp pid=88710 port=/dev/cu.usbserial-0287A9CA
-=== nrf start 2026-08-03T06:17:58Z port=/dev/cu.usbmodem0009600365811 ===
-=== esp start 2026-08-03T06:17:58Z port=/dev/cu.usbserial-0287A9CA ===

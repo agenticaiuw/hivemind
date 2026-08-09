@@ -1,1 +1,0 @@
-{"name":"GET /pipeline/:pipelineId/audio/:direction","liveStatus":400,"liveResponse":"{\"ok\":false,\"error\":\"Pipeline audio direction must be input or output.\"}"}

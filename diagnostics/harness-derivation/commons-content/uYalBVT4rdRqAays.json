@@ -1,1 +1,0 @@
-{"name":"DELETE /browser/commands/:commandId?","liveStatus":404,"liveResponse":"{\"ok\":false,\"error\":\"No such route on this agent: GET /browser/commands/:commandId\",\"hint\":\"GET /capabilities lists every route this process has.\"}"}

@@ -1,1 +1,0 @@
-{"name":"GET /workbench/jobs","liveStatus":404,"liveResponse":"{\"ok\":false,\"error\":\"No such route on this agent: GET /workbench/jobs\",\"hint\":\"GET /capabilities lists every route this process has.\"}"}
