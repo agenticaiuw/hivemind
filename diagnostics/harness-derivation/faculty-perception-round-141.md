@@ -1,0 +1,79 @@
+# Harness derivation — faculty-perception — round 141
+
+Model: `gpt-5.6-luna`  ·  probes against `http://localhost:8000`
+
+## What it established
+
+- **mac permissions and input reachability** — At 2026-08-08T01:36Z, AI Pendant Agent host com.aipendant.agent has Accessibility and Screen Recording granted; /observe reports inputReachability.status=verified, uiActionsWillReachTheScreen=true, secureInput=false, and no missing automation permissions. /ops/status reports permissions.ready=true.
+  - evidence: GET /observe and GET /ops/status both returned HTTP 200 with trusted:true, screenRecording:true, eventsPost:true, status verified, and requiredMissing:[]
+- **live browser exposure** — Safari extension is online with 9 tabs; active extension tab is platform.openai.com titled 'Billing overview - OpenAI API'. A durable browser session also exposes Gmail Inbox (14,987) at mail.google.com. Browser commands pending=0 and spool=0.
+  - evidence: GET /browser/status and GET /ops/snapshot at 2026-08-08T01:36Z
+- **relay and pendant liveness** — Mac bridge and relay are reachable/online, but no nRF pendant is registered; current live surfaces are Mac agent, browser extension, and D1 relay. Relay advertises pendantPipelineTelemetry, pendantSpeech, persistentAgentState, and durableAudio.
+  - evidence: GET /ops/snapshot HTTP 200 plus established device registry showing only home-macbook-bridge online and cloudflare-contract-test offline
+
+## Capabilities it proposed
+
+### "Before you send that email, change that page, or speak an answer aloud, tell me exactly which app/tab/account is in focus, whether the visible page looks sensitive, and what you can actually verify."
+- **useful because:** The system can now see the screen and browser, but judgement still receives an unstructured snapshot. A short, provenance-backed preflight would prevent the most dangerous class of mistake: acting on the wrong account or treating a login/billing page as ordinary context. It is the single most useful trust feature now that input and screen permissions are genuinely verified.
+- **path:** pendant (voice request and eventual spoken confirmation) → relay-realtime (low-latency intent extraction only) → mac-planner (preflight orchestration) → mac-vision (read-only screenshot and foreground-window inspection) → browser-extension (active tab URL/title and session identity) → relay (durable preflight receipt and status)
+- **model tier:** Realtime for extracting the owner's preflight request; a cheaper background model or deterministic classifiers for page sensitivity and account mismatch; no vision model unless the read-only accessibility/browser facts are insufficient.
+- **latency:** Under 1.5 seconds for app/tab/account facts and deterministic sensitivity flags; up to 4 seconds if a screenshot classification is needed. Never blocks ordinary read-only conversation.
+- **cost:** Usually near-zero model cost using /observe, browser status, and URL/title rules; occasional vision classification dominates, roughly one small image inference.
+- **security:** The preflight must never transmit page bodies or screenshots to the relay by default. It should return host, app, URL, tab title, session pseudonym, and sensitivity reason, redact account identifiers, and require explicit owner confirmation for external side effects. A false negative must fail closed for send/delete/payment actions.
+- **missing:** A typed preflight receipt joining one /observe sample, browser session identity, intended action, and freshness timestamp; A deterministic sensitivity classifier for billing, payment, mail-compose, password, and account-admin pages; A judgement/action gate that consumes the receipt instead of merely displaying it
+
+### "When you read something in my browser, save a trustworthy reference so I can ask later “where did that come from?” and get the exact page, tab, capture time, hash, and the quoted passage—even if the page has changed."
+- **useful because:** Today a relay-side browser read can be spoken or placed into an announcement without an ID, hash, URL-linked durable evidence, or later replay. This capability turns a fleeting answer into an auditable, revocable reference while preserving the existing redaction and expiry rules.
+- **path:** browser-extension (authenticated tab read when available) → relay-realtime (answer and citation request) → relay (return a stable read correlation ID and content hash for cloud browser reads) → mac-planner (mint the existing content-addressed evidence capsule and record browser provenance) → mac-vision (only if the extension cannot read the relevant region) → pendant (speak a compact citation, never the whole evidence body)
+- **model tier:** Cheap text model for selecting a quote and explaining conflicts; realtime only when the owner asks during a live voice turn. Hashing, expiry, redaction, and URL normalization are deterministic.
+- **latency:** 2–4 seconds for a cloud-browser read plus local capsule mint; under 1 second to retrieve an existing capsule by ID.
+- **cost:** One small browser-rendering call plus deterministic SHA-256/redaction; model cost only for quote selection, typically far below a full realtime turn.
+- **security:** Never store raw credentials or unredacted page text. Respect the existing 24-hour body TTL, seven-day tombstone grace, revocation, and content-addressed collapse. Sensitive locators should store withheld digests, and the spoken citation should omit account IDs. Relay-fetched page text must not enter untraceable announcement storage.
+- **missing:** A relay read contract returning correlation ID, normalized source, and content hash; A Mac call site that mints the existing evidence capsule from that contract and records browserProvenance links; Mount browserProvenance routes and expose citation lookup through the voice/briefing path; A relay routine change preventing raw browser text from being copied into indefinitely retained announcements
+
+### "Is my pendant actually working right now? Run a two-minute tethered test that proves the nRF and audio bridge are connected, captures a spoken sample, plays a 24 kHz response, and gives me packet/audio measurements—not a guess from relay history."
+- **useful because:** The relay registry cannot answer physical presence and recorded pipeline telemetry is not live hardware evidence. A USB test would make the pendant useful and verifiable before LTE pairing, and would distinguish a dead cable, firmware, microphone, codec, or bridge from a cloud outage.
+- **path:** pendant (nRF9160 firmware test mode, local capture and health frame) → Mac-terminal (serial discovery, firmware test orchestration, counter collection) → Mac-vision (show the operator the test progress and any serial permission dialog) → relay (optional receipt upload once the test is complete) → relay-realtime (speak the concise verdict) → browser-extension (not needed; must be explicitly excluded from this hardware test)
+- **model tier:** No frontier model for the test. Deterministic serial protocol and audio-quality-probe metrics; a cheap model may summarize failures after measurements. Realtime only speaks the final result if requested.
+- **latency:** Two minutes maximum, with first connection verdict in five seconds and per-stage timeout under 15 seconds.
+- **cost:** Negligible API cost; local USB serial and on-device counters dominate. Requires a small test harness and firmware test endpoint, not cloud inference.
+- **security:** USB serial access must be allowlisted to /dev/cu.usbmodem00096003658* and /dev/cu.usbserial-0287A9CA; never upload raw microphone audio by default. Store only metrics, firmware/build IDs, sequence numbers, and an owner-approved short sample. Do not write routine diagnostics to the SD failure buffer.
+- **missing:** A granted Mac serial-health reader and allowlisted serial test runner; A pendant firmware USB/tether test mode that exposes the accepted offline-reality-beacon and capture-integrity-sentinel frames; An ESP32 bridge loopback command and a deterministic 24 kHz playback/capture acceptance report; A local receipt route that distinguishes physically verified from relay-observed status
+
+### "Before you click “Buy,” “Send,” or “Delete,” show me a reversible preview of the exact browser/Mac changes that would happen, what cannot be undone, and the smallest confirmation I need to give."
+- **useful because:** A confirmation prompt alone is not understanding. The owner should see the concrete diff—recipient, account, files, fields, and side effects—before an action crosses from reversible to irreversible. This is especially valuable across a logged-in browser and Mac apps where the model’s interpretation can be wrong even when the click succeeds.
+- **path:** pendant (request and concise spoken preview) → relay-realtime (extract intent and read the final preview) → mac-planner (construct the operation graph) → browser-extension (capture authenticated DOM values and intended mutations) → mac-vision (verify visual target and modal state) → mac-terminal (compute file/process diffs where applicable) → relay (durable preview receipt and expiry)
+- **model tier:** Realtime only for the live request; deterministic state-diff and policy checks first; a cheaper model may summarize a large diff. Never use the expensive model to decide whether a diff is complete.
+- **latency:** 2 seconds for ordinary browser/app previews, up to 8 seconds for multi-step file or form workflows. The preview expires after 60 seconds or any observed UI change.
+- **cost:** Usually one small planning call plus local deterministic inspection; screenshot or DOM extraction dominates, not token cost. No external API call is required for local files or authenticated pages.
+- **security:** Preview data must stay local by default and redact passwords, tokens, full payment numbers, and message bodies. A cryptographic receipt must bind the preview to the exact tab/session, target, pre-state hash, and action plan; any DOM/window change invalidates it. Confirmation must not be inferred from a vague utterance.
+- **missing:** A typed cross-surface operation-diff schema with precondition hashes and invalidation; Browser and Mac adapters that report before-state, intended mutation, and after-state without executing; An enforcement layer that refuses execution unless the owner confirms the still-valid preview; A local-only redaction policy for sensitive fields
+
+### "If the connection drops while I am talking or you are working, keep the task safely paused, remember exactly what I said and what was already done, and resume when the pendant or Mac comes back—without repeating an action or losing my place."
+- **useful because:** Today a dropped link can leave the owner unsure whether a request was heard, partially executed, or lost. A bounded handoff would make the wearable dependable in elevators, commutes, and Wi‑Fi/LTE gaps while preventing duplicate sends, purchases, edits, or reminders.
+- **path:** pendant (offline utterance sequence, local health frame, and reconnect event) → Mac bridge (USB/Bluetooth or network reappearance and local task continuation) → relay (durable task lease, idempotency key, and reconnect reconciliation) → mac-planner (pause/resume the operation graph) → browser-extension (revalidate tab/session and pending browser mutations) → faculty-perception layer (report exactly what was heard, executed, and remains unknown)
+- **model tier:** No frontier model for reconciliation. Deterministic event sequencing, leases, idempotency, and precondition checks; use a cheap model only to summarize the recovered state. Realtime is needed only if the owner is actively asking during reconnect.
+- **latency:** Persist the interruption frame within 200 ms; reconnect reconciliation within 5 seconds; never auto-resume an irreversible step without renewed confirmation.
+- **cost:** Low API cost; dominated by bounded local NVS/relay event storage and a few reconciliation calls. Model usage is optional and small.
+- **security:** The pendant must persist sequence numbers and hashes, not raw audio or secrets. Every action needs an idempotency key and a lease owner. Reconnect must treat uncertain outcomes as unknown and ask, rather than retrying blindly. A stale browser session or changed account must invalidate the task.
+- **missing:** A cross-surface task journal with monotonic event IDs and explicit heard/accepted/started/finished/unknown states; Firmware emission and relay ingestion of offline capture and reconnect sequence frames; Idempotency-key propagation through Mac actions, browser commands, relay jobs, and routine runs; A resume policy distinguishing safe read-only work from confirmation-required mutations
+
+### "Answer questions about private pages and messages without sending their contents to the cloud: use the browser session on my Mac, extract only the minimum fact I asked for, and tell me exactly what was withheld."
+- **useful because:** The browser is the one surface holding authenticated sessions, while the relay is the one that speaks naturally. Today the convenient path risks moving page text through relay tools or durable announcements. A local extraction boundary would let the owner use voice over private mail, billing, health, and account pages without turning the cloud into a copy of them.
+- **path:** pendant (voice question and spoken result) → relay-realtime (intent only; receives no page body) → mac-planner (local extraction and answer composition) → browser-extension (authenticated DOM read in the selected session) → mac-vision (local visual confirmation when DOM extraction is unavailable) → relay (receives only a redacted answer, sensitivity label, and provenance hash)
+- **model tier:** A local small model or deterministic extractor should answer from the page; realtime handles only the conversational envelope. Escalate to a stronger model only after explicit permission to export the relevant excerpt.
+- **latency:** 1–3 seconds for structured pages and mail metadata; up to 6 seconds for local visual extraction. Cloud relay must not add a page-content round trip.
+- **cost:** Low: browser read and local inference dominate; no cloud page-token cost in the default path. A user-approved excerpt export incurs ordinary model cost.
+- **security:** The local process must enforce a no-body-egress contract, redact secrets and identifiers, preserve the selected tab/session boundary, and state when extraction is uncertain. The spoken answer should disclose source and withheld categories without revealing hidden content. Never use the active tab implicitly when multiple authenticated sessions exist.
+- **missing:** A local-only browser question route that accepts a question plus explicit tab/session ID; A constrained extractor with field-level allowlists and a proof that raw DOM/screenshot bytes were not sent to relay; A typed redacted-result envelope carrying answer, confidence, withheld categories, source hash, and capture time; A voice-agent policy preventing read_web_page or announcements from being selected for private-page questions
+
+
+## What it asked for
+
+_Nothing._
+## Its own summary
+
+Recorded three new owner-facing capabilities: expiring cross-surface operation previews before irreversible actions; safe interruption/resumption with idempotent reconciliation across pendant, relay, Mac, and browser; and local-only answers from authenticated browser pages with minimum-fact export. Each names the missing protocol/policy work rather than pretending current routes already provide it.
+
+**Biggest unknown:** Whether any of these collide with a backlog entry not visible in this round; the interruption/resumption idea was flagged as somewhat close to an existing entry, so its distinguishing requirement is explicit idempotent cross-surface reconciliation and no automatic retry of uncertain mutations.
+

@@ -1,0 +1,1 @@
+{"name":"POST /vision-loop/execute","liveStatus":404,"liveResponse":"{\"ok\":false,\"error\":\"No such route on this agent: GET /vision-loop/execute\",\"hint\":\"GET /capabilities lists every route this process has.\"}"}

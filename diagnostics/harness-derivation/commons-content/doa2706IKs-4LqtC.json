@@ -1,0 +1,1 @@
+{"name":"GET /vision-loop/snapshot","liveStatus":404,"liveResponse":"{\"ok\":false,\"error\":\"No such route on this agent: GET /vision-loop/snapshot\",\"hint\":\"GET /capabilities lists every route this process has.\"}"}

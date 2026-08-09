@@ -1,0 +1,1 @@
+{"name":"mac-planner","role":"You run on the owner's MacBook. You receive plans from the server-side agent and turn them into concrete desktop actions: apps, files, shortcuts, the browser.","model":"gpt-5.6-luna","base":"http://localhost:8000","defaultScenario":"desktop-task","facetOf":null}

@@ -1,0 +1,75 @@
+# Harness derivation — mac-terminal — round 182
+
+Model: `gpt-5.6-luna`  ·  probes against `http://localhost:8000`
+
+## What it established
+
+- **live cross-surface readiness** — The Mac agent, relay, and Safari browser extension are online now. Safari has 9 tabs and the active authenticated tab is X at https://x.com/home; ops reports fullControlMode=true, vision loop enabled, screen recording/accessibility granted, relay reachable, and browser pendingCommands=0. The pendant is not represented as LTE-registered in the live device list, so the immediately testable path remains USB-attached hardware rather than LTE.
+  - evidence: GET /ops/snapshot returned agent.ready=true, relay.reachable=true, macBridgeOnline=true, browser.online=true, fullControlMode=true, visionUploadConsented=false; GET /browser/status returned Safari online with tabCount 9; discover(devices) returned cloudflare-contract-test offline.
+
+## Capabilities it proposed
+
+### "“Do this whole thing for me, and keep me informed”: from the pendant, turn a spoken goal into a durable, cross-surface job that can read the authenticated Safari page, operate the Mac, recover from a failed step, and tell me exactly what is done, waiting, or failed."
+- **useful because:** This is the single most useful missing behavior: today the owner has to know whether a request belongs to voice, browser, or Mac control. A one-sentence request should survive a dropped USB/LTE link, use the browser session nobody else can reach, and finish with an auditable spoken result rather than a vague “I’m working.” The owner can interrupt or resume it without repeating the goal.
+- **path:** pendant → relay-realtime → mac-planner → browser-extension → mac-vision → dashboard
+- **model tier:** Use realtime only for the short spoken intake/status turns; route decomposition, browser-page interpretation, and recovery decisions to a cheaper background model. Use deterministic Mac/browser actions where the plan is unambiguous.
+- **latency:** Acknowledge on the pendant in under 1 second; first useful status in 3 seconds; individual browser/Mac steps may run for minutes with push updates rather than holding the voice turn open.
+- **cost:** One short realtime turn plus roughly 2–6 background text/vision calls per multi-step job; browser text inspection is cheap, while screenshot interpretation dominates. Persist evidence hashes and summaries instead of resending full page/screen context.
+- **security:** Authenticated page text, screenshots, and local paths leave the Mac for planning. Keep secrets out of model context, attach every result to a job/evidence capsule, and require an explicit owner checkpoint before sending messages, publishing, purchasing, or deleting. Recovery must never blindly repeat a non-idempotent browser action.
+- **missing:** A durable cross-surface state machine joining pendant turn ID, browser command IDs, Mac job IDs, and action-ledger step keys; Real process-level cancellation and retry/resume semantics for run_shell and computer-use steps; Push status delivery from Mac/relay to the pendant, including stale/offline truth; A planner output that records an idempotency key and evidence prerequisite for every side effect
+
+### "“Stop the thing you’re doing right now.” Press the pendant’s second button (or say stop) and have the currently running Mac/browser job actually terminate, then report whether it stopped before or after the last side effect."
+- **useful because:** The owner can currently issue a cancel, but a run_shell child is not given the abort signal, so a 120-second command keeps running; after a restart, the job can remain falsely “processing.” A physical, low-latency stop path is the difference between an agent that is controllable and one that merely promises cancellation. It is useful specifically when the owner cannot reach the keyboard or the model is stuck.
+- **path:** pendant → relay-realtime → mac-planner → browser-extension → dashboard
+- **model tier:** No expensive model is needed for the stop itself. Firmware emits a signed cancel intent; relay/mac agent routes it by job ID. Use a cheap classifier only when “stop” is ambiguous; never use realtime to decide whether to honor an unambiguous physical cancel.
+- **latency:** Pendant acknowledgment under 250 ms; OS process termination under 1 second; status receipt and spoken confirmation within 2 seconds. If the link is down, queue exactly one cancel intent and show the existing stale/queued pattern.
+- **cost:** Negligible model cost for physical-button stop; one small relay event and one receipt lookup. The engineering cost is process-group management and mapping active job/step IDs, not inference.
+- **security:** A cancel can discard unsaved work, so the response must say what was terminated and whether a side effect may already have happened. Bind the intent to the current owner/session and reject stale job IDs. Never claim rollback: use the existing undo route only for actions whose receipt says reversible.
+- **missing:** Firmware mapping for the existing dedicated button to a cancel-intent payload (not a gesture on sw0); A Mac executor that launches run_shell/computer-use in a killable process group and passes AbortSignal to it; An active-job registry that survives relay/Mac restarts and maps pendant intent to job and step; A durable cancel receipt with pre/post side-effect boundary and pendant push delivery
+
+### "“Watch this page and only interrupt me when something materially changes.” Let me pin an authenticated Safari tab from the pendant, have the browser extension diff it over time, and hear a two-sentence alert with the relevant local context and a one-word action choice."
+- **useful because:** The owner should not repeatedly open dashboards, delivery pages, issue trackers, or a private work portal just to check for change. A change-triggered alert is different from a morning briefing: it preserves the authenticated browser session, suppresses cosmetic churn, explains why the change matters using Mac context, and lets the owner act hands-free while the page is still open.
+- **path:** pendant → relay-realtime → browser-extension → mac-planner → dashboard
+- **model tier:** Use DOM hashing and selectors locally for the common case; send only changed, redacted regions to a cheap background model for semantic significance. Realtime is reserved for the short alert and the owner’s reply. Escalate to vision only when the page is canvas-heavy or the DOM diff is inconclusive.
+- **latency:** Heartbeat/diff within 30–60 seconds of a tab update; alert speech starts within 3 seconds of a confirmed material change. Suppress duplicate alerts until the owner acknowledges or the page changes again.
+- **cost:** Near-zero cost for unchanged pages; one small text-model call per candidate diff and occasional vision call. Storage is a selector/hash plus compact prior snapshot, not full page history.
+- **security:** The extension must never upload whole authenticated pages by default. Redact tokens, account identifiers, and unrelated regions before diffing; require an explicit allowlist per watch. Alert actions such as replying, approving, or downloading remain separate commands with a visible evidence capsule.
+- **missing:** A user-facing watch-creation command that pins the current tab and stores a redaction/selector policy; A semantic diff service with materiality thresholds and deduplication; Relay-to-pendant push for asynchronous browser events while no voice session is open; A bounded encrypted snapshot store with retention and per-watch deletion
+
+### "“If my Mac is asleep or disconnected, hold this job and finish it the next time the Mac and browser are available—without doing it twice.”"
+- **useful because:** The owner should be able to delegate work once and stop thinking about transport state. Today a relay job, a Mac job, a browser command, and a reboot are separate lifetimes; a laptop sleep or USB drop can strand work or invite a dangerous manual retry. A durable lease with preconditions would make overnight and commute-time requests genuinely dependable.
+- **path:** pendant → relay-realtime → mac-planner → browser-extension → dashboard
+- **model tier:** Cheap background orchestration and deterministic precondition checks; realtime only acknowledges capture and eventual completion. No vision/model call while the Mac is unavailable.
+- **latency:** Local acknowledgment under 1 second. Resume within 10 seconds of a healthy bridge/browser heartbeat; otherwise remain quiet and show queued age rather than pretending progress.
+- **cost:** Tiny storage and heartbeat overhead; inference only when a queued task resumes or a precondition changes. The expensive part is an occasional planner call after a reboot, not idle waiting.
+- **security:** A resumed task must re-check the URL, logged-in identity, files, and any time-sensitive assumptions. Use a lease, generation number, and idempotency key; expire tasks whose authorization or precondition changed. Never resume sends, purchases, deletion, or publication without a fresh owner checkpoint.
+- **missing:** A relay-resident durable task record with lease, generation, expiry, and precondition predicates; Mac bridge reconnect handshake that adopts, rather than duplicates, outstanding work; Browser-session revalidation and command deduplication across extension restarts; Pendant delivery of queued/resumed/expired states over the existing offline-aware status channel
+
+### "“Use this private page, but do not send its contents off my Mac; tell me only the answer and show me exactly what evidence stayed local.”"
+- **useful because:** Authenticated browser sessions currently make powerful tasks possible, but the owner has no per-request way to distinguish safe remote planning from sensitive local-only work. A privacy mode would let them use the browser body, local files, and Mac vision without choosing between abandoning automation and exporting an entire private page to the relay/model.
+- **path:** pendant → relay-realtime → browser-extension → mac-planner → mac-vision → dashboard
+- **model tier:** Use a local Mac model or deterministic extractor for page parsing and screenshot OCR; the relay receives only a narrowly scoped question, redacted answer, hashes, and confidence. Realtime speaks the result, not the private source.
+- **latency:** Answer in under 5 seconds for DOM/text extraction; under 15 seconds for local vision. The pendant must say “local-only” before work begins and indicate if a requested operation would require remote context.
+- **cost:** No remote token cost for local extraction; local compute and occasional model download/storage are the dominant costs. Send compact hashes and field-level summaries only when needed for audit.
+- **security:** Local-only must be enforced technically, not by a prompt. Redact secrets at the browser-extension boundary, keep source bytes in a local encrypted vault, and make evidence export an explicit separate action. Model telemetry must not contain raw page text, screenshots, URLs with tokens, or clipboard contents.
+- **missing:** A hard local-only execution mode spanning browser inspection, Mac vision, planner context, logs, and telemetry; A browser extension redaction/field-extraction API that can answer structured questions without exporting the DOM; A local evidence vault with short-lived capabilities and owner-visible provenance; A dashboard/pendant indicator that distinguishes local-only, redacted-remote, and unrestricted jobs
+
+### "“Do this in my work account, not my personal one.” Have the pendant and browser extension identify the correct authenticated identity, refuse to guess when two accounts are open, and report which account and tab will be used before any side effect."
+- **useful because:** Authenticated Safari is a powerful reach, but the owner cannot safely delegate account-sensitive work by voice when multiple profiles, windows, or organizations are open. Wrong-account actions are more damaging than failed actions. An identity-aware handoff turns a vague spoken target into a verifiable choice without requiring the owner to inspect tabs manually.
+- **path:** pendant → relay-realtime → browser-extension → mac-planner → dashboard
+- **model tier:** Use deterministic session metadata, domain/account markers, and local browser storage inspection first; use a small text model only to map spoken labels such as “work” or “school” to known identities. Realtime speaks the candidate list and collects the owner’s selection.
+- **latency:** Candidate identities in under 2 seconds; no side effect until the selected session is confirmed and revalidated immediately before dispatch. If identity cannot be proven, answer with the ambiguity instead of proceeding.
+- **cost:** Negligible inference for known labels; occasional local parsing of account markers. The cost is extension/session plumbing and maintaining identity fingerprints, not model tokens.
+- **security:** Never expose cookies, tokens, or full account identifiers to the relay. Store salted local fingerprints and human-readable aliases only; treat a changed account marker, domain, or window as a mismatch. A selection must be bound to a tab/session generation so navigation cannot silently switch identity.
+- **missing:** Browser extension API for account/profile identity fingerprints and session generations; A per-owner alias store (“work”, “personal”, etc.) kept on the Mac, not in model prompts; Planner/executor preflight that blocks dispatch on identity drift and emits a pendant-readable candidate list; Receipts that include the verified domain, account alias, tab, and generation without secrets
+
+
+## What it asked for
+
+_Nothing._
+## Its own summary
+
+Live discovery confirms the Mac agent, relay, and authenticated Safari extension are online now; full-control, Accessibility, Screen Recording, browser bridge, and vision loop are available. I recorded three new owner-facing capabilities: (1) a durable cross-surface voice job, while explicitly separating the missing connective state machine from existing routes; (2) a real physical/voice emergency stop that kills the active Mac process rather than merely setting a cooperative cancel flag; and (3) event-triggered semantic monitoring of an authenticated browser tab with material-change filtering and spoken alerts. The strongest immediate capability is the stop path: current cancellation cannot interrupt a running shell child and can leave stale “processing” state after restart.
+
+**Biggest unknown:** The remaining blockers are implementation, not discovery: which existing firmware button is reserved for cancel in the live build; a killable process-group/AbortSignal path and durable active-job mapping on Mac; relay push of job/browser events to the pendant; and the exact watch API/schema (GET /watches was referenced but not yet described). I still need those pieces—or a granted USB serial diagnostic path—to validate the pendant-to-Mac cancel flow on the hardware that is physically connected today.
+

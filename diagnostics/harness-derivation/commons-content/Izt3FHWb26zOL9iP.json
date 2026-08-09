@@ -1,0 +1,1 @@
+{"name":"POST /bridge/work/:jobId/result","liveStatus":404,"liveResponse":"{\"ok\":false,\"error\":\"No such route on this agent: GET /bridge/work/:jobId/result\",\"hint\":\"GET /capabilities lists every route this process has.\"}"}
