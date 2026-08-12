@@ -41,7 +41,7 @@
     {
       "id": "T7",
       "title": "Commit and push only the session deliverables without disturbing existing user changes",
-      "status": "in_progress",
+      "status": "completed",
       "owner": "orchestrator"
     }
   ]

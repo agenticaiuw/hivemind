@@ -12,3 +12,4 @@
 - 2026-08-11: Visual inspection found the first exploded rendering had placed a Ø30 mm battery and 10 × 10 mm LRA in the same lateral plane inside a roughly 31 mm cavity, which is not physically possible.
 - 2026-08-11: Applied a targeted built-in image edit: the battery now owns a full-width layer; the current LRA shares the upper mechatronic layer with the speaker; the current-part fallback is Ø34 × 14 mm; 12.5 mm is retained only as a smaller-LRA stretch target.
 - 2026-08-11: Copied all requested final project assets into the session output folder and verified both final PNGs at 1536 × 1024. Retained the superseded exploded draft for traceability.
+- 2026-08-11: Committed only this session folder as `667ac24` (`Add dimensioned pendant hardware concept renders`) and pushed `main` to `origin`; unrelated pre-existing worktree and index changes were preserved.
