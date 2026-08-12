@@ -13,16 +13,18 @@ generic memories + chats, then purge every store.
 1. [x] shared/domains/* — registry + six domain modules (tools+memory+clarify) — 27 tests green
 2. [x] shared/domainMemory.js — fact store logic + fleet-state hive block
 3. [x] shared/domainCapture.js — run-settle capture heuristic
-4. [ ] Remove generic splices: fleetContext memory.text + Recent context,
+4. [x] Remove generic splices: fleetContext memory.text + Recent context,
        orchestrator projection swap, conversationContext memory sections,
        bridge memoryText, pendantConverse spokenMemory writer
-5. [ ] Delete dead generic-memory machinery: shared/fleetMemory.js,
+5. [x] Delete dead generic-memory machinery: shared/fleetMemory.js,
        shared/spokenMemory.js, local-agent/contextProjection.js (+tests,
-       + store memory-event methods)
-6. [ ] Voice: memory tools + fetch-on-tool-selection + clarification
-7. [ ] Mac planner: domain memory attach + memory actions + clarification +
-       run-settle capture + bridge hive sync (fleet-state merge/write-back)
-8. [ ] Browser brain: memory tools + clarify reply + relay domain-memory routes
+       + store memory-event methods, measure-context-projection.mjs)
+6. [x] Voice: memory tools + fetch-on-tool-selection + clarification
+       (relay-voice agent; independently verified 658/658 by relay-voice-2)
+7. [x] Mac planner: domain memory attach + memory actions + clarification +
+       run-settle capture + bridge hive sync (mac-agent; local-agent 1780/1780)
+8. [x] Browser brain: memory tools + clarify reply + relay domain-memory routes
+       (browser-brain; 242/242 extension tests; manifest 1.7.10)
 9. [x] Archive + purge DONE 2026-08-12. Archive: memory-archive-2026-08-12.json
        (8.1 MB). Counts archived: 26 local facts, 57 graph entities (the
        owner's "47" had grown by 10 while agents ran), 38 relations, 100 live
@@ -32,8 +34,14 @@ generic memories + chats, then purge every store.
        + pendant-sessions.json reset to empty shapes; D1 DELETEs confirmed
        (3426/1330/1413/1118/915/0 changes). Subagents delegated: relay-voice,
        mac-agent, browser-brain (parallel, disjoint file sets).
-10. [ ] Full test suite green; wrangler deploy; safari ship (1.7.10);
-        agent restart + /health; commit/push
+10. [x] SHIPPED 2026-08-12: full suite 2722/2722 green (~223s). wrangler
+        deploy → version bb6773eb-961d-40db-a72e-f77b6e5f5eca, /health ok,
+        macBridgeOnline true. launchctl kickstart com.aipendant.agent →
+        /health ok. Live check: GET /v1/memory/domains 200 (empty, post-
+        purge); fleet state now carries domainMemory {version:1, facts:[]}
+        and the legacy `memory` field is GONE from production fleet state.
+        Safari ship 1.7.9 → 1.7.10 in place, codesign valid; Safari NOT
+        relaunched (orchestrator's ceremony — serves 1.7.9 until then).
 
 ## Notes
 - Hive sync rides FLEET_STATE_KEY ('fleet') under data.domainMemory; the relay
