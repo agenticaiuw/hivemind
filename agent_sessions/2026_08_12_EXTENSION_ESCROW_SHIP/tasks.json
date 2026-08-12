@@ -1,0 +1,26 @@
+{
+  "session": "2026_08_12_EXTENSION_ESCROW_SHIP",
+  "tasks": [
+    {
+      "id": "ship-script",
+      "title": "scripts/ship-safari-extension.sh — mechanical, credential-preserving ship recipe",
+      "owner": "escrow-ship-agent",
+      "status": "done",
+      "proof": "guard trip at 1.7.0==1.7.0 and 1.7.1==1.7.1; real 1.7.0->1.7.1 ship succeeded, pluginkit UUID unchanged"
+    },
+    {
+      "id": "credential-escrow",
+      "title": "Escrow pairing in the Safari wrapper app (store/fetch/clear via sendNativeMessage)",
+      "owner": "escrow-ship-agent",
+      "status": "done",
+      "proof": "SafariWebExtensionHandler.swift + pairing.js pure helpers + background.js wiring; 194/194 browser-extension tests"
+    },
+    {
+      "id": "ship-1.7.1",
+      "title": "Bump manifest to 1.7.1 and ship with the new script",
+      "owner": "escrow-ship-agent",
+      "status": "done",
+      "proof": "installed appex manifest at 1.7.1, codesign valid, one enabled pluginkit row at ~/Applications"
+    }
+  ]
+}
