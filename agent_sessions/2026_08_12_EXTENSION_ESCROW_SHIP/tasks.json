@@ -21,6 +21,20 @@
       "owner": "escrow-ship-agent",
       "status": "done",
       "proof": "installed appex manifest at 1.7.1, codesign valid, one enabled pluginkit row at ~/Applications"
+    },
+    {
+      "id": "approval-card-flicker",
+      "title": "Dashboard: stop 'Needs your approval' cards flashing between refreshes; stale parks render quiet + dismissible",
+      "owner": "dashboard-defects-agent",
+      "status": "done",
+      "proof": "root cause: /api/jobs silently alternates mac-agent ops-proxy vs relay-history fallback and the client replaced the list wholesale; fixed with a latch-merge in dataSource.fetchJobs + stale split in runState/pendingApprovals; svelte-check 0 errors, 45/45 tests"
+    },
+    {
+      "id": "fleet-map-ext-rly-edge",
+      "title": "Hive runtime ring: add intended-topology EXT—RLY edge (browser_node mesh), grey when down, live from relay device rows",
+      "owner": "dashboard-defects-agent",
+      "status": "done",
+      "proof": "graphEdges synthesis in routes/hive/+page.svelte; 'ext-relay'/'mesh socket' present in build-agent and .svelte-kit worker bundles; build:agent done, worker deployed version 141ff39c"
     }
   ]
 }
