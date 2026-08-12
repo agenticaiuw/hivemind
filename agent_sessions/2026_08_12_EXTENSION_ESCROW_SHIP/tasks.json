@@ -54,43 +54,71 @@
       "id": "screenless-menu-model",
       "title": "Relay-side app ring (Time/Timer/Reminders/Calendar) driven by encoder menu frames",
       "owner": "screenless-apps-agent",
-      "status": "in_progress",
-      "proof": ""
+      "status": "done",
+      "proof": "cloud-relay/menuRing.js pure reducer + 27 tests; live: detent/push/menu_back drove earcons+names+apps on the deployed worker (version 36422c99)"
     },
     {
       "id": "screenless-timer-store",
       "title": "Relay-held timer store: expiry rows on getState/saveState, chime down an open socket or queue for the next press",
       "owner": "screenless-apps-agent",
-      "status": "in_progress",
-      "proof": ""
+      "status": "done",
+      "proof": "cloud-relay/timerStore.js on getState/saveState, claim-before-speak; live: 1-min knob timer chimed on the NEXT press with zero interaction (18 frames / 5618 B)"
     },
     {
       "id": "screenless-briefs",
       "title": "Reminders / Calendar apps: read-only Mac jobs on the existing relay->Mac path, spoken briefs with honest empties",
       "owner": "screenless-apps-agent",
-      "status": "in_progress",
-      "proof": ""
+      "status": "done",
+      "proof": "run_applescript read-only bodies (classifyAction {safe:true}, tier read); measured on the real Mac: per-item loop never returned, bulk form ~16s; Calendar needs open_app first and is still >90s — documented as the Phase-1 limit"
     },
     {
       "id": "screenless-voice-parity",
       "title": "set_timer voice tool backed by the SAME relay timer store as the knob",
       "owner": "screenless-apps-agent",
-      "status": "in_progress",
-      "proof": ""
+      "status": "done",
+      "proof": "set_timer tool + createTimerControl over the SAME store; 6 socket-seam tests drive the tool into a real memory store and read it back through the knob path"
     },
     {
       "id": "screenless-doc-correction",
       "title": "Screenless_App_Grammar.md: blue button is push-to-talk, not approve/deny",
       "owner": "screenless-apps-agent",
-      "status": "in_progress",
-      "proof": ""
+      "status": "done",
+      "proof": "blue = push-to-talk with the Solar_Feasibility §4.3 numbers; approvals answered by voice/dashboard + the approval_readback haptic; Back-entry escape, run_applescript rationale, audio app and X-Pendant-Mode all documented"
     },
     {
       "id": "screenless-ship",
       "title": "Tests green + wrangler deploy + /health verify + commit/push",
       "owner": "screenless-apps-agent",
-      "status": "in_progress",
-      "proof": ""
+      "status": "done",
+      "proof": "658 -> 743 tests green; wrangler deploy version 36422c99; /health ok"
+    },
+    {
+      "id": "screenless-audio-devices",
+      "title": "Audio devices app on the ring: bt_list / bt_select / audio_sink senders",
+      "owner": "screenless-apps-agent",
+      "status": "done",
+      "proof": "ring built from bt_devices; live: bt_list on entry, then bt_select index 1 AND audio_sink bluetooth on the wire; Pendant speaker entry sends audio_sink speaker"
+    },
+    {
+      "id": "screenless-approval-haptic",
+      "title": "Send {type:approval_readback} so the device fires the strong haptic (blue no longer approves)",
+      "owner": "screenless-apps-agent",
+      "status": "done",
+      "proof": "{type:approval_readback} sent unconditionally before every readback in speakQueuedApprovals"
+    },
+    {
+      "id": "screenless-ptt-label",
+      "title": "PTT labelling: accept X-Pendant-Mode on the command path and record it on the job",
+      "owner": "screenless-apps-agent",
+      "status": "done",
+      "proof": "PENDANT_MODES allowlist + X-Pendant-Mode header on /v1/pendant/command; converse tags duplex, ring jobs tag knob; null when absent (never inferred from transport)"
+    },
+    {
+      "id": "screenless-brief-latency",
+      "title": "Reminders/Calendar AppleScript measured on the real Mac; bounded queries + honest wait line",
+      "owner": "screenless-apps-agent",
+      "status": "done",
+      "proof": "APP_BRIEF_WAIT_MS 26s from the 16s measurement; \"Checking your reminders.\" spoken on entry so the wait is not silence"
     }
   ]
 }
