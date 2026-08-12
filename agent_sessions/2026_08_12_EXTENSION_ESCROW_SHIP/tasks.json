@@ -3,7 +3,7 @@
   "tasks": [
     {
       "id": "ship-script",
-      "title": "scripts/ship-safari-extension.sh \u2014 mechanical, credential-preserving ship recipe",
+      "title": "scripts/ship-safari-extension.sh — mechanical, credential-preserving ship recipe",
       "owner": "escrow-ship-agent",
       "status": "done",
       "proof": "guard trip at 1.7.0==1.7.0 and 1.7.1==1.7.1; real 1.7.0->1.7.1 ship succeeded, pluginkit UUID unchanged"
@@ -31,7 +31,7 @@
     },
     {
       "id": "fleet-map-ext-rly-edge",
-      "title": "Hive runtime ring: add intended-topology EXT\u2014RLY edge (browser_node mesh), grey when down, live from relay device rows",
+      "title": "Hive runtime ring: add intended-topology EXT—RLY edge (browser_node mesh), grey when down, live from relay device rows",
       "owner": "dashboard-defects-agent",
       "status": "done",
       "proof": "graphEdges synthesis in routes/hive/+page.svelte; 'ext-relay'/'mesh socket' present in build-agent and .svelte-kit worker bundles; build:agent done, worker deployed version 141ff39c"
@@ -49,6 +49,48 @@
       "owner": "feed-consolidation-agent",
       "status": "done",
       "proof": "svelte-check 0 errors; 51/51 tests; build:agent live at :8000/dashboard (chips All-120/This Mac-78/Browser-22/Pendant-13/Agent-initiated-7, tiles Work/System/Mac/Browser); worker deployed version b0c41418"
+    },
+    {
+      "id": "screenless-menu-model",
+      "title": "Relay-side app ring (Time/Timer/Reminders/Calendar) driven by encoder menu frames",
+      "owner": "screenless-apps-agent",
+      "status": "in_progress",
+      "proof": ""
+    },
+    {
+      "id": "screenless-timer-store",
+      "title": "Relay-held timer store: expiry rows on getState/saveState, chime down an open socket or queue for the next press",
+      "owner": "screenless-apps-agent",
+      "status": "in_progress",
+      "proof": ""
+    },
+    {
+      "id": "screenless-briefs",
+      "title": "Reminders / Calendar apps: read-only Mac jobs on the existing relay->Mac path, spoken briefs with honest empties",
+      "owner": "screenless-apps-agent",
+      "status": "in_progress",
+      "proof": ""
+    },
+    {
+      "id": "screenless-voice-parity",
+      "title": "set_timer voice tool backed by the SAME relay timer store as the knob",
+      "owner": "screenless-apps-agent",
+      "status": "in_progress",
+      "proof": ""
+    },
+    {
+      "id": "screenless-doc-correction",
+      "title": "Screenless_App_Grammar.md: blue button is push-to-talk, not approve/deny",
+      "owner": "screenless-apps-agent",
+      "status": "in_progress",
+      "proof": ""
+    },
+    {
+      "id": "screenless-ship",
+      "title": "Tests green + wrangler deploy + /health verify + commit/push",
+      "owner": "screenless-apps-agent",
+      "status": "in_progress",
+      "proof": ""
     }
   ]
 }
