@@ -35,6 +35,13 @@
       "owner": "dashboard-defects-agent",
       "status": "done",
       "proof": "graphEdges synthesis in routes/hive/+page.svelte; 'ext-relay'/'mesh socket' present in build-agent and .svelte-kit worker bundles; build:agent done, worker deployed version 141ff39c"
+    },
+    {
+      "id": "browser-runs-in-dashboard-feed",
+      "title": "Browser-extension-local runs appear in the shared job history and the dashboard's Recent/hero feed (owner: 'why didn't my question in the browser extension carried to the dashboard?')",
+      "owner": "browser-runs-dashboard-agent",
+      "status": "done",
+      "proof": "read-side fix, not a new ingest (mesh-envelope fold already live: owner's run btask_930d46ec was in relay_jobs): operatorRunForRow membership in /v1/ops/voice-runs(+/latest), /api/runs jobStatus+reply passthrough, recordRunToHive fire-and-forget; 2731/2731 relay+ext tests, 45/45 dashboard; relay 487876c3 + dashboard 669b6d5d deployed, live voice-runs now heads with the Wells Fargo browser run; extension shipped 1.7.8->1.7.9, pluginkit UUID unchanged"
     }
   ]
 }
