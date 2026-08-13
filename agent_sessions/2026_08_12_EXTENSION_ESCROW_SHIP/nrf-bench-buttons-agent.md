@@ -343,3 +343,105 @@ memo, push-to-talk and bookmark are withheld. It sits after
 `clear_button_events()` so a probe press cannot be banked and replayed on
 disarm. Verified live: three presses, three correct identifications, zero
 conversations, zero captures, zero uploads.
+
+---
+
+## TASK B (#26) — context-sensitive buttons, the nRF half
+
+### What the grammar is now
+
+Matching `docs/Screenless_App_Grammar.md` and the relay exactly:
+
+| | ring CLOSED (global) | ring OPEN |
+|---|---|---|
+| **yellow P0.21** | short: start/stop conversation · **long (600 ms): push-to-talk** | `menu_select` |
+| **green P0.22** | nothing — wires are off | nothing |
+| **blue P0.23** | memo (record-only, no planner) | `menu_back` |
+| **encoder** | scroll, one detent = one unit, no acceleration | same |
+
+### The three things that were STALE, not missing
+
+The interesting part of this task was not adding `menu_context` — it was that
+the firmware was still implementing the *previous* design in three places, and
+each would have actively fought the shipped relay:
+
+1. **Dwell-to-select was still live.** Resting the knob for 1500 ms emitted
+   `menu_select`. The relay stopped expecting that (`menuRing.js`: "a rested
+   knob became a yellow press"), so the timer would have been committing ring
+   entries the owner never chose — the worst possible residue on a device with
+   no screen to show what just got selected. **Deleted**, not merely unused.
+2. **Blue was still push-to-talk and green was still memo.** Green's wires are
+   off, so "memo" was assigned to a dead button.
+3. **Yellow ended the conversation unconditionally.** With the ring living
+   *inside* a conversation, that would have hung up on the owner every time
+   they tried to select something.
+
+### The one real design cost, stated
+
+Yellow carries both talk verbs, so it needs a gesture, and `MARK_BUTTON_NODE`'s
+comment argues hard against exactly that: acting on the active edge means the
+mic is powering up before the finger lifts, and a gesture taxes *every* press to
+serve the rarer one. That argument was right while a second physical button
+existed. Blue is memo now and green is dead, so the choice is a gesture or
+losing the 2.4× cheaper question entirely.
+
+Mitigated by polling at 10 ms and returning **the instant the button comes up**:
+a normal tap resolves in its own 80–150 ms, not in 600. Only a real long press
+pays the full threshold, and it announces itself with a strong haptic *at* the
+threshold so the thumb learns which verb it bought while still holding.
+
+### Fail-safe, which is the point of the whole feature
+
+`menu_context_active` is 0 at boot, 0 whenever the socket is down, and cleared
+the moment a conversation ends — the device does not wait for a teardown frame
+a dead socket cannot send. A frame with no `"active"` key parses as false. The
+value is read by *scanning past* `"active"` rather than matching
+`"\"active\":true"` literally, because a stray space would otherwise read as
+false, and silently reverting to global verbs is the one failure this mechanism
+exists to make loud.
+
+### Verified on the board — every case, zero cloud spend
+
+Two hooks made this testable without generating a single junk run:
+`pendant_bench_probe` (press observed, verb withheld) and a new
+`pendant_remote_frame` injector that feeds **real relay bytes** through the
+**same dispatch chain** a socket frame takes. Writing `menu_context_active`
+directly would only have proven the mapping; injecting the bytes proves the
+parser, which is the part most likely to be wrong and which fails *silently* in
+the safe direction.
+
+```
+Injected frame: {"type":"menu_context","active":true}
+Menu context -> ring (yellow=select, blue=back)
+Yellow (P0.21) press -> menu_select
+Injected frame: {"type":"menu_context","active":false}
+Menu context -> global (yellow=talk, blue=memo)
+Yellow (P0.21) press -> conversation
+Injected frame: {"type":"menu_context", "active": true}     <- whitespace variant
+Menu context -> ring (yellow=select, blue=back)
+Blue (P0.23) press -> menu_back
+Injected frame: {"type":"menu_context"}                     <- no active key
+Menu context -> global (yellow=talk, blue=memo)             <- fails SAFE
+Blue (P0.23) press -> memo
+```
+
+Globals, with no context frame ever received (the fail-safe default):
+yellow tap → `conversation`; yellow 1000 ms hold → `push-to-talk question`;
+blue → `memo`; green → `unassigned` with its pad transition still on the BENCH
+line (`p22` 1→0→1).
+
+And the frames genuinely leave the device, over the live relay socket:
+
+```
+Yellow (P0.21) press -> menu_select
+-> menu_select (0)
+Blue (P0.23) press -> menu_back
+-> menu_back (0)
+```
+
+Conversations, captures and uploads across every one of these runs: **zero**.
+
+**Not verified, and why:** an end-to-end select against a real relay-driven ring
+needs a conversation, and this board's mic reads unpowered so no capture can
+run. Everything up to and including the frame leaving the socket is proven; the
+relay's reaction to it is ring-voice-2's half and was already tested there.
