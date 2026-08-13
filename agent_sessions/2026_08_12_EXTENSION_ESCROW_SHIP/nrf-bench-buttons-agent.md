@@ -186,3 +186,160 @@ microSD is required for Internet voice upload
 returns `-2` (ENOENT), so `sd_ready` is forced false and `show_error()` never
 returns. Reproduced on every boot. The pendant reaches its idle loop **never**:
 no LTE, no WebSocket, no Bluetooth, no button actions.
+
+---
+
+## TASK A2 (coordinator-assigned, taken ahead of B) — the boot gate
+
+### The proximate bug, measured rather than guessed
+
+`CONFIG_FS_FATFS_LFN` was **not set**, so FatFs enforces 8.3 short names and
+returns `FR_INVALID_NAME` for anything longer. Zephyr's
+`subsys/fs/fat_fs.c:translate_error()` folds that into `-ENOENT` **in the same
+case arm as `FR_NO_FILE`**:
+
+```c
+case FR_NO_FILE:
+case FR_NO_PATH:
+case FR_INVALID_NAME:
+	return -ENOENT;
+```
+
+That is why the errno looked self-contradictory: a CREATE that fails with "no
+such file". It was never about the card.
+
+**Six paths were over 8.3 and had therefore never worked:**
+
+| path | why it fails 8.3 | what it broke |
+|---|---|---|
+| `power_test.bin` | base is 10 chars | **the boot gate** — halted the whole device |
+| `recipes.json` | ext is 4 chars | the reflex layer's entire persistence |
+| `latest.opus` | ext is 4 chars | Opus journal |
+| `selftest.opus` | ext is 4 chars | selftest journal |
+| `agent_reply.audio` | base 11, ext 5 | reply audio download |
+| `agent_reply.pcm` | base is 11 chars | decoded reply playback |
+
+Fix: `CONFIG_FS_FATFS_LFN=y`, `LFN_MODE_BSS`, `MAX_LFN=64` — measured **+152 B
+RAM, +3.0 kB flash**. Renaming six paths was the alternative and is worse:
+`recipes.json` is a name the relay, the docs and any hand-written card all
+share, so 8.3 would have to be re-derived by every future author from an errno
+that actively misleads.
+
+**Proof on the board:** flashed LFN-only, no other change → the SD self-test
+passed, `sd_ready` stayed true, and the boot ran through to
+`Pendant LTE connection ready (attach 8 s)` / `LTE OK — ready for button`.
+The device had been dead at boot; it is alive.
+
+### The design flaw, which mattered more
+
+`show_error()` never returns. One optional peripheral was taking down LTE, the
+WebSocket, Bluetooth, every button, the status vocabulary and the whole menu
+grammar. Storage now costs **only storage**:
+
+- The gate logs what was actually lost — the offline outbox, the alert inbox,
+  and the capture journal used when there is no live uplink at press time —
+  and says plainly that conversation, buttons, LTE and Bluetooth are
+  unaffected. With a live uplink (the normal case) recording never touches the
+  card at all; that branch already existed in `record_microphone`.
+- It announces on the existing local vocabulary — `PENDANT_STATUS_FAILED`,
+  three red blinks and a two-part buzz — rather than inventing a signal nobody
+  has been taught.
+- It queues `{"type":"device_degraded","subsystem":"storage","lost":[…]}` for
+  the converse socket. **Deliberately NOT drop-when-closed**, unlike every
+  other frame in that group: a menu twist banked across a dead link is stale
+  intent, but "your storage is gone" is still true an hour later.
+- The boot's two-slow-flashes "card OK" signal is now gated on `sd_ready`. It
+  was firing unconditionally, which would have made the degraded boot actively
+  tell the owner something false.
+
+**Honest limit:** this firmware plays audio only inside a started conversation,
+so there is no way to speak a sentence at boot. The device half of the spoken
+announcement is done; the relay half (turning that frame into
+"Storage unavailable; I can still talk, but I can't upload recordings") is
+ring-voice-2's and does not exist yet. Until it lands the announcement is
+local-only — LED, buzz, console, bench.
+
+**Fault injection, because reasoning about a failure path is not testing it:**
+built `build-nosd` with `CONFIG_FS_FATFS_LFN=n` to reproduce the exact original
+failure, and captured:
+
+```
+microSD unavailable (mount=0 write=-2) — voice upload journal, offline outbox
+and alert inbox are OFF for this boot; conversation, buttons, LTE and
+Bluetooth are unaffected
+…
+Pendant LTE connection ready (attach 6 s)
+LTE OK — ready for button
+```
+
+A pendant with a broken card now boots, attaches and connects to the relay.
+
+### A second bug the fault-injection run exposed: 34 phantom bookmarks
+
+The degraded capture showed bursts of `Bookmark dropped: seq=57,58,59` and
+`Outbox full — evicting seq=51`, with 34 marks queued that no human made.
+
+`gpio_is_ready_dt()` checks the **port** device, never the node's status. The
+DK's Button 2 node (`sw1`) is `status = "disabled"` in the overlay because its
+pin went to the RGB status LED — but the macro still resolves to gpio0 pin 7,
+gpio0 is ready, so the firmware happily armed an `EDGE_TO_ACTIVE` interrupt on
+**P0.07, the pin `pendant_status.c` drives as the blue channel through PWM0**.
+
+The chain: mic reads muted → muted breathes blue → every PWM edge on P0.07
+fires the bookmark ISR → the device fills its own durable outbox with events
+the owner never caused, evicting real ones to make room.
+
+Fixed with `DT_NODE_HAS_STATUS(MARK_BUTTON_NODE, okay)`. Verified: **34 → 0**
+phantom bookmarks, 0 evictions, and the boot now says
+`Bookmark button not present on this board`.
+
+This one only surfaced because the mic reads muted on this board. It would have
+been invisible on a board whose mic sense reads high.
+
+### show_error() audit — every remaining forever-loop
+
+Seven call sites. One fixed; the rest listed as asked, with an assessment.
+
+| line | trigger | verdict |
+|---|---|---|
+| 4893, 4898, 4904, 4909 | DK Button 1 (`sw0`) not ready / configure / callback / interrupt fails | **Low risk, wrong in principle.** `sw0` is on-board so it does not fail in practice — but the external yellow button shares this semaphore, so a dead on-board button bricks a device whose real button works. |
+| 4985 | `!device_is_ready(i2s)` | **Defensible.** No I2S means no record and no play; the device's whole purpose is gone. Still silent on a screenless device. |
+| 5015 | SD gate | **FIXED** — degrades and announces. |
+| 5118 | boot capture self-test failure (`PENDANT_BOOT_AUDIO_CYCLE_TEST` only) | Harness-only, not a production path. |
+| 5141 | `pendant_cloud_init()` — LTE attach failed | **The worst one left, and it contradicts a shipped design.** `PENDANT_OFFLINE_STORE`'s stated purpose is that the pendant "can be present and remember while the link is down". A pendant that bricks itself in a dead zone is the exact opposite. Not changed here: the idle loop assumes an initialised modem, so making it survive needs care and its own verification pass. **Recommend it as the next task.** |
+
+### The junk runs in the owner's feed — same bug, downstream
+
+While this was being fixed the owner watched eight "Untitled run · Didn't catch
+that" rows appear in two minutes. The suspicion was my SWD button presses; it
+was not. Those presses happened while the board was still parked in
+`show_error()`, so the semaphore was never consumed, and all three boot
+self-test auto-press flags are 0.
+
+It was the phantom bookmarks above, plus my own SD fix. The 34 marks nobody
+made were sitting in the durable outbox; the LFN fix gave the device a relay to
+drain them into. A bookmark carries no audio, so the relay gets a run with no
+transcript ("Untitled run") and nothing to recognise ("Didn't catch that"), one
+per idle pass — which is what a drain loop looks like and what a human does not.
+
+Contained: generator fixed, backlog empty (`pending=0 next_seq=104`), fixed
+image on the board.
+
+### Bench probe mode — testing a button must be free
+
+Every button test was costing the owner a junk run in his own history and real
+cloud spend, on a board whose mic is unpowered so the capture is silence
+anyway. New SWD hook, same idiom as `pendant_remote_press`:
+
+```
+w4 <&pendant_bench_probe> 1    arm
+w4 <&pendant_bench_probe> 0    disarm
+```
+
+Armed, a press is fully **observed** and fully **inert** — the ISR still
+latches the edge and the BENCH line still carries the raw pad level, so the
+wire question is answered exactly as well as before; only the conversation,
+memo, push-to-talk and bookmark are withheld. It sits after
+`clear_button_events()` so a probe press cannot be banked and replayed on
+disarm. Verified live: three presses, three correct identifications, zero
+conversations, zero captures, zero uploads.
