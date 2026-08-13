@@ -468,3 +468,42 @@ the recency both missing. Both were artifacts of a stale harness of my own from
 an hour earlier still holding port 8021 and serving old code. Check what is
 actually serving before believing a negative — the same lesson the propagation
 lag taught, in a different costume.
+
+## The lesson worth keeping: verify end-to-end from the far side
+
+nrf-bench-buttons put the sharpest version of this, and it is narrower and more
+useful than "look harder":
+
+> Both of us had a hypothesis that FULLY explained the symptom, and a full
+> explanation feels like a complete one. The thing that would have caught it
+> sooner is that neither of us checked whether the symptom persisted after our
+> own fix landed — I verified my emitter was producing lines, you verified your
+> reader was reading lines, and nobody verified the two ends were connected to
+> each other until the owner's page stayed dark.
+
+Their termios ordering bug and my scan short-circuit were both real, both fully
+explained "the board has sent nothing", and each of us stopped at our own half.
+The owner found the gap between them, which is the worst possible way to find it.
+
+So the closing check on this work was deliberately run from the far side —
+board bytes to rendered pixels, in one pass, comparing the raw tap against the
+DOM the owner is actually looking at:
+
+| the board's own words (raw tap) | what his page renders |
+| --- | --- |
+| `"enc":{"cw":2,"ccw":18,"pos":-16}` | ENCODER · -16 · 2 cw / 18 ccw |
+| `"pot":{"raw":168}` (172 when read) | VOLUME POT · 4% · raw 172 |
+| `"mic":{"sense":0}` | MIC POWER · MUTED · never read high — the switch or the wire |
+| `"btn":{"p21":1}`, never once low | YELLOW · — · not seen yet |
+| — | header: nRF CONNECTED |
+
+Every tile agrees with the bytes that produced it, the unwired pins stay
+honestly empty, and the "turn it the other way" prompt has retired itself now
+that cw is non-zero. That is the chain proven end to end rather than two halves
+each proven from its own side.
+
+Also settled: no bare-text mode on the tap. They asked for it once, then found
+`grep "^cu.usbmodem0009600365811 BENCH"` works and `sed 's/^[^ ]* //'` strips
+the prefix if they ever want it bare — so a second format would be a branch
+nobody exercises. The port prefix is strictly more information than a bare line;
+documenting it in the route's own comment was the whole fix.
