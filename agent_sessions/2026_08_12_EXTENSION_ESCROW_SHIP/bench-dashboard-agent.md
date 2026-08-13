@@ -285,3 +285,74 @@ from the served chunk — I did not sign in to exercise it.
 Agent build re-verified working at http://127.0.0.1:8000/dashboard/bench: 11
 tiles, and correctly showing STOOD DOWN while the firmware agent holds the
 console.
+
+## The links: "is this thing talking to anything"
+
+Owner: "add the debugs to the bench on the status of the mics and connections
+to the remote agents and also lte connection, etc."
+
+### Where it went, and why
+
+Below the controls grid, not above it. The controls are the main feature and
+DESIGN.md says the main feature holds the most visual field: the owner reads
+them while looking up from a breadboard with a wire in his hand, several times
+a minute. Connectivity gets checked when something is already wrong, which is
+far rarer, so putting a wall of status text above the tiles would invert the
+hierarchy for the sake of the less-used answer. Smaller type and a tighter tile
+say the same thing a second way — the row reads as one glance, not as eleven
+readings.
+
+Measured at 1280x800: controls grid 536 px, links strip starts at y=702 in one
+row of six, so its top is visible without scrolling and the controls still own
+the screen. At 375 px it is three rows of two, no overflow, nothing clipped.
+
+The mic is deliberately NOT repeated in this row. It already owns two of the
+largest tiles above — the sense pin and the level — and DESIGN.md is explicit
+about not repeating what adds no value. What it needed was honesty, not a
+second home: the level tile now reads "level not reported yet" instead of a
+bare dash, because "muted" and "powered but hearing nothing" are different
+problems with different fixes and the page could only answer the first.
+
+### The contract (mine; firmware conforms)
+
+Slow line only — this is status, not pads:
+
+    "lte":{"reg":"home","op":"AT&T","rsrp":-95,"rsrq":-9.5,"band":12,
+           "mode":"ltem","cell":"01A2B3C4"}
+    "sock":{"up":true,"idle":1450}
+    "bt":{"conn":true,"name":"SoundCore 2","addr":"AA:BB:CC:DD:EE:FF"}
+    "mic":{"sense":1,"peak":91234,"rms":560}
+
+`lte.reg` is a string mapping 1:1 onto +CEREG <stat> so the firmware translates
+the modem's number rather than inventing wording. `rsrp`/`rsrq` are sent
+already converted to dBm/dB — the index arithmetic is a modem detail and must
+not live in two places. `sock.idle` is ms since the socket last carried
+anything either way, because "up but silent for 40 s" is the state most worth
+seeing and `up` alone cannot express it. Sent to nrf-bench-buttons.
+
+### Absent is not zero, enforced in the shape
+
+Every link carries `reported`. A key the firmware has never sampled is omitted,
+lands as null, and renders "not reported yet" in grey — never as a measured
+failure. `sock:{"up":false}` is a claim; omitting `sock` says nothing has
+measured it, and those must not look alike. Nothing here is red: a radio that
+has not registered yet is not a fault, and `searching` / `denied` /
+`not-registered` are kept apart because they have different causes.
+
+### Working on day one, without waiting for firmware
+
+pendant_cloud.c already prints the modem's raw AT answers, so LTE and Bluetooth
+partly work now: `+CEREG` gives registration and cell id, `+CESQ` gives both
+signal figures with 255 correctly staying unknown rather than becoming a very
+bad reading, and the BT lines give the sink's name and address. "BT sink
+remembered" is parsed as remembered and NOT as connected — it is the pendant
+writing a speaker into its list, which it does whether or not the speaker is
+powered on. The tile says "remembered, not reached" for exactly that state.
+
+### Remote agents: the existing source, not a new one
+
+The Mac bridge, relay and browser extension come from `fetchSnapshot()` — the
+same /ops/snapshot the rest of the dashboard reads. Two probes of the same
+three things drift, and then the bench and the home page disagree about whether
+the bridge is up, which makes both untrustworthy rather than one of them wrong.
+Live: all three UP, with "claiming work", "reachable" and "1 device".
