@@ -3,7 +3,7 @@
   "tasks": [
     {
       "id": "ship-script",
-      "title": "scripts/ship-safari-extension.sh — mechanical, credential-preserving ship recipe",
+      "title": "scripts/ship-safari-extension.sh \u2014 mechanical, credential-preserving ship recipe",
       "owner": "escrow-ship-agent",
       "status": "done",
       "proof": "guard trip at 1.7.0==1.7.0 and 1.7.1==1.7.1; real 1.7.0->1.7.1 ship succeeded, pluginkit UUID unchanged"
@@ -31,7 +31,7 @@
     },
     {
       "id": "fleet-map-ext-rly-edge",
-      "title": "Hive runtime ring: add intended-topology EXT—RLY edge (browser_node mesh), grey when down, live from relay device rows",
+      "title": "Hive runtime ring: add intended-topology EXT\u2014RLY edge (browser_node mesh), grey when down, live from relay device rows",
       "owner": "dashboard-defects-agent",
       "status": "done",
       "proof": "graphEdges synthesis in routes/hive/+page.svelte; 'ext-relay'/'mesh socket' present in build-agent and .svelte-kit worker bundles; build:agent done, worker deployed version 141ff39c"
@@ -69,7 +69,7 @@
       "title": "Reminders / Calendar apps: read-only Mac jobs on the existing relay->Mac path, spoken briefs with honest empties",
       "owner": "screenless-apps-agent",
       "status": "done",
-      "proof": "run_applescript read-only bodies (classifyAction {safe:true}, tier read); measured on the real Mac: per-item loop never returned, bulk form ~16s; Calendar needs open_app first and is still >90s — documented as the Phase-1 limit"
+      "proof": "run_applescript read-only bodies (classifyAction {safe:true}, tier read); measured on the real Mac: per-item loop never returned, bulk form ~16s; Calendar needs open_app first and is still >90s \u2014 documented as the Phase-1 limit"
     },
     {
       "id": "screenless-voice-parity",
@@ -83,7 +83,7 @@
       "title": "Screenless_App_Grammar.md: blue button is push-to-talk, not approve/deny",
       "owner": "screenless-apps-agent",
       "status": "done",
-      "proof": "blue = push-to-talk with the Solar_Feasibility §4.3 numbers; approvals answered by voice/dashboard + the approval_readback haptic; Back-entry escape, run_applescript rationale, audio app and X-Pendant-Mode all documented"
+      "proof": "blue = push-to-talk with the Solar_Feasibility \u00a74.3 numbers; approvals answered by voice/dashboard + the approval_readback haptic; Back-entry escape, run_applescript rationale, audio app and X-Pendant-Mode all documented"
     },
     {
       "id": "screenless-ship",
@@ -119,6 +119,13 @@
       "owner": "screenless-apps-agent",
       "status": "done",
       "proof": "APP_BRIEF_WAIT_MS 26s from the 16s measurement; \"Checking your reminders.\" spoken on entry so the wait is not silence"
+    },
+    {
+      "id": "dashboard-deploy-gap",
+      "title": "Dashboard changes deployed to BOTH surfaces; committed-vs-deployed gap closed",
+      "owner": "orchestrator",
+      "status": "done",
+      "proof": "Worker version 4a9f2a5a-68bc-4a36-a8cc-1e6704f966e8 (prev deploy was 2026-08-12T19:27Z, so fb0d272 'System tile row deleted' had never shipped). Live home bundle byte-identical to local build: 37993 bytes, sha256 4baf8e087515d2e4. Live compiled template reads '</header> <!> <section class=\"ask\" aria-label=\"Ask the hive\">' - composer is first after the header. Agent build served at 127.0.0.1:8000/dashboard byte-identical to build-agent on disk (sha f70eab052424cee6). 'Memory'/'History' occur 0 times in the shipped bundle."
     }
   ]
 }
