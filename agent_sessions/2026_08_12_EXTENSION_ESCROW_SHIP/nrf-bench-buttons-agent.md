@@ -796,3 +796,78 @@ observability I never validated.
 disconnect — which confirms the amp gate's input buffer really is disconnected,
 so the `nrf_gpio_pin_out_read()` I chose for `amp` was correct and reading `IN`
 there would have produced a permanent fake 0.)
+
+---
+
+## THE MIC WORKS — and my instrument was the thing lying
+
+The coordinator caught the board emitting `"mic":{"sense":0,"peak":13100,"rms":11292}`
+— a level, while sense said the mic was dark, FROZEN identical line after line.
+I had told him twice those fields were "correctly absent". They were not, and
+I had said so from reading the gate on the PROBE without ever checking the gate
+on the OUTPUT. The code told me they were absent and I repeated it.
+
+### Measured, not reasoned
+
+| global | value | what it rules out |
+|---|---|---|
+| `mic_probe_next_ms` | 2525412 → 2555550 | the probe IS called every 15 s |
+| `mic_peak` / `mic_rms` | byte-identical across both reads | …and returns early, leaving a stale value |
+| `recorded_samples` | **0** | no capture ever ran — `record_microphone` was not the source |
+| `mic_sense_ready` | 1 | the gate is live and reading a real pin |
+
+Two bugs, both mine:
+
+1. **No staleness.** `mic_peak`/`mic_rms` were set once and republished
+   forever. A number that does not move is not a measurement, and a frozen one
+   is worse than an absent one because it looks like data.
+2. **A broken wire vetoing the diagnosis of another wire.** The probe was gated
+   on `mic_power_is_cut()`, and P0.26 is tied low — so the gate could never
+   open on this board and the microphone could never be measured no matter how
+   many mic wires got fixed. A diagnostic must not take its own inputs on
+   trust, least of all from a pin already proven to be lying.
+
+### The third bug was in my arithmetic, and it inverted the conclusion
+
+With the level refreshing again it read `peak ~13000, rms ~11300` — ratio 0.86.
+I read that as "near-square, not room audio". It was my own probe's fault: I had
+deliberately removed the DC blocker to "report the microphone as it is", and the
+SPH0645 carries a large DC offset. Raw RMS is therefore dominated by DC and
+lands right next to peak — and a stuck line also gives ~1. **Two opposite
+diagnoses, identical number.**
+
+Reporting variance instead (`E[x²] − E[x]²`) strips the DC:
+
+```
+peak 12552  ac_rms  756   ratio 0.060
+peak 13044  ac_rms  875   ratio 0.067
+peak 13536  ac_rms  933   ratio 0.069
+peak 13788  ac_rms 1095   ratio 0.079
+```
+
+`peak` is the DC offset (~10% of full scale, exactly where that part sits),
+`ac_rms` is real acoustic content, 0.06–0.08 is the room-audio signature, and
+**ac_rms moves between probes** — 756 to 1095. A floating line does not do that.
+By benchTelemetry's own bands that is "sound".
+
+### Verdict — per pin
+
+- **P0.20 (I2S SDIN): PROVEN GOOD.** Carrying live audio.
+- **Mic VDD/GND: PROVEN GOOD.** An unpowered SPH0645 produces neither a DC
+  offset nor varying AC.
+- **P0.26 (sense): PROVEN BAD, and proven to be LYING** — reporting "power cut"
+  about a microphone that is demonstrably alive and hearing.
+- **OPEN on the mic: nothing.** One wire to fix, not two, not three.
+
+And 32767 was never a floating input: it was the DC offset plus a loud
+transient clipping the 16-bit ceiling at `MIC_GAIN = 4`.
+
+### The lesson, which is the day's lesson wearing its fourth costume
+
+A frozen value is the failure mode that looks most like success. The pot's
+2.5% span, the port reporting "streaming" while reading silence, the disabled
+node whose interrupt still armed, and this — all the same shape: **something
+that presents as a live measurement while nothing is measuring.** The general
+defence is not care, it is FRESHNESS: every reported value needs a timestamp
+and a rule that makes it vanish when nothing refreshes it. Absent-is-not-zero
+applied to time.
