@@ -356,3 +356,65 @@ same /ops/snapshot the rest of the dashboard reads. Two probes of the same
 three things drift, and then the bench and the home page disagree about whether
 the bridge is up, which makes both untrustworthy rather than one of them wrong.
 Live: all three UP, with "claiming work", "reachable" and "1 device".
+
+## The 811 bug: a latch, not a flake
+
+The owner pressed a button, saw nothing, and said so. The bench held 813 and
+815, had never opened 811 — the only port the board prints to — and reported
+"streaming" over the silence.
+
+One line in `scanSerial`:
+
+    if (this.winner && this.readers.has(this.winner)) return
+
+The instant any port produced a parseable line, all scanning stopped forever.
+811 was held by the firmware agent at that moment, so it was skipped once; a
+stray byte on 813 then elected 813 the winner and closed the rest; and 811 was
+never retried — not when they released it, not when the stand-down file went
+away, not until a restart. "6 attempts" were six opens of the two ports that
+had never been busy.
+
+Fixed as a class: every closed port is retried on every scan; `consolePortOf()`
+identifies VCOM0 as the lowest-numbered cu.usbmodem instead of treating three
+ports as equals; the console outranks whoever spoke first, and the others are
+released only once the console itself is the winner; a new `console-missing`
+state makes "streaming with the console unread" unrepresentable, with the
+`live` branch gated on `consoleOpen` too; and the console is never reaped for
+being quiet, which was a second way to lose it.
+
+Verified on the page, not on a field: nRF CONNECTED, winner ...811, pot moving
+171-190, LTE ROAMING / AT&T / -82 dBm / b12 — independently matching the
+firmware agent's own SWD measurement.
+
+## The raw line tap replaces the stand-down file
+
+The stand-down dance blanked the owner's bench twice in fifteen minutes, and it
+was never necessary: a flash and every JLinkExe measurement go over SWD through
+the J-Link's own USB interface, a different channel from the console. Reading
+text was the only thing that ever needed the tty, and this process already does
+that continuously. So the bench owns the ports permanently and everyone else
+subscribes:
+
+    GET /bench/lines               SSE, one raw console line per message,
+                                   in arrival order, tagged with its port
+    GET /bench/lines?after=N       backlog since sequence N, as JSON
+    GET /bench/lines?format=text   backlog as newline-delimited text, to grep
+
+Raw rather than parsed, because consumers grep for printk text this parser has
+no rule for ("Injected frame:", "microSD unavailable (mount=0 write=-2)"). The
+500-line backlog is replayed before any live line, so an agent attaching a
+second after a reset still catches the boot banner. A plain GET returns the
+backlog and ends — only `stream=1` holds the connection open, so a one-shot
+curl cannot hang.
+
+**The one exception, and it is an exception rather than a second path:** if this
+agent process is not running there is no tap, and an agent that needs the
+console must open the tty directly — otherwise a broken dashboard would mean no
+firmware diagnosis at all. Check `curl -sf localhost:8000/health` first; if it
+answers, use the tap and do not touch the port.
+
+The first fragment after attaching is dropped. A reader opens mid-transmission,
+so its first bytes are the tail of a line that began before we were listening;
+publishing it produced exactly the corruption the first live capture showed
+(`..."pot":{"raw":166` glued to `STATUS mic MUTED`). One truncated line at
+attach is a known cost of tailing a live stream; a fabricated one is not.
