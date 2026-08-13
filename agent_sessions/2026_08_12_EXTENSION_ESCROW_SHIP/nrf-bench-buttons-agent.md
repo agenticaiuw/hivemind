@@ -571,13 +571,26 @@ Most likely, in order: the sense wire landed on a ground rail or a ground-side
 row instead of the mic VDD net; or the 100k is missing/bypassed so the wire
 ties straight to GND; or the pin is one row off on the breadboard.
 
-**The caveat, stated because it changes how much to trust this.** "No change"
-is also what a register write that never landed looks like. The identical
-technique on P0.21/22/23 demonstrably worked earlier today — one press each,
-no cross-talk — so the method is proven on this board, but not inside *that*
-session. The airtight version is a 60 s run driving P0.21 LOW as a live
-control alongside P0.26 HIGH: if P0.21 moves and P0.26 does not, in the same
-run, the short is proven rather than inferred. Waiting on a console window.
+**The caveat that made this worth re-running.** "No change" is also exactly
+what a register write that never landed looks like, and this project has been
+burned repeatedly by silence that meant something other than it appeared to.
+So the verdict was NOT claimed until a control ran in the same session.
+
+**The control run — one JLinkExe session, one command file, adjacent writes.**
+P0.21 driven LOW (control) and P0.26 driven HIGH (subject), both held 9 s:
+
+```
+ 2 lines   "p21":1 ... "sense":0     before
+16 lines   "p21":0 ... "sense":0     BOTH pins driven
+ 2 lines   "p21":1 ... "sense":0     after release
+```
+
+P0.21 went 1 → 0 → 1 exactly on cue, so the writes landed and the method works
+*in this session*. P0.26 never left 0 across all 20 lines while being driven
+push-pull high.
+
+**VERDICT: P0.26 is shorted to ground.** Not inferred across sessions — proven
+against a live control in the same one.
 
 **Consequence for the mic level probe.** It is written, flashed and correct,
 and it can never arm while this pin reads low — by design, since you cannot
