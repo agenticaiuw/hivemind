@@ -189,3 +189,49 @@ scan, no HTTP call and no token; delete it and the reader returns on its own.
 The lsof guard remains as the automatic fallback, but it leaves a ~2 s window
 where both readers are on the tty — enough to shred the first seconds of a
 first-boot capture.
+
+## Follow-up: real firmware telemetry, and a bug the firmware agent found in me
+
+nrf-bench-buttons shipped the `BENCH` emitter and the pipeline ran end to end
+against real hardware: `link.state: streaming` on /dev/cu.usbmodem...811,
+`source: bench-json`, 1307 bytes, 9 parsed lines, uptime 331381 ms, every
+control populated from raw pad levels. Their two captured lines are now a test,
+pasted byte for byte.
+
+**Their bug report was correct and was mine.** `openReader` ran `stty` and then
+spawned `cat`. On macOS a `cu.*` device's termios is reset when the FIRST
+reader opens it, so the `stty` was undone by the open that followed it and
+`cat` read a port that had quietly reverted to 9600 — nothing, or a few dozen
+bytes of garbage. They lost three captures to it and ruled out contention with
+lsof. The reader is now one `sh -c` that holds the fd open first (`exec 3<port`),
+sets the line discipline second, and `exec cat <&3` third, so the setting
+survives. Device paths are validated against a strict pattern before they go
+near a shell.
+
+That also means my "the board has sent nothing at all" empty state was partly
+self-inflicted: some of that silence was this bug, not silent firmware.
+
+Three wording corrections from what they measured:
+
+- an empty `i2c` list is never a verdict on the bus. It now reads "nothing
+  answered — the bus itself reads healthy, so this is about the part", and
+  "intermittent — it answered earlier on this board, then stopped" once an
+  address has ever ACKed. That one fact deliberately survives a reboot reset,
+  because the DRV2605L attached on one boot (0xe4) and refused on the next
+  (-116), and intermittent is a different diagnosis from absent.
+- `sd.mounted:false` is the firmware's own write test failing, not a missing
+  card: "the card answers — the firmware's own write test is what did not pass".
+- an absent `esp` means the app halts in `show_error()` before
+  `pendant_bt_init()`, so the tile says "not probed yet" in amber rather than
+  rendering as a failure.
+
+A test caught a flake of its own making: it read the real
+/tmp/pendant-bench-standdown while the firmware agent was holding the console,
+so the stand-down path is now per-instance. Fixing that surfaced a genuine gap
+— with the open attempted optimistically, a link whose readers all exit was
+still reporting "probing" forever; it now falls back to "no port would open —
+the DK is unplugged".
+
+Watch item for the owner: mic sense reads LOW on every boot, which says the
+red switch is cutting the mic — the owner believes it is ON. One flip of that
+switch while /bench is open settles it, and the tile is live for exactly that.
