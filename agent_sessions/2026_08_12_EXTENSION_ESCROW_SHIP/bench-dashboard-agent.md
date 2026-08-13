@@ -150,3 +150,42 @@ and LOCAL/RELAY chip and submit intact.
 The hero answer card renders "Couldn't do it" in red on the main dashboard.
 DESIGN.md says never red text. Left alone to avoid colliding with whoever owns
 that card this session.
+
+## Follow-up: the header was lying, and the labels were stale
+
+The owner's screenshot of /bench asked "why does it say listening and no
+numbers are showing???" Two separate defects, both mine.
+
+**"LISTENING" over eleven grey dashes.** The reader was healthy — three `cat`
+readers on three VCOMs — and the board had simply never spoken, because no
+flashed image emits these values. The page rendered "ports open, nothing ever
+received" identically to "connected and idle", so the owner read it as wires he
+had broken. Now the situation is computed from whole-life link totals
+(`link.bytes` / `link.parsed`, which survive a board reset, unlike the per-boot
+counts) and says which of these is true, in plain words and never in red:
+
+- NO DATA YET — "Serial ports are open (3) and healthy, but the board has sent
+  nothing at all. The firmware that reports these values is not flashed yet —
+  this is not a wiring fault."
+- UNRECOGNISED OUTPUT — bytes arrived, none parseable: a format mismatch, a
+  completely different fix. Requires a line's worth of bytes (>40), because an
+  idle VCOM drops the odd stray byte at open and one byte is not "talking".
+- BOARD IDLE — parsed before, quiet now. Normal: the app's console only prints
+  when a value moves.
+- PORT BUSY / STOOD DOWN / nRF NOT CONNECTED / READER OFF.
+
+**Stale control map.** The tiles taught the map the owner overruled. Corrected
+at its single source (`BUTTONS` in benchTelemetry.js): yellow P0.21 is talk AND
+push-to-talk, blue P0.23 is memo, green P0.22 owns nothing — its wires are off.
+Green keeps its tile, since the pin level is still worth watching, but says
+"wires off — reads the same either way" rather than "not seen yet": a floating
+pin reads HIGH exactly like an unpressed one, so that tile cannot answer either
+way and must not imply it is testing anything. Grepped the whole dashboard
+package; no other surface carried the old mapping.
+
+**Stand-down lever** for the firmware agent that needs the console:
+`touch /tmp/pendant-bench-standdown` and this reader lets go within one 2 s
+scan, no HTTP call and no token; delete it and the reader returns on its own.
+The lsof guard remains as the automatic fallback, but it leaves a ~2 s window
+where both readers are on the tty — enough to shred the first seconds of a
+first-boot capture.
