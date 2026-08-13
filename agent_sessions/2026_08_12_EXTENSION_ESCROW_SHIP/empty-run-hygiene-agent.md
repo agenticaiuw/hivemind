@@ -264,6 +264,186 @@ the unit-test coverage already pinning the write→read contract
 (`endReason`/`endError` stamped at write time, classified at read time) and
 the live evidence above that the deployed code is correct and active.
 
+## Follow-up (coordinator, after initial deploy verified live at 100%)
+
+Two asks: (1) close the jobRecall.js gap I'd flagged as narrower/lower-
+frequency — coordinator's point stands: it's the SCREENLESS surface, so a
+wrong answer there has no evidence next to it for the owner to catch,
+inverting the frequency-vs-cost tradeoff. (2) sweep cloud-relay once more for
+the same general defect ("terminal state inferred from absence of a result
+rather than a recorded reason") now that its shape is known.
+
+### 1. jobRecall.js fix
+
+Added `jobs.js` `planJobCapturedNothing(job)` — ONE shared predicate (job
+type 'plan', status exactly 'transcribed', not typed, no useful command text,
+no result object) — and used it from BOTH:
+- `voiceRunForJob`'s `recordedSilently` (refactored to call it instead of
+  duplicating the same four-condition check inline — matches this codebase's
+  established "one place decides" pattern, e.g. `jobParkedForApproval`
+  shared between `jobs.js` and `routines.js`).
+- `jobRecall.js`'s `describeJobOutcome`, as a new branch checked BEFORE the
+  generic `PRE_DISPATCH_STATUSES` bucket (which would otherwise call the job
+  'queued' and, past `STALE_QUEUE_MS`, speak "your Mac hasn't picked it up" —
+  exactly the wrong, alarming answer for a job nothing was ever asked of).
+  New `state: 'no_speech'` outcome; `speakJobStatus` gets a new case,
+  phrased in the same `${label} — X` shape as the 'done' case: `"your last
+  Mac task — nothing was said."` Never says "failed," never says "hasn't
+  picked it up," never invents a task name beyond the existing generic
+  fallback (`jobLabel`'s pre-existing `'your last Mac task'`).
+
+Real STT failures are unaffected — `describeJobOutcome`'s `status ===
+'failed'` branch runs BEFORE `planJobCapturedNothing` is ever checked, so a
+genuine transcription error still says "failed: <real reason>," same as
+before. A stalled `'transcribing'` job past `STALE_TRANSCRIBE_MS` is also
+unaffected (different status, different branch, unchanged). An empty TYPED
+command is excluded on purpose (stays 'queued'/pending — a different,
+stranger bug than silence, not waved through).
+
+Tests: 6 new in `jobRecall.test.js` — the silent-press case reads as
+"nothing was said" and explicitly never contains "hasn't picked it up",
+"failed", or "queued"; a real STT failure on the identical shape (empty
+command, null result) still says failed with the real reason; a stalled
+transcription still fails; an empty typed command stays queued (not waved
+through as silence); a genuinely queued job with real content is unaffected.
+Full suite: 649/649 green (5 net new — jobsVoiceRun.test.js's refactor
+didn't add/remove tests, jobRecall.test.js gained 6, one pre-existing test
+count arithmetic includes a rename none of these results changed pass/fail).
+
+### 2. Broad sweep for the same defect class
+
+Investigated, before delegating the rest: routines.js (`closeFailedDispatch`
+/ `reapDispatchedRuns`), pendantApps.js (`macStdout` / `appBriefSpeech` /
+`macUnansweredSpeech` / `macFailedSpeech`), and server.js's
+`/v1/pendant/command` `storeDiagnosticCapture` (the PTT/blue-button path —
+traced exhaustively since it's the same shape as the two bugs already fixed
+and NOT yet endReason-aware). All three: **already correct**, not this bug
+class:
+
+- **routines.js**: a Mac dispatch that never returns within
+  `MAC_RESULT_MAX_WAIT_MS` is explicitly worded "The Mac claimed this
+  routine but never returned a result" (distinct from a real
+  `job.error`-carrying failure) — and for a SCHEDULED routine, unlike a
+  button press, a non-response genuinely IS worth retrying/reporting; there
+  is no "the owner chose to say nothing" analog here. Correct as-is.
+- **pendantApps.js**: already has the identical fix, done earlier, with its
+  own docblock naming the exact same bug ("Falsy-checking here is the bug
+  that turns a genuinely empty calendar into 'your Mac hasn't answered
+  yet'"). `macUnansweredSpeech` (timeout/pending) vs `macFailedSpeech`
+  (real error) vs a genuine empty-but-successful answer ("your day is
+  clear") are three distinct, correctly-separated outcomes.
+- **server.js `/v1/pendant/command` `storeDiagnosticCapture`**: traced every
+  reachable path. A genuinely empty plan (no text/actions/response) 400s
+  BEFORE any capture row is created (classic JSON-response mode) — no row,
+  no misclassification. Any path that DOES reach `storeDiagnosticCapture`
+  either (a) has real plan content, which already dispatched a Mac job and
+  links `capture.planJobId` — excluding it from `voiceRunForCapture`
+  entirely (handled by `voiceRunForJob` instead), or (b) required real
+  streamed reply audio to get there (`replyStreamStarted` can only become
+  true after PCM bytes are already pushed), which sets `replyCaptureId` and
+  makes it "answered" regardless of transcript. No path produces an
+  unlinked, unanswered, empty capture. (Noted, not flagged as actionable: a
+  few-millisecond window exists between `store.createJob(capture)` and the
+  later `store.updateJob(capture.jobId, {planJobId})` linking call where a
+  concurrent read would see it unlinked — a transient eventual-consistency
+  gap, not a durable misclassification, and a different class of issue.)
+
+Covered the remaining files myself directly (scheduler.js, bridgeDoorbell.js,
+nodeMailbox.js, converseSessions.js, domainMemoryRelay.js, serverBrowser.js,
+audioRetention.js, store/jobQuery.js) after the coordinator flagged that a
+background research agent I'd dispatched for this wasn't visible to them and
+told me not to wait on it.
+
+**RACE NOTE**: while landing this follow-up, a concurrent agent's commit
+(`9970387`, a bench-dashboard-agent commit about `/bench/lines`) swept my
+staged `jobRecall.js` / `jobRecall.test.js` / `jobs.js` changes into itself
+via what looks like a broad `git add` — my own `git commit` then had nothing
+left to commit. The code landed correctly (verified: 0-line diff between my
+working tree and that commit for all three files), just under someone else's
+unrelated message/authorship. Did not attempt to rewrite that commit — it
+belongs to another agent's work. Flagging as evidence this exact "several
+agents share one tree" risk AGENTS.md warns about happened live today.
+
+### Full sweep results — "terminal state inferred from absence, not a recorded reason"
+
+**Fixed today** (this session):
+1. `jobs.js` `voiceRunForCapture` — duplex conversation press, no speech
+   heard → was unconditionally `'failed'`; now reads `capture.endReason`
+   (stamped by `pendantConverse.js` at teardown) to tell benign silence from
+   a real fault.
+2. `jobs.js` `voiceRunForJob` — same shape for `/v1/transcribe`-originated
+   plan jobs (browser extension + dashboard mic capture): a job stuck at
+   `'transcribed'` with no text and no error → was `'failed'`; now
+   `'recorded'` via the shared `planJobCapturedNothing()` predicate.
+3. `jobRecall.js` `describeJobOutcome` — the pendant's spoken "what happened
+   with that": the same silent `'transcribed'` job was described as
+   "queued... your Mac hasn't picked it up"; now "nothing was said," via the
+   same shared `planJobCapturedNothing()`.
+
+**Checked and confirmed ALREADY correct** (not this bug, or already fixed
+historically with its own commentary — useful as reference examples of the
+right pattern):
+4. `pendantApps.js` `macStdout`/`appBriefSpeech` — three-way honest split:
+   `macUnansweredSpeech` ("hasn't answered yet," a real timeout/pending
+   state) vs `macFailedSpeech` (a real, recorded failure) vs a genuine
+   empty-but-successful answer ("your day is clear," an empty calendar read
+   correctly treated as data, not a breakage). Own docblock names this exact
+   bug class and why it's avoided.
+5. `routines.js` `closeFailedDispatch`/`reapDispatchedRuns` — a scheduled
+   routine whose Mac dispatch never returns within `MAC_RESULT_MAX_WAIT_MS`
+   is explicitly worded "never returned a result," distinct from a real
+   `job.error`. Legitimately still a failure to retry/report (unlike a
+   button press, there's no "the owner chose to say nothing" reading for a
+   routine nobody interrupted) — correct as designed, not the same bug.
+6. `server.js` `/v1/pendant/command` `storeDiagnosticCapture` (the PTT/blue-
+   button HTTP path) — traced exhaustively since it's structurally identical
+   to the two duplex/converse bugs and wasn't touched by today's endReason
+   plumbing. Confirmed safe by construction, not by luck: a genuinely empty
+   plan 400s BEFORE any capture row is created; every path that DOES create
+   one either already dispatched a Mac job (linking `planJobId`, which
+   excludes it from `voiceRunForCapture` entirely) or already has real
+   streamed reply audio (`replyStreamStarted` cannot be true without PCM
+   bytes already pushed, which sets `replyCaptureId` → "answered"). No path
+   produces an unlinked, unanswered, empty capture. One minor, DIFFERENT-
+   class aside noted: a few-ms window between `store.createJob(capture)` and
+   the later `store.updateJob(..., {planJobId})` linking call where a
+   concurrent read would see it transiently unlinked — eventual-consistency
+   flicker, not a durable misclassification; not fixed, not flagged as
+   urgent.
+7. `scheduler.js` `runScheduledTick` — already separates `retryingCount` /
+   `failedCount` / `awaitingApprovalCount` explicitly, with its own comment
+   naming the identical incident class ("three 'failures' that were really
+   one plan waiting behind a dashboard nobody had open").
+8. `serverBrowser.js` `readPublicPage` — every failure path
+   (`timeout`/`transport-error`/`http-error`/`rate-limited`/`not-configured`/
+   `empty`) carries its own distinct, honest `reason` string; a page that
+   renders no text gets `reason: 'empty'` with a concrete hint, never
+   conflated with a transport failure or silently reported as success.
+9. `bridgeDoorbell.js` / `nodeMailbox.js` `ring*Doorbell` — every outcome
+   (`no_hub_binding`/`no_store`/`no_bridge_registered`/`invalid_address`/a
+   real error message) is an explicit reason; documented as best-effort
+   whose failure never corrupts a recorded verdict (the store row, not the
+   doorbell, is the source of truth).
+10. `converseSessions.js` `nudgeConverseSession` — `{nudged:false,
+    reason:'no-live-session'}` vs `{nudged:false, reason:'nudge-failed',
+    error}` vs success; a missed nudge is documented as costing only
+    immediacy, never corrupting the underlying approval record.
+11. `audioRetention.js` `deleteStoredAudio` — explicitly "distinguishes an
+    already-empty capture from a failure" in its own docstring (deletion
+    bookkeeping, not run-status classification, but same discipline).
+12. `store/jobQuery.js` `normalizeJobCursor` — a malformed pagination cursor
+    degrades to "first page," documented explicitly as NOT "no results."
+13. `domainMemoryRelay.js` — a failed memory *read* returns an honest empty
+    hand (survivable); a failed memory *store* is explicitly still an error,
+    not an empty result — the two are not conflated.
+
+**Verdict**: after fixing #1–#3, no further reachable instance of this
+defect class remains in cloud-relay as far as this sweep found. The
+codebase's own commentary (jobRecall.js's original docblock, jobs.js's
+`voiceRunForCapture` comments, scheduler.js) shows this exact lesson was
+already being actively applied in most of the surrounding code before today
+— #1–#3 were the surfaces that hadn't caught up yet.
+
 ### Files touched (all within claimed `cloud-relay/**`)
 - `/Users/evanliu/agentic-gadget/software/ai-pendant-simulator/cloud-relay/jobs.js`
 - `/Users/evanliu/agentic-gadget/software/ai-pendant-simulator/cloud-relay/server.js`

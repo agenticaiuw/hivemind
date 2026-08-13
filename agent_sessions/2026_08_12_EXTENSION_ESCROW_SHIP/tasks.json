@@ -154,6 +154,13 @@
             "owner": "empty-run-hygiene-agent",
             "status": "done",
             "proof": "jobs.js voiceRunForCapture/voiceRunForJob classify a benign silent press (endReason idle/agent-done/stopped/restarted/socket-closed) as status 'recorded' and exclude it from /v1/ops/voice-runs + /latest (feed:true); genuine failures (agent-error/bad-audio/socket-error, real STT errors, stale transcription) stay 'failed' and visible with the real error text; collapseRepeatRuns folds consecutive identical failures from one device within a 10min window into one row+repeatCount; 664/664 cloud-relay tests green (20 new); deployed version 48eddb0a-d7fa-4c3e-8c1f-20fd02d2083f, verified live against production D1 data (repeatCount:2 folding observed on real rows, genuine stale-transcription failures still visible, legacy pre-fix rows correctly fail-closed to 'failed' since they predate endReason)"
+        },
+        {
+            "id": "empty-run-hygiene-followup",
+            "title": "Extend silence-vs-failure fix to jobRecall.js spoken recall + sweep cloud-relay for the same absence-inferred-terminal-state defect class",
+            "owner": "empty-run-hygiene-agent",
+            "status": "done",
+            "proof": "jobs.js exports shared planJobCapturedNothing() (job type plan, status transcribed, not typed, no useful command, no result) used by BOTH voiceRunForJob and jobRecall.js's describeJobOutcome, so the dashboard feed and the pendant's spoken 'what happened with that' answer can never disagree; silent /v1/transcribe jobs now speak as 'nothing was said' instead of 'your Mac hasn't picked it up'; genuine STT failures/stale transcriptions/typed-empty unaffected (6 new tests). Full sweep of remaining cloud-relay files (scheduler.js, routines.js, pendantApps.js, server.js storeDiagnosticCapture, serverBrowser.js, bridgeDoorbell.js/nodeMailbox.js, converseSessions.js, audioRetention.js, domainMemoryRelay.js, store/jobQuery.js) found no further reachable instance of the defect class; 13-item list with file:line reasoning logged. 649/649 tests green; deployed version 58a59ca1-3812-4556-93f9-d5d015fc1248, verified live (/health, /v1/ops/voice-runs sane post-deploy). Note: a concurrent agent commit (9970387) swept these 3 staged files into its own commit via a broad git add -- code verified byte-identical to intent, not re-committed."
         }
     ]
 }
