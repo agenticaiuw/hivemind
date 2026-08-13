@@ -235,3 +235,53 @@ the DK is unplugged".
 Watch item for the owner: mic sense reads LOW on every boot, which says the
 red switch is cutting the mic — the owner believes it is ON. One flip of that
 switch while /bench is open settles it, and the tile is live for exactly that.
+
+## Owner ruling: the bench is local-only, so it is not built for the Worker
+
+"remember that the bench should only be available locally."
+
+The self-describing hosted page did not satisfy that. It still shipped the
+whole instrument to a public URL — tiles, SSE client, and the literal device
+paths (`/dev/cu.usbmodem0009600365811`) baked into its empty-state copy. Hidden
+is not absent, and publishing the port names on the owner's desk is a leak
+nobody asked for.
+
+The route is now excluded at build time rather than at render time. A Vite
+plugin (`benchIsAgentOnly` in vite.config.ts) replaces the page component with
+an empty one for every target except `DASHBOARD_TARGET=agent`, so Rollup has
+nothing to bundle; `src/routes/bench/+page.ts` redirects the hosted URL home so
+nothing renders bench chrome either. Both gate on the same compile-time flag
+`hooks.server.ts` already uses, so the agent build folds them away.
+
+Measured, per build:
+
+| | hosted node 3 | agent node 3 |
+| --- | --- | --- |
+| size | 264 B (redirect + empty component) | 15,515 B (the instrument) |
+| `usbmodem` | 0 files | 1 |
+| `bench/stream` | 0 | 1 |
+| `bn-tile` | 0 | 2 |
+
+**Stated plainly, because it is checkable:** SvelteKit builds its route table
+from the filesystem and has no supported per-build route exclusion, so the
+hosted manifest still carries an empty `/bench` entry and the URL redirects
+rather than 404s. The code behind it is gone, which is the part that mattered.
+
+Leak audit of the hosted surface: no nav link anywhere points at /bench, there
+are no `/bench/*` API routes under src/routes/api, and no prerender entry. The
+only `bench` match elsewhere in src/ is the word "Benchmark" in hiveFeed.js,
+unrelated. **The Mac agent's own routes are the only backend the bench has ever
+had** — /bench/snapshot and /bench/stream exist solely on the local agent, and
+nothing relay-side proxies them.
+
+Live verification of Worker 985ab1fb, against the deployed bytes rather than
+the build config: all 15 client chunks fetched and byte-identical to the local
+build, none containing `usbmodem`, `bn-tile`, `bench/stream` or `NO DATA YET`;
+the publicly served /bench node is the 264-byte redirect stub; GET /bench
+returns 302 to /login with a zero-byte body and no bench chrome. The
+authenticated path 307s home per the deployed module's own source, which I read
+from the served chunk — I did not sign in to exercise it.
+
+Agent build re-verified working at http://127.0.0.1:8000/dashboard/bench: 11
+tiles, and correctly showing STOOD DOWN while the firmware agent holds the
+console.
