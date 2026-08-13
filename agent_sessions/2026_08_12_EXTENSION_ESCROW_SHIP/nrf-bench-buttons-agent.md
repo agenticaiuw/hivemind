@@ -675,11 +675,29 @@ phase does not produce clean detents: with one phase stuck the transitions
 alternate between two adjacent states, which the Gray-code table scores +1, −1,
 +1, −1 and nets to zero. Eleven decoded detents means both phases are alive.
 
-**One thing to check with the owner:** `cw=0`. All eleven were counter-
-clockwise. The innocent reading is that he only spun it one way. But if he
-turned it in both directions and only one direction ever counted, that is a
-real finding and worth chasing — the counters are independent, not a net, so
-`cw=0` means zero clockwise detents have EVER been decoded.
+**`cw=0` — raised as a question, and the answer is the innocent one.** All
+eleven were counter-clockwise, which could have meant the owner only spun it
+one way, or that one direction never decoded. The counters are independent
+rather than a net, so `cw=0` really did mean zero clockwise detents had EVER
+been seen.
+
+Settled by the owner's hand within minutes. Confirmed off the tap myself
+rather than taken on report:
+
+```
+"enc":{"a":1,"b":1,"pos":-16,"det":20,"cw":2,"ccw":18}
+```
+
+`cw` moved 0 → 2. **Both directions decode**, so the encoder is fully proven:
+eleven clean detents established that A and B are both alive, and the
+clockwise pair establishes the decode is correct in the other direction too.
+Nothing left open on P0.24/P0.25.
+
+Worth keeping the shape of how this closed: it was surfaced to the owner as a
+question rather than a verdict from us, and two seconds of his hand answered
+what no amount of our reasoning could. bench-ui had put a self-retiring prompt
+on the encoder tile for exactly this case ("turn it the other way to check"),
+which removed itself once `cw` went non-zero.
 
 The pot is confirmed alive too, tracking 171 → 270 under his hand.
 
