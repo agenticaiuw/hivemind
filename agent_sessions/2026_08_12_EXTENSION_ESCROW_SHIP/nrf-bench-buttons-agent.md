@@ -619,3 +619,79 @@ after a reset still catches the boot) would mean no agent ever opens the port
 again. Worth keeping exactly one documented exception: if the bench process is
 down, an agent needs a fallback, or a broken dashboard means no firmware
 diagnosis at all.
+
+---
+
+## CUTOVER: the stand-down file is retired, the raw line tap replaces it
+
+bench-ui built the tap off the fact this session established — **a flash does
+not need the tty**. `west flash` and every JLinkExe measurement go over SWD
+through the J-Link's own USB interface; reading console text was always the
+only thing that needed the port. So the bench holds all three VCOMs
+permanently and serves the stream, and no agent opens the port again.
+
+Verified all three forms against the live agent before trusting any of them:
+
+| form | result |
+|---|---|
+| `?format=text` | 108 lines of backlog, **terminated on its own** (curl exit 0, no hang) |
+| `?after=999999` | `{"ok":true,"lines":[],"seq":127}` — correct empty answer with the current cursor |
+| `?stream=1` | 268 lines in an 8 s window: backlog replayed first, then live |
+
+**The gotcha that cost me two greps, recorded so it costs nobody else one:**
+every line is prefixed with its originating port —
+
+```
+cu.usbmodem0009600365811 BENCH {"v":1,"up":540631,...}
+```
+
+so `grep "^BENCH"` matches **nothing**. Anchor on the port or do not anchor.
+My first two checks reported "no BENCH lines" against a feed that was full of
+them, which is exactly the kind of clean-looking negative this bench keeps
+punishing.
+
+`AGENT_TOKEN` is derived rather than stored — it is not a line in `.env`:
+`HMAC-SHA256(PAIRING_CODE, "aipendant:agent-token")`, hex. Recipe now in
+`hardware/BREADBOARD_WIRING.md` along with the tap itself; the stand-down
+instructions there have been deleted rather than annotated, so nobody follows
+them out of an old copy.
+
+Kept exactly one documented exception: if the agent is down there is no tap,
+and a broken dashboard must not mean no firmware diagnosis. `curl -sf
+localhost:8000/health` first, fall back to the tty only if it does not answer.
+
+## THE ENCODER WORKS — correcting my Task A report
+
+Task A reported the encoder as "never moved", which was accurate then and is
+wrong now. Live off the tap:
+
+```
+"enc":{"a":1,"b":1,"pos":-11,"det":11,"cw":0,"ccw":11}
+```
+
+**11 clean detents.** That proves A and B are both wired and the quadrature
+decode works — and it proves it in a way a resting level never could. A dead
+phase does not produce clean detents: with one phase stuck the transitions
+alternate between two adjacent states, which the Gray-code table scores +1, −1,
++1, −1 and nets to zero. Eleven decoded detents means both phases are alive.
+
+**One thing to check with the owner:** `cw=0`. All eleven were counter-
+clockwise. The innocent reading is that he only spun it one way. But if he
+turned it in both directions and only one direction ever counted, that is a
+real finding and worth chasing — the counters are independent, not a net, so
+`cw=0` means zero clockwise detents have EVER been decoded.
+
+The pot is confirmed alive too, tracking 171 → 270 under his hand.
+
+## Also from bench-ui, worth recording against my own conclusions
+
+Their reader had latched onto the wrong ports: a short-circuit in the scan
+stopped all rescanning the moment any port parsed, so VCOM0 — busy for a moment
+while I held it — was never retried, and a stray byte on 813 elected 813 as the
+console. Fixed on their side.
+
+So the earlier "the board has sent nothing at all" had **two** causes, and I
+only found one. The macOS termios ordering bug was real and cost me my first
+three captures, but their port election was the reason the dashboard stayed
+dark after my emitter was live. Worth remembering that a symptom with one
+confirmed cause can still have another sitting behind it.
