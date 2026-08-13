@@ -699,7 +699,8 @@ what no amount of our reasoning could. bench-ui had put a self-retiring prompt
 on the encoder tile for exactly this case ("turn it the other way to check"),
 which removed itself once `cw` went non-zero.
 
-The pot is confirmed alive too, tracking 171 → 270 under his hand.
+The pot tracks 171 → 270 under his hand — see the RETRACTION below, because
+"tracks his hand" is not "works", and I called it working.
 
 ## Also from bench-ui, worth recording against my own conclusions
 
@@ -713,3 +714,85 @@ only found one. The macOS termios ordering bug was real and cost me my first
 three captures, but their port election was the reason the dashboard stayed
 dark after my emitter was live. Worth remembering that a symptom with one
 confirmed cause can still have another sitting behind it.
+
+
+---
+
+## RETRACTION: I called the pot good. It is NOT good.
+
+The coordinator pushed back and was right. I wrote "pot good" on the strength of
+a moving number, which is the same defect class this whole session has been
+chasing — a subtler form of it, and I walked into it right after drawing the
+distinction correctly for the encoder.
+
+**The arithmetic, which settles it with no adjectives.** From
+`volume_adc_init()`: `gain = ADC_GAIN_1_4`, `reference = ADC_REF_VDD_1_4`,
+12-bit. Full-scale input = reference / gain = (VDD/4) / (1/4) = **VDD**. That
+is the whole point of the ratiometric setup and my own comment says so. So
+**4095 counts = VDD**, and there is no scaling artefact hiding a healthy pot.
+
+**The measurement**, 364 samples off the tap, across a full end-to-end turn:
+
+| | raw | volts |
+|---|---|---|
+| min | 164 | 0.120 V |
+| max | 266 | 0.195 V |
+| span | **102** | **75 mV** |
+| expected span | ~4095 | ~3.0 V |
+
+**2.5% of range.** A pot with one outer leg on 3V and the other on GND sweeps
+the wiper essentially 0 → 4095.
+
+### Proven vs open — the distinction I failed to draw
+
+- **PROVEN: the wiper leg (middle → P0.15) is good.** The reading tracks the
+  owner's hand monotonically and repeatably across 364 samples, and the
+  `Volume:` printk fires only when the value actually moves. The wiper, the
+  breadboard row, the SAADC input and AIN2 all work.
+- **PROVEN: the track does not span the rail.** 75 mV of travel out of 3.0 V,
+  with full scale confirmed by arithmetic rather than assumed.
+- **OPEN: which outer leg, and how.** And note it is NOT a clean open: a 3V leg
+  simply disconnected with GND intact would park the wiper at ~0 counts and
+  barely move. Instead it sits at 0.12–0.20 V and follows his hand, which
+  points at the top of the track reaching *something that is not the 3V rail*,
+  or reaching it through a large series resistance. The coordinator called this
+  signature before I did.
+
+A hypothesis that fits the numbers well and is cheap to check: **both outer
+legs in the same rail**, or in a rail with nothing feeding it. Then the wiper
+sits near that rail's potential with a small position-dependent offset from the
+SAADC's own sampling current through the track — small, real, responsive
+variation around a low voltage, which is precisely what we see.
+
+### Check order for the owner — no multimeter needed
+
+1. Are both outer legs actually in the **rail** rows, or is one a row off? Same
+   class of error as P0.26, on the same breadboard, the same afternoon.
+2. Is the 3V rail the top leg sits in actually **fed** from the DK? An unfed
+   rail looks exactly like this.
+3. Are the two outer legs in the **same** rail (both GND, or both dead)?
+4. Then one slow end-to-end sweep while I watch the tap, and I report true
+   min/max against the 4095 = VDD figure.
+
+### An experiment I ran that did NOT work, reported as such
+
+I tried the technique that proved P0.26: drive P0.15 from the nRF and see
+whether the reading follows. **It is inconclusive and I am not drawing anything
+from it.**
+
+What IS established, by register readback in the same session:
+`DIR` bit 15 went 0 → 1 and `PIN_CNF[15]` went `0x02` → `0x03`, so the write
+lands and the pad is genuinely driven as a push-pull output.
+
+What is NOT established: whether the SAADC observes a pad while the GPIO output
+driver owns it. The reading stayed near 0.12 V throughout the driven window,
+which would mean a near-short to ground *if* the SAADC were observing the pad —
+and would mean nothing at all if it is not. I could not rule out the second, so
+the first is not a finding. Reporting a short here would have been the pot
+mistake again in the opposite direction: over-claiming from an experiment whose
+observability I never validated.
+
+(One genuine side-benefit: `PIN_CNF[1]` reads `0x03` — DIR=output, INPUT=
+disconnect — which confirms the amp gate's input buffer really is disconnected,
+so the `nrf_gpio_pin_out_read()` I chose for `amp` was correct and reading `IN`
+there would have produced a permanent fake 0.)
