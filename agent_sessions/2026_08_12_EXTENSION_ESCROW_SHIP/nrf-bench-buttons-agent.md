@@ -547,3 +547,62 @@ Also measured: VCOM2 carried `00 00` during a boot in which the app sent
 `{"command":"status"}` on uart1 TX — a contended line, consistent with
 `vcom2_pins_routing` still closed and the interface MCU fighting P0.00 exactly
 as the overlay's comment predicts.
+
+---
+
+## THE MIC: P0.26 looks HARD-TIED TO GROUND, not merely unpowered
+
+The owner has been asked three times to flip the red switch and watch. He
+should stop, because on this evidence the switch is not what is wrong.
+
+**Measurement.** With the app running, I drove P0.26 push-pull HIGH from the
+nRF (`OUTSET` then `DIRSET` on the NS GPIO alias) and held it for 40 s. The
+capture spans uptime 417 → 75,355 ms, covering the whole window: **68 of 68
+telemetry lines reported `"sense":0`.** Not one read high.
+
+**Why that is a wiring verdict and not a switch position.** The sense line is
+meant to watch the SPH0645 VDD net *through a 100k resistor*. If the switch
+were simply off, P0.26 would see 0 V through 100k — and the nRF driving high
+through roughly 50 Ω beats 100k trivially, so the pad would have gone high and
+the firmware would have read "powered". Holding logic-0 against that drive
+needs a path to ground well under a kilohm.
+
+Most likely, in order: the sense wire landed on a ground rail or a ground-side
+row instead of the mic VDD net; or the 100k is missing/bypassed so the wire
+ties straight to GND; or the pin is one row off on the breadboard.
+
+**The caveat, stated because it changes how much to trust this.** "No change"
+is also what a register write that never landed looks like. The identical
+technique on P0.21/22/23 demonstrably worked earlier today — one press each,
+no cross-talk — so the method is proven on this board, but not inside *that*
+session. The airtight version is a 60 s run driving P0.21 LOW as a live
+control alongside P0.26 HIGH: if P0.21 moves and P0.26 does not, in the same
+run, the short is proven rather than inferred. Waiting on a console window.
+
+**Consequence for the mic level probe.** It is written, flashed and correct,
+and it can never arm while this pin reads low — by design, since you cannot
+measure a microphone you believe is dark. Fixing the P0.26 wire is what
+unlocks `mic.peak`/`mic.rms`.
+
+## Console discipline — my failure, and the fix
+
+I held `/tmp/pendant-bench-standdown` for nine minutes across a build while the
+owner sat watching STOOD DOWN. That was wrong: the file is for serial work, not
+for think time. The touch and the `rm` now live inside the same script as the
+capture, so the hold cannot outlive the work that needs it.
+
+**The structural answer, and it is better than discipline.** A flash does NOT
+need the tty — `west flash` and every SWD measurement go through the J-Link's
+own USB interface, a completely separate channel. The only thing any agent
+needs the tty for is READING console output. So the bench owning the port
+permanently and serving the stream retires this whole class of problem.
+
+One requirement: it must be a **raw line tap**, not the parsed snapshot. The
+useful evidence here is arbitrary printk text the parser has no rule for —
+`Injected frame:`, `Yellow (P0.21) press -> menu_select`,
+`microSD unavailable (mount=0 write=-2)`, `Bench probe: withheld ...`. A
+newline-delimited stream with a small backlog (so a consumer attaching just
+after a reset still catches the boot) would mean no agent ever opens the port
+again. Worth keeping exactly one documented exception: if the bench process is
+down, an agent needs a fallback, or a broken dashboard means no firmware
+diagnosis at all.
