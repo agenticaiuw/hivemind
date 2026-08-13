@@ -445,3 +445,105 @@ Conversations, captures and uploads across every one of these runs: **zero**.
 needs a conversation, and this board's mic reads unpowered so no capture can
 run. Everything up to and including the frame leaving the socket is proven; the
 relay's reaction to it is ring-voice-2's half and was already tested there.
+
+---
+
+## TASK C — mic level, LTE, socket and Bluetooth on the bench
+
+Conformed to bench-ui's field contract exactly; no names invented. All of it on
+the SLOW line (status, not pads), which now runs every 10 s.
+
+Live from the board, unedited:
+
+```
+BENCH {"v":1,"up":32259,"fw":"pendant app","i2c":[],
+       "sd":{"present":true,"mounted":true},"esp":"silent",
+       "bt":{"conn":false},"sock":{"up":true,"idle":19912},
+       "lte":{"reg":"roaming","rsrp":-80,"rsrq":-12.0,"op":"AT&T",
+              "mode":"ltem","band":12,"cell":"0499B665"}}
+```
+
+`sock.idle` visibly cycles (19912 → 4797 ms) with the WS keepalive, which is
+the proof it is measuring traffic rather than uptime.
+
+### Decisions worth recording
+
+**The 255 rule, enforced at the source.** `+CESQ` answers 255 for "I do not
+know", and 255 is not a signal level — it is the absence of one. Converted here
+(`rsrp = index − 140`, `rsrq = index/2 − 19.5`) and OMITTED when out of range,
+because −115 dBm is a real reading that an unconverted 255 would be
+indistinguishable from.
+
+**`+CEREG <stat>` translated on-device**, not on the Mac: 3GPP 27.007 is the
+stable contract and the number is what the modem actually said. Note this board
+reports **`roaming`**, not `home` — a legitimate state that must not render as
+a fault.
+
+**`bt.conn` is the module's own event, never "we have a sink in the table".**
+A remembered speaker is one the owner once used; reporting the two the same way
+would show a connected speaker to an owner holding a silent pendant. `name` and
+`addr` are still filled from the LRU when present, so a disconnected sink can
+be NAMED without being claimed.
+
+**`mic.peak`/`rms` are absent on this board and that is the correct output.**
+They are fed from the capture path's own totals, and no capture can run while
+P0.26 reads unpowered. Verified: `grep -c '"peak"'` → **0**, and the fast line
+carries `"mic":{"sense":0}` alone. A zero here would read as "powered and stone
+deaf", which is the precise confusion the field exists to resolve.
+
+**The slow line stands down during audio.** It runs up to three blocking AT
+commands, and the duplex I2S path has a ~205 ms TX runway the driver errors the
+whole transfer over. `pendant_bench_set_busy()` holds it during a conversation
+or a capture — and is cleared by the IDLE LOOP rather than by a matching call,
+because `record_microphone` has a dozen early returns and a flag that must be
+un-set on every one of them is a flag that eventually stays set. Reaching the
+idle loop IS the proof no audio path is running.
+
+### Validation
+
+Every emitted line is valid JSON (27/27; the one rejected line was truncated by
+a reset landing mid-transmission, which the parser drops by design), and the
+real Mac parser reads the capture end to end.
+
+### Live values changed since Task A
+
+The **pot now reads raw≈233 with a span of 24**, where it was a flat 0 all
+morning. So the wiper is alive; the earlier flat zero was the board parked in
+its dead boot, not a dead pot.
+
+---
+
+## BLOCKED (not by me): the ESP32 command UART needs a PHYSICAL switch
+
+The board-controller image at `boards/nrf9160dk_nrf52840.overlay` is built
+(`build-bc52840/hello_world/zephyr/zephyr.hex`) and **I did not flash it**, on
+purpose.
+
+`JLinkExe -device nRF52840_xxAA` on this DK reports:
+
+```
+Found Cortex-M33 r0p2
+WARNING: Identified core does not match configuration. (Found: Cortex-M33, Configured: Cortex-M4)
+```
+
+The on-board debugger is wired to the nRF9160, not the nRF52840. Selecting
+between them is **SW10, labelled PROG/DEBUG, positions nRF52 / nRF91** —
+confirmed from `hardware/nrf9160-dk-v1.1-front-layout.png`, a physical slide
+switch currently on nRF91.
+
+Flashing anyway would have been actively dangerous: the runner would have
+programmed a board-controller image into the nRF9160 through a debugger that
+just told me it is talking to the M33. That trades a missing feature for a
+bricked pendant.
+
+**One piece of good news from the telemetry:** `esp` now reports **`"silent"`**,
+not absent. That is the honest discrimination the coordinator asked for —
+uart1 IS up on the nRF side and has simply never received a byte, which is what
+"the pins are routed away and no wires are fitted" should look like. If the
+pins were the problem on the nRF's own side we would see `NULL` (no UART at
+all); if bytes were arriving malformed we would see `"partial"`.
+
+Also measured: VCOM2 carried `00 00` during a boot in which the app sent
+`{"command":"status"}` on uart1 TX — a contended line, consistent with
+`vcom2_pins_routing` still closed and the interface MCU fighting P0.00 exactly
+as the overlay's comment predicts.
