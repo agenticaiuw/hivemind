@@ -507,3 +507,65 @@ Also settled: no bare-text mode on the tap. They asked for it once, then found
 the prefix if they ever want it bare — so a second format would be a branch
 nobody exercises. The port prefix is strictly more information than a bare line;
 documenting it in the route's own comment was the whole fix.
+
+## The threshold audit: three tiles were reassuring the owner about faults
+
+The pot tile said a proven-mis-wired pot was fine, and the audit that followed
+found the same shape twice more. All three are the same mistake: a single
+boolean carrying two different claims.
+
+**Pot.** `moved` was gated on span >= 100 counts, and the owner's pot spans 102
+— it cleared by two counts and rendered "swept 102 counts". The SAADC runs
+gain 1/4 against a VDD/4 reference, so full scale IS the rail and 4095 counts is
+3 V: 102 counts is 2.5% of the track. Two claims now, separately: the wiper
+responds monotonically and repeatably (proving the middle leg, its row, AIN2 and
+the SAADC), and the track covers 2.4% of the rail (proving it is not reaching
+it). The tile prints the observed range against full scale and stops there —
+which outer leg, and how, is the owner's check order.
+
+Then the same threshold lied in the other direction: at span 99 the tile read
+"barely moved", i.e. as if he had never touched it. One count apart, opposite
+lies. So "is he turning it" is no longer answered by the span at all — it is
+answered by the number of DISTINCT readings, which is independent of how far the
+track goes. A hand on the knob produces a stream of different values whether the
+track spans the rail or 2% of it. The span and percentage are now shown
+unconditionally; no threshold decides whether he is allowed to see them.
+
+**Mic level.** Found live during the audit: rms 29250 on all 43 samples, peak
+pinned at exactly 32767, while the power sense read cut — and the tile said
+LOUD. A band word is a label for a number, not a verdict on a microphone. Two
+constant-free detections now: an rms identical across eight samples is stuck (a
+live mic always jitters, so equality alone is sufficient and no tolerance
+constant is needed), and a peak exactly on the 16-bit ceiling is a pinned input
+rather than a loud room. Either one and the tile reads STUCK with the reason,
+instead of wearing the level's word.
+
+**Contaminated statistics.** The coordinator caught runs of `0` folded into the
+pot's `min`, arriving interleaved with steady ~170s with no gradual approach on
+either side — samples taken while the board was resetting or before the SAADC
+existed, making the span look twice as good as it is. Three fixes:
+
+- a sample with board uptime under 1.5 s moves the live value and never the
+  extremes: a reading taken before the thing that takes readings exists is not
+  a measurement;
+- uptime going BACKWARDS restarts everything. It is a marker the firmware
+  already sends on every line, and it catches the resets a boot banner misses —
+  every reflash or power cycle that happened while the reader was detached;
+- a stream gap over 30 s restarts everything too, because we cannot vouch for
+  continuity across it.
+
+On semantics, agreeing with the coordinator: extremes and counters reset when
+the board does. "The widest sweep since this board booted" is a claim the owner
+can act on; "the widest since some dashboard process started" is not. Applied
+uniformly to pot extremes, press counts, encoder detents, mic-power flips and
+amp toggles rather than per-field — with one documented exception, whether an
+I2C device has ever answered, because intermittent-versus-absent is precisely a
+cross-boot question. The stronger argument for the gap rule is that he is
+REWIRING while he watches: evidence from before a gap may describe a circuit
+that no longer exists.
+
+Audited and left alone, deliberately: button `presses`/`edges` and encoder
+detents count real events with no threshold (0 is 0); LTE `on` claims
+registration only, with dBm shown beside it; `socket.up` shows idle time next to
+it; the SSE liveness windows are presentation, and the console-missing gate
+already covers the dangerous case.
