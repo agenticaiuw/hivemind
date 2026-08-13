@@ -1,7 +1,10 @@
 # empty-run-hygiene-agent
 
 Claim: `software/ai-pendant-simulator/cloud-relay/**` only. Not touching
-dashboard-sveltekit, firmware/**, or local-agent/bench*.js.
+dashboard-sveltekit, firmware/**, or local-agent/bench*.js. Scope explicitly
+widened by the coordinator, later in this session, to two specific files
+outside that glob: `shared/audioDelivery.js` (already imported by cloud-relay
+throughout) and a read-only review of `cloudflare-worker/bridgeHub.js`.
 
 ## Investigation
 
@@ -451,3 +454,176 @@ already being actively applied in most of the surrounding code before today
 - `/Users/evanliu/agentic-gadget/software/ai-pendant-simulator/cloud-relay/jobsVoiceRun.test.js`
 - `/Users/evanliu/agentic-gadget/agent_sessions/2026_08_12_EXTENSION_ESCROW_SHIP/tasks.json` (appended `empty-run-hygiene` entry only)
 - `/Users/evanliu/agentic-gadget/agent_sessions/2026_08_12_EXTENSION_ESCROW_SHIP/empty-run-hygiene-agent.md` (this file)
+
+## Round 3: the two real sweep findings, plus bridgeHub.js review
+
+The coordinator's own read of my subagent's sweep report (which never
+reached me directly — the subagent's output apparently surfaced to the
+coordinator through a different channel) found two genuine, unfixed
+instances my own manual pass missed. Both fixed below.
+
+### FINDING 1 — /v1/transcribe: empty-PCM upload lands as generic 'failed'
+
+Root cause, traced to the exact line: `openaiRealtimeVoice.js`
+`planUtteranceWithRealtime()` decoded PCM via `extractPcmFromWavOrPcm()` and,
+when the decoded sample count was zero, `throw new Error('Audio buffer is
+empty.')`. A WAV with a valid RIFF header and a zero-length (or absent) data
+chunk is dozens of bytes — it clears `/v1/transcribe`'s container-size gate
+(`Buffer.byteLength(audioBase64, 'base64') > 0`, server.js) every time, so the
+job and capture rows are created BEFORE this throws. The throw then lands in
+`/v1/transcribe`'s outer `catch`, which sets `status: 'failed'` with the
+generic message — the exact same bucket a real OpenAI outage lands in, and
+(per the coordinator) exactly the shape that would fold through
+`collapseRepeatRuns` the same way the original flood did. It also skipped
+`planJobCapturedNothing()` entirely: that rescue only fires on
+`status === 'transcribed'`, and this path went `'transcribing' -> 'failed'`
+by exception, never reaching 'transcribed' at all.
+
+Fix (openaiRealtimeVoice.js `planUtteranceWithRealtime`): check the DECODED
+PCM length, not the container size (this was already correct — the bug was
+what happened AFTER the check, not the check itself). Instead of throwing,
+return an honest, non-throwing empty-transcript result — `{text: '', model:
+null, source: 'no_audio', ...}` — no Realtime session is even opened for zero
+audio. This is a genuinely-knowable fact at the exact point of knowledge,
+recorded structurally (`source: 'no_audio'`, distinct from `'audio-native-
+realtime'`), not reconstructed later from an error message. Nothing
+downstream needed to change: `/v1/transcribe`'s existing success path (never
+touched) writes `job.status = 'transcribed'`, `job.command = ''`, which flows
+straight into the ALREADY-CORRECT `planJobCapturedNothing()` classification
+from round 1 — 'recorded', not 'failed'. `error.code`-style pattern-matching
+on the thrown message was explicitly avoided, per the coordinator's
+instruction, by not throwing in the first place.
+
+Checked the one other caller (`server.js`'s `/v1/pendant/command` buffered
+branch, ~line 1816): still correctly 400s via its own `planHasContent` gate
+with no job/capture ever created for this branch — same outcome as before
+(previously the throw was caught by the outer catch-all with the same net
+effect: 400, nothing persisted), no regression.
+
+Tests (openaiRealtimeVoice.test.js, 3 new): a zero-length WAV data chunk
+never throws and returns `text: ''`/`source: 'no_audio'`; a bare 44-byte
+header with no data chunk marker at all is also handled (falls to the same
+zero-length path); the no-audio result carries nothing
+`server.js`'s `plannerHintFromPlan` would read as plan-worthy (checked
+structurally against every field that function inspects — not imported
+directly, since `server.js` binds a real port at module load and must never
+be imported by a test).
+
+### FINDING 2 — normalizePipelineStatus defaulted unknown to 'done'
+
+`server.js`'s `normalizePipelineStatus(value)` (fed by
+`POST /v1/pendant/jobs/:jobId/events`, the firmware's raw pipeline-stage
+report) recognized `active/processing`, `failed/error`, `waiting/queued` —
+and fell through EVERYTHING else, including a genuinely missing status field,
+to `return 'done'`. It never even had an explicit check for the literal
+string `'done'`; that word was just one more member of the catch-all bucket.
+`shared/audioDelivery.js` `gradeAudioDelivery()` checks `played?.status ===
+'done'` as the ONE comparison that sets `provesPlayback: true` / `heard:
+'yes'` — the single claim that file's own docblock calls "the correct,
+uncomfortable answer" because it must never be true unless the pendant
+itself said so. A firmware typo or an omitted field would have been
+laundered straight into a false "the owner heard this" claim. Confirmed
+dormant only because nothing calls the firmware's playback reporters yet
+(`PLAYBACK_REPORT_CONTRACT`) — it activates with zero other code change the
+moment that ships.
+
+Also confirmed the SAME default bug would have equally forged the
+`received_by_device` rung (RECEIVED stage), not just PLAYED — `latestDone()`
+requires an exact `'done'` match for every stage it checks, so the old
+catch-all could forge any of them, not only playback.
+
+Fix: moved `normalizePipelineStatus` into `shared/audioDelivery.js` (its
+natural home — the file that already owns this exact status vocabulary,
+`HEARD_UNKNOWN`/`HEARD_NO_AUDIO`/`PLAYBACK_UNKNOWN_STATUS`) and added an
+explicit `status === 'done'` branch alongside the existing recognized groups,
+with the catch-all now returning a new named constant,
+`PIPELINE_STATUS_UNKNOWN = 'unknown'`, instead of `'done'`. Every previously-
+recognized case (including literal 'done') is byte-for-byte unchanged; only
+the true default changed. `server.js` now imports it instead of defining its
+own copy. Left a full docblock behind it (the coordinator's own observation:
+this was the one status-default in the file with no explanatory comment
+while every neighbour is verbosely justified) — matches the length and style
+of the surrounding `AUDIO_DELIVERY_STATES` commentary on purpose.
+
+Checked every consumer for what an honest 'unknown' does to it, per the
+coordinator's explicit ask (a fix that crashes the events endpoint is not an
+improvement): `gradeAudioDelivery`'s `latestDone`/`latestOfStage` only ever
+run `===` equality checks against known strings (`'done'`/`'failed'`/
+`'active'`) — never a switch with no default, never used to index a table —
+so `'unknown'` reaching any of them is a clean non-match, never a throw.
+Checked `local-agent/pipelineTrace.js` (read-only; out of my claimed scope to
+edit) for the same reason — same pattern, plain `===` checks, no crash risk.
+`src/ops/OpsApp.jsx`, named in `shared/audioDelivery.js`'s own docblock as a
+historical third reader, no longer exists (removed in the 2026-08-09 ponytail
+cleanup).
+
+Tests (shared/audioDelivery.test.js, 5 new): every previously-recognized
+status still normalizes the same way, including case/whitespace tolerance on
+literal 'done'; every unrecognized/missing/empty/typo'd value normalizes to
+`PIPELINE_STATUS_UNKNOWN`, never `'done'`; and, run end-to-end through
+`gradeAudioDelivery`, a malformed `device_playback` report never reaches
+`played_by_device`/`provesPlayback`/`heard:'yes'`, and the same fix is proven
+on the RECEIVED rung too (not just PLAYED), pinning the exact scenario the
+coordinator described.
+
+### cloudflare-worker/bridgeHub.js — reviewed, no instance of the defect found
+
+Full read of all 449 lines (the Durable Object behind `/v1/bridge/socket`,
+`/v1/node/socket`, the `/ring`/`/deliver` doorbells, and `/presence`).
+Specifically checked the WebSocket teardown handlers (`webSocketClose`,
+`webSocketError`) and every place a "state" gets read back later (`/presence`,
+`lastDoorbell`), since that is exactly this defect's habitat elsewhere in
+this project. Findings, each checked for the specific "absence read as a
+verdict" shape:
+
+- `webSocketClose(socket, code)` / `webSocketError()`: pure cleanup, no
+  verdict computed or persisted. `webSocketError()`'s own comment reasons
+  explicitly about this ("close follows; nothing to persist") — Cloudflare's
+  Hibernation API removes a closed/errored socket from `getWebSockets()` at
+  the platform level; nothing in this file manually tracks "is this socket
+  still alive" in a way that could go stale or default wrong.
+- `GET /presence`: `connected: sockets.length > 0` reads `getWebSockets()`
+  live on every call — a direct, real-time fact, never a cached or inferred
+  one. No absence-defaults-to-connected (or defaults-to-disconnected) case
+  exists because there is no default branch at all; it is a plain boolean
+  derived from what is true right now.
+- `lastDoorbell` (`/ring`, `/deliver`): `delivered` counts only sockets whose
+  `.send()` actually succeeded — a socket that dies mid-loop is silently NOT
+  counted (never a phantom increment), and the file's own comment states the
+  discipline outright: "never a claim that the node reacted," matching
+  `bridgeDoorbell.js`/`nodeMailbox.js`'s already-reviewed pattern exactly. A
+  ring that reaches zero live sockets is explicitly documented as a "silent
+  no-op" whose real delivery guarantee is the D1 queue's own safety poll —
+  the same best-effort/non-authoritative framing already confirmed correct
+  for the sibling doorbell files in round 2's sweep.
+- `/budget`: a missing storage key defaults to a fresh `{windowStartedAt: 0,
+  count: 0}` window — genuinely correct (a key that has never been written
+  really does mean "no budget consumed yet"; there is no other fact a missing
+  key could represent here to be confused with).
+
+No test file exists for this class at all (`cloudflare-worker/` has zero
+`.test.js` files) — the WebSocketPair/DurableObjectState/Hibernation-API
+surface cannot run in plain Node without heavy platform mocking, which is
+presumably why the whole class is validated live rather than by unit test
+today. Did not add one; nothing here needed pinning since no defect was
+found to pin against.
+
+### Tests, deploy, live verification
+
+Full suite (`cloud-relay/` + `shared/`, all `*.test.js`): **824/824 green**
+(13 new this round: 3 in `openaiRealtimeVoice.test.js`, 5 in
+`shared/audioDelivery.test.js`, plus the 5 already added earlier this
+session). `eslint` clean on every touched file.
+
+Deployed via `wrangler deploy` from `cloud-relay/`; live verification
+evidence and version ID recorded in the implementation log entry immediately
+following this one, added right after the deploy actually ran.
+
+### Files touched this round
+
+- `/Users/evanliu/agentic-gadget/software/ai-pendant-simulator/cloud-relay/openaiRealtimeVoice.js`
+- `/Users/evanliu/agentic-gadget/software/ai-pendant-simulator/cloud-relay/openaiRealtimeVoice.test.js`
+- `/Users/evanliu/agentic-gadget/software/ai-pendant-simulator/cloud-relay/server.js`
+- `/Users/evanliu/agentic-gadget/software/ai-pendant-simulator/shared/audioDelivery.js`
+- `/Users/evanliu/agentic-gadget/software/ai-pendant-simulator/shared/audioDelivery.test.js`
+- `cloudflare-worker/bridgeHub.js` — read only, not edited (no defect found)
