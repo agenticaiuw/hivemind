@@ -418,3 +418,53 @@ so its first bytes are the tail of a line that began before we were listening;
 publishing it produced exactly the corruption the first live capture showed
 (`..."pot":{"raw":166` glued to `STATUS mic MUTED`). One truncated line at
 attach is a known cost of tailing a live stream; a fabricated one is not.
+
+## Three complaints from the owner using it in anger
+
+**"when i pressed there should be like a flash and shows when this button was
+pressed, like 2 seconds ago."** A press lasts about 120 ms, so a tile showing a
+live level answers a question nobody asks — you would have to already be staring
+at the right tile at the right instant. The tile now carries the press FORWARD:
+a 900 ms flash on the edge, and the big number is the recency ("3s ago"), with
+the resting level demoted to the foot ("7 presses · now up"). The resting level
+was the least interesting fact there — it reads identically whether the button
+is wired, unwired, or merely untouched. Needed one telemetry addition,
+`pressedAgoMs`, because at 10 Hz the sample time is always "now" and says
+nothing about when the button was pushed.
+
+**"each turn of the encoder should not change the ui of the entire page."** Three
+real causes, all layout rather than reactivity:
+- proportional digits: every value changed width as it changed, resizing its own
+  tile and reflowing a dense auto-fit grid. `tabular-nums` on values, feet and
+  link values.
+- the foot wrapping one line to two ("raw 171" -> "raw 1710") grew a tile and
+  shoved every tile after it. `min-height: 2.6em` reserves both lines always.
+- `.bn-grid` had `transition: opacity` and a `standby` class driven by a
+  liveness threshold that sample jitter crosses — so the WHOLE grid breathed.
+  Transition removed.
+Also dropped the age clock from 250 ms to 1 s: every age renders in whole
+seconds, so three of every four ticks re-evaluated every age and every class to
+produce identical text. Measured after: zero of eleven tiles shift position
+across 2.5 s of live 10 Hz telemetry.
+
+**"why does it mean by i2s bus not working?"** He read I2C as I2S — this project
+has both, they differ by one letter, and I2S is the audio bus he cares about.
+Tiles are now named after the part he physically installed rather than the bus
+or the pin: HAPTIC (I2C) with DRV2605L in the sub-line, SPEAKER AMP with
+MAX98357A, MIC LEVEL (I2S) with SPH0645, and the mic rail names SPH0645 too. The
+bus and pin stay in the sub-line, where they help once you already know which
+part you are looking at.
+
+Verified against the stub, since no real button reaches the chip: "YELLOW ·
+TALK + PUSH-TO-TALK | 3s ago | P0.21 · 7 presses · now up", the unwired green
+still "—", and the flash class observed firing on an edge.
+
+**Not compensated for in the UI, deliberately:** 196 tapped lines with zero
+button pins ever low, and a pot sweeping 163-272 of 4095 (under 3% of range).
+Both are hardware. A dashboard that smoothed either would be hiding the finding.
+
+**A caution for me:** my first run of this verification reported the flash and
+the recency both missing. Both were artifacts of a stale harness of my own from
+an hour earlier still holding port 8021 and serving old code. Check what is
+actually serving before believing a negative — the same lesson the propagation
+lag taught, in a different costume.
