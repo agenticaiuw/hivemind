@@ -25,15 +25,36 @@
       "owner": "orchestrator",
       "status": "completed",
       "scope": "Create linked DOCX, render and verify, deliver and commit/push explicit paths"
+    },
+    {
+      "id": "bluetooth_revision",
+      "owner": "purchased_components",
+      "status": "completed",
+      "scope": "Price final Bluetooth module and matching SoC; ESP32 testing only"
+    },
+    {
+      "id": "pcb_revision",
+      "owner": "manufacturing_research",
+      "status": "completed",
+      "scope": "Source and calculate bare PCB and separate assembly estimate for 30 devices"
+    },
+    {
+      "id": "revise_docx",
+      "owner": "orchestrator",
+      "status": "completed",
+      "scope": "Revise Word document, render all pages, commit and push"
     }
   ],
   "validation": {
-    "docx_pages": 4,
-    "clickable_hyperlinks": 40,
-    "visual_qa": "Every final rendered page inspected; no clipping or table overflow",
+    "docx_pages": 2,
+    "clickable_hyperlinks": 36,
+    "visual_qa": "Both final rendered pages inspected; no clipping or overflow",
     "content_review": "Independent price and equivalence cross-check passed",
     "token_usage": null,
-    "token_usage_note": "Exact agent token accounting unavailable"
+    "token_usage_note": "Exact agent token accounting unavailable",
+    "tables": 2,
+    "revision": "Combined old/new products in two tables; ESP32 testing only; final Bluetooth module and PCB costs"
   },
-  "delivery": "outputs/01a0d046-7d49-7871-8a87-73ebb2cf093f/Agentic_AI_UW_Component_Costs.docx"
+  "delivery": "outputs/01a0d046-7d49-7871-8a87-73ebb2cf093f/Agentic_AI_UW_Component_Costs.docx",
+  "format_revision": "User supplied screenshot: exactly two combined tables, breakout boards and final bare-chip purchase, links and costs. No historical/new separation."
 }
