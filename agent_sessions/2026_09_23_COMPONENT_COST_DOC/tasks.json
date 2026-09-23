@@ -61,6 +61,12 @@
       "owner": "orchestrator and research agents",
       "status": "completed",
       "scope": "Search harder for one-unit bare modem IC and payment IC prices, not30-unit quotes; accurately label source authenticity, packages, provisioning and module differences"
+    },
+    {
+      "id": "phone_number_architecture",
+      "owner": "orchestrator and additional_components",
+      "status": "completed",
+      "scope": "Explain standalone phone numbers, existing AT&T number sharing, and Bluetooth companion constraints with official sources"
     }
   ],
   "validation": {

@@ -22,3 +22,8 @@ User explicitly requests deeper search for single bare chip pricing, no 30-unit 
 
 ## Single-chip price correction completed
 Delegated modem and payment IC research. Replaced final table module/quote-only rows with $9.20 MDM9207 and $2.14 SN100U/100VB27 independent/repair-market listings. Preserved exact-variant and provisioning uncertainties, NRF chips, PCB allowance, and two combined tables. Removed bulk chip tier calculations. Render-v5 contains two pages; both visually inspected. DOCX has 40 hyperlinks. Exact token counts unavailable. Committing and pushing explicit session/artifact paths.
+
+## Phone number architecture
+User asks how each device obtains a number or reuses existing AT&T number. Checking official carrier and Bluetooth/phone platform requirements.
+
+Phone number research complete: carrier-assigned new lines, NumberSync compatible-device restriction, SIM transfer versus sharing, Bluetooth HFP and SMS platform restrictions. User screenshots directly show updated page2 prices $9.20/$2.14; page1 evaluation products remain $52.81/GBP99. Explained distinction without claiming stale preview. No DOCX changes requested beyond existing completed pricing update.
