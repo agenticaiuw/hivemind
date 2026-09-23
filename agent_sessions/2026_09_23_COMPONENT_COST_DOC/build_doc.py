@@ -122,7 +122,7 @@ rows += [
 ]
 table(['Item','Function','Product','Cost'],[.42,1.18,4.55,1.05],rows,10)
 para('Items 1–11 use the actual receipt prices; the remaining entries use current single-unit listings. The payment sample pack is priced in GBP excluding VAT and contains multiple samples. It is not a per-chip price. Other current prices exclude tax, shipping, and tariffs.')
-para('The Bluetooth board and module use the same chip family. The A7672G evaluation kit and module are both backordered. The optional payment sample pack is not required for every device and does not establish a payment-chip price.')
+para('The Bluetooth board and module use the same chip family. The A7672G evaluation kit is backordered; it is a different modem candidate from the bare Qualcomm IC below. The optional payment sample pack is not required for every device and does not establish a payment-chip price.')
 para('The TDK microphone and DVP camera need interface validation. BLE does not provide Classic Bluetooth/A2DP. Payment provisioning, carrier service, support circuitry, and assembly are additional requirements; these tables are not a complete assembled-device quote.')
 
 doc.add_page_break()
@@ -148,14 +148,15 @@ rows=[
     [14,'Fingerprint',[('FPC2534AP LGA sensor system',ADD[1]['bare_url'])],'$23.85'],
     [15,'Solar panel',[('Voltaic P122 finished panel',ADD[2]['board_url'])],'$5.95'],
     [16,'Solar charger',[('TI BQ24074RGTR IC',ADD[3]['bare_url'])],'$2.43'],
-    [17,'Standalone calls',[('SIMCom A7672G VoLTE/SMS — backorder','https://www.digikey.com/en/products/detail/simcom-wireless-solutions-limited/A7672G/28868527')],'$22.22'],
-    [18,'Payments',[('Infineon SECORA Pay W chip or module','https://www.infineon.com/products/security-smart-card-solutions/secora-security-solutions/secora-pay')],'Quote needed'],
+    [17,'Voice modem IC',[('Qualcomm MDM9207 bare IC — see note','https://tech-electr.com/product/mdm9207-qualcomm-genuine-reliable-electronic-components/')],'$9.20'],
+    [18,'NFC / secure IC',[('NXP SN100U / 100VB27 — repair-market IC','https://www.phonelcdparts.com/iphone-xr-xs-xs-max-ipad-pro-11-1st-gen-2018-ipad-pro-11-2rd-gen-2020-ipad-7-2019-ic-100vb27-xr')],'$2.14'],
     [19,'PCB fabrication',[('4-layer PCB • 32 mm • 0.8 mm thick','https://jlcpcb.com/resources/pcb-thickness')],'~$8 each\n~$240 / 30'],
 ]
 table(['Item','Function','Product','Cost'],[.42,1.18,4.55,1.05],rows,10)
-para('Nordic options: the $7 Bluetooth module already contains an nRF5340. Its bare-SoC alternative costs $8.65 at quantity one, or $7.1024 each at 30 ($213.07), plus RF/support circuitry. The module costs $210 for 30 plus $25 listed shipping. ESP32 remains testing-only.',bold='Nordic options:')
+para('Nordic options: the $7 Bluetooth module contains an nRF5340. Its bare-SoC alternative is $8.65 for one, plus RF/support circuitry. The $31.56 nRF9160 SiP supports data/SMS, not VoLTE calls. ESP32 remains testing-only.',bold='Nordic options:')
 p=para('PCB: $240 is a planning allowance for 30 bare 0.8 mm boards, excluding components, soldering/assembly, shipping, and tax. For comparison, ');link(p,'OSH Park’s published four-layer rate','https://docs.oshpark.com/services/four-layer/');p.add_run(' gives about $158.72 for 30 at a 32 × 32 mm bounding size, but at 1.6 mm thickness. Final cost needs routed Gerbers and a supplier quote.')
-p=para('Cellular and payments: nRF9160 ');link(p,'does not support VoLTE calls','https://devzone.nordicsemi.com/f/nordic-q-a/87167/case-about-nrf9160-voice-calls');p.add_run('. ');link(p,'A7672G supports VoLTE','https://en.simcom.com/product/A7672G.html');p.add_run(' and is listed at $18.3832 each for 30 ($551.50), but has no immediate distributor stock; US carrier approval remains unverified. The £99 pack is optional evaluation hardware, not payment silicon. Production payment-chip pricing is unverified and requires a supplier quote.')
+p=para('Bare modem: $9.20 buys one MDM9207 IC from an independent seller. ');link(p,'Qualcomm specifies VoLTE for MDM9207-1','https://s204.q4cdn.com/645488518/files/doc_news/2015/10/2015-10-26_Qualcomm_Announces_New_Modem_Solutions_Designed_725.pdf');p.add_run('; the listing does not confirm that variant. RF transceiver, power IC, memory, antenna, firmware and carrier compatibility require separate validation/costing.')
+p=para('Payment IC: ');link(p,'TechInsights identifies 100VB27 as SN100U','https://www.techinsights.com/blog/google-pixel-3-xl-teardown');p.add_run(', integrating NFC, a secure element and eSIM. The $2.14 repair-market listing covers one physical chip; keys, payment provisioning and custom-board usability are unverified. It is not a ready-to-pay wallet. Both bare IC prices exclude shipping/tax and are sourcing leads, not validated design selections.')
 OUT.parent.mkdir(parents=True,exist_ok=True)
 doc.save(OUT)
 print(OUT)

@@ -55,17 +55,23 @@
       "owner": "orchestrator and research agents",
       "status": "completed",
       "scope": "Find lower-cost standalone voice/SMS modules and payment secure elements with genuine supplier prices; correct overstated cost assumptions"
+    },
+    {
+      "id": "single_bare_ic_search",
+      "owner": "orchestrator and research agents",
+      "status": "completed",
+      "scope": "Search harder for one-unit bare modem IC and payment IC prices, not30-unit quotes; accurately label source authenticity, packages, provisioning and module differences"
     }
   ],
   "validation": {
     "docx_pages": 2,
     "clickable_hyperlinks": 40,
-    "visual_qa": "Both final rendered pages inspected; no clipping or overflow",
+    "visual_qa": "Both render-v5 pages inspected; no clipping or overflow",
     "content_review": "Independent price and equivalence cross-check passed",
     "token_usage": null,
     "token_usage_note": "Exact agent token accounting unavailable",
     "tables": 2,
-    "revision": "Lower-cost A7672G $22.22 q1 and $18.3832 at30, out of stock; payment production price unknown, sample pack optional"
+    "revision": "Single bare IC sourcing leads: MDM9207 $9.20 MOQ1; SN100U/100VB27 $2.14 one chip. Exact modem variant and payment provisioning unverified; no bulk chip quotes."
   },
   "delivery": "outputs/01a0d046-7d49-7871-8a87-73ebb2cf093f/Agentic_AI_UW_Component_Costs.docx",
   "format_revision": "User supplied screenshot: exactly two combined tables, breakout boards and final bare-chip purchase, links and costs. No historical/new separation."
