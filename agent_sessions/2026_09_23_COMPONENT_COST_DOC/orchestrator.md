@@ -27,3 +27,6 @@ Delegated modem and payment IC research. Replaced final table module/quote-only 
 User asks how each device obtains a number or reuses existing AT&T number. Checking official carrier and Bluetooth/phone platform requirements.
 
 Phone number research complete: carrier-assigned new lines, NumberSync compatible-device restriction, SIM transfer versus sharing, Bluetooth HFP and SMS platform restrictions. User screenshots directly show updated page2 prices $9.20/$2.14; page1 evaluation products remain $52.81/GBP99. Explained distinction without claiming stale preview. No DOCX changes requested beyond existing completed pricing update.
+
+## Removed rejected packages
+User clarified that expensive prototype packages must also be removed. Deleted A7672G kit and USC sample pack rows, URLs, prices and obsolete notes. Verified DOCX XML has no 52.81,42.71,GBP99,sample pack,A7672G,SIM7600; retains $9.20/$2.14 and exactly two tables. Both render-v6 pages visually inspected.

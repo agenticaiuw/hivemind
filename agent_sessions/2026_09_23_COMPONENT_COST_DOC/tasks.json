@@ -67,17 +67,23 @@
       "owner": "orchestrator and additional_components",
       "status": "completed",
       "scope": "Explain standalone phone numbers, existing AT&T number sharing, and Bluetooth companion constraints with official sources"
+    },
+    {
+      "id": "remove_rejected_packages",
+      "owner": "orchestrator and additional_components",
+      "status": "completed",
+      "scope": "Remove expensive cellular evaluation kit and payment sample pack from prototype table and all associated obsolete notes; retain two tables and single bare IC prices"
     }
   ],
   "validation": {
     "docx_pages": 2,
-    "clickable_hyperlinks": 40,
-    "visual_qa": "Both render-v5 pages inspected; no clipping or overflow",
+    "clickable_hyperlinks": 38,
+    "visual_qa": "Both render-v6 pages visually inspected; package removal verified in DOCX XML",
     "content_review": "Independent price and equivalence cross-check passed",
     "token_usage": null,
     "token_usage_note": "Exact agent token accounting unavailable",
     "tables": 2,
-    "revision": "Single bare IC sourcing leads: MDM9207 $9.20 MOQ1; SN100U/100VB27 $2.14 one chip. Exact modem variant and payment provisioning unverified; no bulk chip quotes."
+    "revision": "Removed rejected cellular development kit and payment pack entirely; individual IC prices retained"
   },
   "delivery": "outputs/01a0d046-7d49-7871-8a87-73ebb2cf093f/Agentic_AI_UW_Component_Costs.docx",
   "format_revision": "User supplied screenshot: exactly two combined tables, breakout boards and final bare-chip purchase, links and costs. No historical/new separation."

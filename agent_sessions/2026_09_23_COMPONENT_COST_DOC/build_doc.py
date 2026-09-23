@@ -103,7 +103,7 @@ r=f.add_run('Agentic AI UW  |  '); r.font.size=Pt(9)
 fld=OxmlElement('w:fldSimple'); fld.set(qn('w:instr'),'PAGE'); f._p.append(fld)
 
 doc.add_paragraph('Agentic AI UW Device Component Costs', 'Title')
-para('UW–Madison ECE • Prices checked 23 September 2026 • USD unless marked GBP')
+para('UW–Madison ECE • Prices checked 23 September 2026 • Single-unit component prices in USD')
 para('The final product uses a Bluetooth module. The ESP32 is testing hardware only. Product names link directly to suppliers. Existing purchases and added features are combined below.')
 doc.add_heading('1 Breakout boards and prototype hardware',1)
 short = ['MAX98357A I2S 3 W amplifier breakout','PDM MEMS microphone breakout','DRV2605L haptic driver breakout','Vibrating mini motor disc','LiPo battery 3.7 V 500 mAh','Mini oval speaker 8 Ω 1 W','LSM6DSOX six-axis IMU breakout','Nordic nRF9160 Development Kit','HUZZAH32 ESP32 Feather — testing only','microSD breakout 5 V or 3 V','DFRobot FIT0642 64 GB microSD card']
@@ -117,12 +117,9 @@ rows += [
     [14,'Fingerprint',[('SparkFun FPC2534 Qwiic',ADD[1]['board_url'])],'$59.95'],
     [15,'Solar panel',[('Voltaic P122 panel',ADD[2]['board_url'])],'$5.95'],
     [16,'Solar charger',[('Adafruit BQ24074 charger',ADD[3]['board_url'])],'$14.95'],
-    [17,'Standalone calls',[('SIMCom A7672G-LABE-TEKIT — backorder','https://www.digikey.com/en/products/detail/simcom-wireless-solutions-limited/A7672G-LABE-TEKIT/28716794')],'$52.81'],
-    [18,'Payment demo',[('USC evaluation pack — optional samples','https://www.usmartcards.co.uk/sample-and-oem-packs/usc-wearable-technology-samples-pack')],'£99 / pack'],
 ]
 table(['Item','Function','Product','Cost'],[.42,1.18,4.55,1.05],rows,10)
-para('Items 1–11 use the actual receipt prices; the remaining entries use current single-unit listings. The payment sample pack is priced in GBP excluding VAT and contains multiple samples. It is not a per-chip price. Other current prices exclude tax, shipping, and tariffs.')
-para('The Bluetooth board and module use the same chip family. The A7672G evaluation kit is backordered; it is a different modem candidate from the bare Qualcomm IC below. The optional payment sample pack is not required for every device and does not establish a payment-chip price.')
+para('Items 1–11 use the actual receipt prices; the remaining entries use current single-unit listings. Prices exclude tax, shipping, and tariffs. Cellular and payment hardware are listed as individual ICs in the final-parts table on page 2.')
 para('The TDK microphone and DVP camera need interface validation. BLE does not provide Classic Bluetooth/A2DP. Payment provisioning, carrier service, support circuitry, and assembly are additional requirements; these tables are not a complete assembled-device quote.')
 
 doc.add_page_break()
