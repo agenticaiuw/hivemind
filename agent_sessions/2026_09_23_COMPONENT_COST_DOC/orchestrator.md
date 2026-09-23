@@ -1,0 +1,7 @@
+# Component cost lists for Agentic AI UW
+
+2026-09-23: User rejected the budget-sheet format and requested a DOCX containing a list of all purchased boards/components and receipt prices, a separate list of bare chips/components and costs, links for every item, plus camera, fingerprint, NFC for payments, cellular for a phone number and onboard solar. Prior workbook is background only. Exact token telemetry is unavailable for parent and subagents.
+
+All agents share checkout; each owns only designated research files in this session. No app or firmware changes. Read DESIGN.md and retained clear hierarchy with restrained colors for the document. Research is read-only; no vendor contact or purchases.
+
+Completed: four-page DOCX with 11 historical purchase entries, 13 sourced component crosswalk records, camera/fingerprint/solar additions, voice/SMS module and board, quote-required payment IC and public GBP payment sample pack. Added true bare ESP32 SoC as well as RF module. User confirmed calls/texts and contactless payments. Final document has 40 external hyperlink elements. Rendered with bundled renderer and inspected every page after final changes. Independent content review confirmed receipt math, addition prices, and component distinctions. Exact token telemetry unavailable. Only this session files and final DOCX are included in explicit-path commit; unrelated root task registry and prior-session files are preserved locally. No software deployment required for document-only change.
