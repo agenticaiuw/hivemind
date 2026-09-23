@@ -117,12 +117,12 @@ rows += [
     [14,'Fingerprint',[('SparkFun FPC2534 Qwiic',ADD[1]['board_url'])],'$59.95'],
     [15,'Solar panel',[('Voltaic P122 panel',ADD[2]['board_url'])],'$5.95'],
     [16,'Solar charger',[('Adafruit BQ24074 charger',ADD[3]['board_url'])],'$14.95'],
-    [17,'Standalone calls',[('Waveshare SIM7600NA-H 4G HAT','https://www.waveshare.com/sim7600na-h-4g-hat.htm')],'$84.99'],
-    [18,'Payments',[('USC wearable payment samples pack','https://www.usmartcards.co.uk/sample-and-oem-packs/usc-wearable-technology-samples-pack')],'£99 / pack'],
+    [17,'Standalone calls',[('SIMCom A7672G-LABE-TEKIT — backorder','https://www.digikey.com/en/products/detail/simcom-wireless-solutions-limited/A7672G-LABE-TEKIT/28716794')],'$52.81'],
+    [18,'Payment demo',[('USC evaluation pack — optional samples','https://www.usmartcards.co.uk/sample-and-oem-packs/usc-wearable-technology-samples-pack')],'£99 / pack'],
 ]
 table(['Item','Function','Product','Cost'],[.42,1.18,4.55,1.05],rows,10)
 para('Items 1–11 use the actual receipt prices; the remaining entries use current single-unit listings. The payment sample pack is priced in GBP excluding VAT and contains multiple samples. It is not a per-chip price. Other current prices exclude tax, shipping, and tariffs.')
-para('The Bluetooth development board is for prototyping; the final table uses its compact module family. The camera, biometric, cellular, and payment entries are candidate additions requiring integration validation.')
+para('The Bluetooth board and module use the same chip family. The A7672G evaluation kit and module are both backordered. The optional payment sample pack is not required for every device and does not establish a payment-chip price.')
 para('The TDK microphone and DVP camera need interface validation. BLE does not provide Classic Bluetooth/A2DP. Payment provisioning, carrier service, support circuitry, and assembly are additional requirements; these tables are not a complete assembled-device quote.')
 
 doc.add_page_break()
@@ -148,14 +148,14 @@ rows=[
     [14,'Fingerprint',[('FPC2534AP LGA sensor system',ADD[1]['bare_url'])],'$23.85'],
     [15,'Solar panel',[('Voltaic P122 finished panel',ADD[2]['board_url'])],'$5.95'],
     [16,'Solar charger',[('TI BQ24074RGTR IC',ADD[3]['bare_url'])],'$2.43'],
-    [17,'Standalone calls',[('SIMCom SIM7600NA-H VoLTE/SMS module','https://www.lcsc.com/product-image/C5380303.html?whichImg=sch')],'$42.71'],
+    [17,'Standalone calls',[('SIMCom A7672G VoLTE/SMS — backorder','https://www.digikey.com/en/products/detail/simcom-wireless-solutions-limited/A7672G/28868527')],'$22.22'],
     [18,'Payments',[('Infineon SECORA Pay W chip or module','https://www.infineon.com/products/security-smart-card-solutions/secora-security-solutions/secora-pay')],'Quote needed'],
     [19,'PCB fabrication',[('4-layer PCB • 32 mm • 0.8 mm thick','https://jlcpcb.com/resources/pcb-thickness')],'~$8 each\n~$240 / 30'],
 ]
 table(['Item','Function','Product','Cost'],[.42,1.18,4.55,1.05],rows,10)
 para('Nordic options: the $7 Bluetooth module already contains an nRF5340. Its bare-SoC alternative costs $8.65 at quantity one, or $7.1024 each at 30 ($213.07), plus RF/support circuitry. The module costs $210 for 30 plus $25 listed shipping. ESP32 remains testing-only.',bold='Nordic options:')
 p=para('PCB: $240 is a planning allowance for 30 bare 0.8 mm boards, excluding components, soldering/assembly, shipping, and tax. For comparison, ');link(p,'OSH Park’s published four-layer rate','https://docs.oshpark.com/services/four-layer/');p.add_run(' gives about $158.72 for 30 at a 32 × 32 mm bounding size, but at 1.6 mm thickness. Final cost needs routed Gerbers and a supplier quote.')
-p=para('Cellular and payments: nRF9160 supports data and carrier-dependent SMS, but ');link(p,'does not support VoLTE calls','https://devzone.nordicsemi.com/f/nordic-q-a/87167/case-about-nrf9160-voice-calls');p.add_run('. SIM7600 is a separate calling-modem candidate, subject to carrier approval. The £99 payment pack is for evaluation; production payment-chip pricing remains quote-required. No minimum payment-chip cost is established by that pack.')
+p=para('Cellular and payments: nRF9160 ');link(p,'does not support VoLTE calls','https://devzone.nordicsemi.com/f/nordic-q-a/87167/case-about-nrf9160-voice-calls');p.add_run('. ');link(p,'A7672G supports VoLTE','https://en.simcom.com/product/A7672G.html');p.add_run(' and is listed at $18.3832 each for 30 ($551.50), but has no immediate distributor stock; US carrier approval remains unverified. The £99 pack is optional evaluation hardware, not payment silicon. Production payment-chip pricing is unverified and requires a supplier quote.')
 OUT.parent.mkdir(parents=True,exist_ok=True)
 doc.save(OUT)
 print(OUT)
