@@ -43,17 +43,23 @@
       "owner": "orchestrator",
       "status": "completed",
       "scope": "Revise Word document, render all pages, commit and push"
+    },
+    {
+      "id": "radio_cost_clarity",
+      "owner": "orchestrator and purchased_components",
+      "status": "completed",
+      "scope": "Explain call/payment pricing and restore Nordic chip options with no double counting; retain two-table DOCX"
     }
   ],
   "validation": {
     "docx_pages": 2,
-    "clickable_hyperlinks": 36,
+    "clickable_hyperlinks": 39,
     "visual_qa": "Both final rendered pages inspected; no clipping or overflow",
     "content_review": "Independent price and equivalence cross-check passed",
     "token_usage": null,
     "token_usage_note": "Exact agent token accounting unavailable",
     "tables": 2,
-    "revision": "Combined old/new products in two tables; ESP32 testing only; final Bluetooth module and PCB costs"
+    "revision": "Restored nRF9160 data/SMS SiP and bare nRF5340 option; prices are alternatives, payment pack not unit chip cost"
   },
   "delivery": "outputs/01a0d046-7d49-7871-8a87-73ebb2cf093f/Agentic_AI_UW_Component_Costs.docx",
   "format_revision": "User supplied screenshot: exactly two combined tables, breakout boards and final bare-chip purchase, links and costs. No historical/new separation."
