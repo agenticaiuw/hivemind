@@ -67,7 +67,7 @@ ROWS = [
  ("PCB design software", devi("KiCad")),
  ("3D CAD software", devi("Onshape")),
  ("Voice tokens", devi("OpenAI gpt-realtime-2.1-mini")),
- ("Prototype PCBs", "proto"),
+ ("Full prototype units", "proto"),
  ("Tools", None),
  ("Soldering station", devi("Pinecil")),
  ("Magnifier", devi("Stereo/digital soldering microscope")),
@@ -81,10 +81,10 @@ MS = "'Manufacturing (30 units)'!"
 R = dict(starts=2, acc=3, target=4, pcb=6, pcba=7, comp=8, encl=9, band=10, cable=11, pack=12, ship=13, other=14, sub=15, cont=16, tot=17, per=18)
 
 # ---------------- Components sheet
-hdr = ["Name", "Estimate Cost", "Estimated Units for Testing", "Product Link", "Actual Product Price"]
-for i, (h, w) in enumerate(zip(hdr, [42, 14, 14, 26, 16]), 1):
+hdr = ["Name", "Estimate Cost", "Estimated Units for Testing", "Product Link", "Product Name", "Actual Product Price"]
+for i, (h, w) in enumerate(zip(hdr, [40, 14, 14, 22, 40, 16]), 1):
     c = wc.cell(1, i, h); c.font = HDR; c.fill = HFILL; c.alignment = Alignment(wrap_text=True, vertical="center", horizontal="left" if i == 1 else "center")
-    wc.column_dimensions["ABCDE"[i - 1]].width = w
+    wc.column_dimensions["ABCDEF"[i - 1]].width = w
 wc.row_dimensions[1].height = 34
 def link(c, url):
     if url:
@@ -95,36 +95,40 @@ def note(c, text):
 x = 2
 for label, src in ROWS:
     if src is None:
-        for j in range(1, 6): wc.cell(x, j).fill = SFILL
+        for j in range(1, 7): wc.cell(x, j).fill = SFILL
         wc.cell(x, 1, label).font = BOLD; x += 1; continue
-    est = act = units = url = cmt = None
+    est = act = units = url = cmt = pname = None
     if src == "subs":
         est, units, act, url = 200, 8, 200, "https://claude.com/pricing"
-        cmt = "$200/month plan (e.g. Claude Max 20x). Units = months."
+        pname, cmt = "Claude Max 20x ($200/month)", "Units = months."
     elif src == "proto":
-        a, b, c_, d = (devi(s) for s in ("Prototype PCB fab", "Prototype PCBA fees", "Stencils", "Prototype PCBA shipping"))
-        est = f"={a['estimate_usd']}+{b['estimate_usd']}+{c_['estimate_usd']}+{d['estimate_usd']}+3*{MS}B{R['comp']}"
-        units, act, url = 3, None, a["url"]
-        cmt = "Per spin (JLCPCB 4-layer): fab + assembly fees + stencil + shipping/tariff + 3 populated boards at the per-device component cost. Units = spins."
+        est, units, act, url = 350, 4, None, devi("Prototype PCB fab")["url"]
+        pname = "Complete unit: PCB + assembly + parts + shell (JLCPCB)"
+        cmt = "Rough per-unit allowance. Each unit may use a different low-power chip / configuration."
     elif "item" in src:                      # manufacturing.json development item
         est, units, act, url = src["estimate_usd"], src["qty"], src["actual_price_usd"], src["url"]
-        cmt = src["item"]
+        pname = src["item"]
+        if label == "Voice tokens":
+            est, units, act, url, pname = 0.05, 5000, 0.05, "https://openai.com/api/pricing/", "GPT Live ($0.05/minute)"
+            cmt = "Units = minutes of testing."
     else:                                    # components.json / compute-options.json part
         est, units, act, url = src["estimate_usd"], src["units_for_testing"], src["actual_price_usd"], src["url"]
         if "OUT OF STOCK" in (src.get("notes") or ""): act = None   # listed price not orderable: leave Actual blank
-        cmt = f'{src["name"]}' + (f' ({src["part_number"]})' if src.get("part_number") else "")
-    wc.cell(x, 1, label).font = BLK; note(wc.cell(x, 1), cmt)
+        pname = src["name"]
+    wc.cell(x, 1, label).font = BLK
+    if cmt: note(wc.cell(x, 1), cmt)
     c = wc.cell(x, 2, est); c.font = BLK if str(est).startswith("=") else BLUE; c.number_format = USD
     c = wc.cell(x, 3, units); c.font = BLUE; c.alignment = Alignment(horizontal="center"); c.number_format = "#,##0"
     link(wc.cell(x, 4), url)
-    c = wc.cell(x, 5, act); c.font = BLUE; c.number_format = USD
+    c = wc.cell(x, 5, (pname or "").split(" (")[0].split(", ")[0]); c.font = BLK; c.alignment = Alignment(wrap_text=True, vertical="center")
+    c = wc.cell(x, 6, act); c.font = BLUE; c.number_format = USD
     x += 1
 last = x - 1; x += 1
 rg = lambda col: f"{col}2:{col}{last}"
 wc.cell(x, 1, "Total (Actual where verified, else Estimate)").font = BOLD
-c = wc.cell(x, 2, f'=SUMPRODUCT({rg("C")},{rg("B")})+SUMPRODUCT({rg("C")},({rg("E")}<>"")*({rg("E")}-{rg("B")}))')
+c = wc.cell(x, 2, f'=SUMPRODUCT({rg("C")},{rg("B")})+SUMPRODUCT({rg("C")},({rg("F")}<>"")*({rg("F")}-{rg("B")}))')
 c.font = BOLD; c.number_format = USD
-for j in range(1, 6): wc.cell(x, j).border = TOP
+for j in range(1, 7): wc.cell(x, j).border = TOP
 wc.freeze_panes = "B2"; wc.sheet_view.showGridLines = False
 COMP_TOTAL = x
 

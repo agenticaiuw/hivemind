@@ -52,3 +52,5 @@ Rebuild to 2 sheets. Components = 5 cols (Name generic e.g. "Processing chip" | 
 Tokens (subagents): components 256k, manufacturing 149k, kws 229k, knob 133k, builder 166k. Orchestrator tokens not exposed.
 
 ## Owner: coding subscription = $200/mo x 8 months (was $180 x 4). Components total $4,068.13 → $4,948.14; grand ≈ $9,868.65. Added fullCalcOnLoad (openpyxl leaves no cached values; Excel AppleScript recalc hung).
+
+## Owner: +Product Name column; voice = GPT Live \$0.05/min x 5000 min; Prototype PCBs → 4 full prototype units @ \$350 (different chips/configs). Components total \$4,807.59; grand ≈ \$9,728.
