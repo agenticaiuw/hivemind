@@ -113,6 +113,7 @@ for label, src in ROWS:
             cmt = "Units = minutes of testing."
     else:                                    # components.json / compute-options.json part
         est, units, act, url = src["estimate_usd"], src["units_for_testing"], src["actual_price_usd"], src["url"]
+        if label.startswith("Processing chip"): units = 3   # one per tester, same as the Bluetooth chip
         if "OUT OF STOCK" in (src.get("notes") or ""): act = None   # listed price not orderable: leave Actual blank
         pname = src["name"]
     wc.cell(x, 1, label).font = BLK
@@ -125,12 +126,20 @@ for label, src in ROWS:
     x += 1
 last = x - 1; x += 1
 rg = lambda col: f"{col}2:{col}{last}"
-wc.cell(x, 1, "Total (Actual where verified, else Estimate)").font = BOLD
-c = wc.cell(x, 2, f'=SUMPRODUCT({rg("C")},{rg("B")})+SUMPRODUCT({rg("C")},({rg("F")}<>"")*({rg("F")}-{rg("B")}))')
-c.font = BOLD; c.number_format = USD
-for j in range(1, 7): wc.cell(x, j).border = TOP
+CSUB, CHEAD, CTOT, CREQ = x, x + 1, x + 2, x + 4
+wc.cell(CSUB, 1, "Subtotal (Actual where verified, else Estimate)").font = BLK
+c = wc.cell(CSUB, 2, f'=SUMPRODUCT({rg("C")},{rg("B")})+SUMPRODUCT({rg("C")},({rg("F")}<>"")*({rg("F")}-{rg("B")}))')
+c.font = BLK; c.number_format = USD
+wc.cell(CHEAD, 1, "Headroom runway (same % on both sheets)").font = BLK
+c = wc.cell(CHEAD, 3, f"=B{CREQ}/(B{CSUB}+{MS}D{R['sub']})-1"); c.number_format = "0.0%"; c.font = BLK; c.alignment = Alignment(horizontal="center")
+c = wc.cell(CHEAD, 2, f"=C{CHEAD}*B{CSUB}"); c.number_format = USD; c.font = BLK
+wc.cell(CTOT, 1, "Total").font = BOLD
+c = wc.cell(CTOT, 2, f"=B{CSUB}+B{CHEAD}"); c.font = BOLD; c.number_format = USD
+for j in range(1, 7): wc.cell(CTOT, j).border = TOP
+wc.cell(CREQ, 1, "Funding request (both sheets)").font = BLK
+c = wc.cell(CREQ, 2, 11000); c.font = BLUE; c.number_format = USD
 wc.freeze_panes = "B2"; wc.sheet_view.showGridLines = False
-COMP_TOTAL = x
+COMP_TOTAL = CTOT
 
 # ---------------- Manufacturing sheet
 for i, (h, w) in enumerate(zip(["Item", "Unit Cost", "Quantity", "Total", "Notes"], [50, 13, 11, 14, 64]), 1):
@@ -177,10 +186,10 @@ row(R["other"], "SIM + data plan, magnet, test fixture", f"=1*{S}+14*{A}+{mag['u
     comment="Not in the requested row list but real costs from manufacturing.json: SIM $1 x 36, $14 flat plan x 30, magnet $1.50 x 36, test fixture $100.")
 wm.cell(R["sub"], 1, "Subtotal").font = BLK
 c = wm.cell(R["sub"], 4, f"=SUM(D{R['pcb']}:D{R['other']})"); c.number_format = USD; c.font = BLK
-wm.cell(R["cont"], 1, "Contingency").font = BLK
-c = wm.cell(R["cont"], 2, M["manufacturing"]["contingency_rate"]); c.number_format = "0%"; c.font = BLUE
+wm.cell(R["cont"], 1, "Headroom runway (same % on both sheets)").font = BLK
+c = wm.cell(R["cont"], 2, f"=Components!C{CHEAD}"); c.number_format = "0.0%"; c.font = BLK
 c = wm.cell(R["cont"], 4, f"=B{R['cont']}*D{R['sub']}"); c.number_format = USD; c.font = BLK
-wm.cell(R["cont"], 5, "Of subtotal").font = F(color="595959")
+wm.cell(R["cont"], 5, "Both sheets together = funding request").font = F(color="595959")
 wm.cell(R["tot"], 1, "Total").font = BOLD
 c = wm.cell(R["tot"], 4, f"=D{R['sub']}+D{R['cont']}"); c.number_format = USD; c.font = BOLD
 wm.cell(R["per"], 1, "Cost per device").font = BOLD
