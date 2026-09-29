@@ -99,8 +99,8 @@ for label, src in ROWS:
         wc.cell(x, 1, label).font = BOLD; x += 1; continue
     est = act = units = url = cmt = None
     if src == "subs":
-        est, units, act, url = 180, 4, None, "https://claude.com/pricing"
-        cmt = "Per month: Claude Max 5x $100 + 2x Claude Pro $20 + Cursor Pro $20 + ChatGPT Plus $20 = $180. Units = months."
+        est, units, act, url = 200, 8, 200, "https://claude.com/pricing"
+        cmt = "$200/month plan (e.g. Claude Max 20x). Units = months."
     elif src == "proto":
         a, b, c_, d = (devi(s) for s in ("Prototype PCB fab", "Prototype PCBA fees", "Stencils", "Prototype PCBA shipping"))
         est = f"={a['estimate_usd']}+{b['estimate_usd']}+{c_['estimate_usd']}+{d['estimate_usd']}+3*{MS}B{R['comp']}"
@@ -189,4 +189,5 @@ for j in range(1, 6): wm.cell(R["tot"], j).border = TOP
 wm.freeze_panes = "A2"; wm.sheet_view.showGridLines = False
 for w in (wc, wm):
     w.page_setup.orientation = "landscape"; w.page_setup.fitToWidth = 1; w.page_setup.fitToHeight = 0; w.sheet_properties.pageSetUpPr.fitToPage = True
+wb.calculation.fullCalcOnLoad = True  # openpyxl writes no cached values
 wb.save(OUT); print("saved", OUT, "| comp total cell B%d" % COMP_TOTAL)

@@ -50,3 +50,5 @@ Rebuild to 2 sheets. Components = 5 cols (Name generic e.g. "Processing chip" | 
 
 ## Builder done (166k tokens). Components $4,068.13; Manufacturing $4,920.51 ($164.02/device). Grand $8,988.64 vs $11k ask. Committing session folder.
 Tokens (subagents): components 256k, manufacturing 149k, kws 229k, knob 133k, builder 166k. Orchestrator tokens not exposed.
+
+## Owner: coding subscription = $200/mo x 8 months (was $180 x 4). Components total $4,068.13 → $4,948.14; grand ≈ $9,868.65. Added fullCalcOnLoad (openpyxl leaves no cached values; Excel AppleScript recalc hung).
