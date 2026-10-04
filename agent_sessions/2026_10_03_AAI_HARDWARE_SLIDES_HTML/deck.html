@@ -599,6 +599,7 @@ body.editing #stage { cursor: default; }
   function save() {
     var clone = document.documentElement.cloneNode(true);
     clone.querySelector('body').classList.remove('editing');
+    clone.querySelectorAll('[data-fs]').forEach(function (el) { el.style.fontSize = el.dataset.fs + 'px'; el.removeAttribute('data-fs'); });
     clone.querySelectorAll('[contenteditable]').forEach(function (el) { el.removeAttribute('contenteditable'); });
     clone.querySelectorAll('.slide.active').forEach(function (el) { el.classList.remove('active'); });
     clone.querySelector('.slide').classList.add('active');
@@ -635,6 +636,25 @@ body.editing #stage { cursor: default; }
     var rect = stage.getBoundingClientRect();
     go(e.clientX < rect.left + rect.width * 0.25 ? cur - 1 : cur + 1);
   });
+
+  /* Autofit (like PowerPoint "shrink text on overflow"): shrinks a text box's
+     font sizes until its text fits the box. Re-runs after edits. */
+  function autofit(box) {
+    var els = [box].concat(Array.prototype.slice.call(box.querySelectorAll('[style*="font-size"]')));
+    els.forEach(function (el) {
+      if (!el.dataset.fs) el.dataset.fs = parseFloat(el.style.fontSize) || '';
+      if (el.dataset.fs) el.style.fontSize = el.dataset.fs + 'px';
+    });
+    var hidden = !box.closest('.slide').classList.contains('active');
+    if (hidden) box.closest('.slide').style.display = 'block';
+    for (var f = 1; f > 0.5 && (box.scrollHeight > box.clientHeight + 1 || box.scrollWidth > box.clientWidth + 1); f -= 0.02) {
+      els.forEach(function (el) { if (el.dataset.fs) el.style.fontSize = (el.dataset.fs * f).toFixed(1) + 'px'; });
+    }
+    if (hidden) box.closest('.slide').style.display = '';
+  }
+  function autofitAll() { document.querySelectorAll('.slide .tx').forEach(autofit); }
+  document.addEventListener('focusout', function (e) { var t = e.target.closest && e.target.closest('.tx'); if (t) autofit(t); });
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(autofitAll);
   window.addEventListener('hashchange', function () { go(fromHash(), true); });
   window.addEventListener('resize', fit);
   fit();
